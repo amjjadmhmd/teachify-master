@@ -107,13 +107,35 @@ class ExamsService {
    */
   async listCertificates(): Promise<Certificate[]> {
     try {
-      const response = await apiClient.get<PaginatedResponse<Certificate>>(
-        '/api/certificates/'
-      );
-      return response.data.results;
+      const response = await apiClient.get<any>('/api/certificates/');
+      console.log('Raw API response:', response);
+      
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(response.data)) {
+        console.log('Response is array:', response.data);
+        return response.data;
+      }
+      
+      // Handle paginated response
+      if (response.data?.results) {
+        console.log('Response has results:', response.data.results);
+        return response.data.results;
+      }
+      
+      // Fallback
+      console.log('No data found, returning empty array');
+      return [];
     } catch (error) {
+      console.error('Error in listCertificates:', error);
       throw new Error(handleApiError(error));
     }
+  }
+
+  /**
+   * Get certificates (alias for listCertificates)
+   */
+  async getCertificates(): Promise<Certificate[]> {
+    return this.listCertificates();
   }
 
   /**

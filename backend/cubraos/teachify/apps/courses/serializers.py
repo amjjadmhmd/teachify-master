@@ -79,6 +79,7 @@ class EnrollmentSerializer(serializers.ModelSerializer):
 # ==========================================
 class CourseSerializer(serializers.ModelSerializer):
     lessons = LessonSerializer(many=True, read_only=True)
+    resources = ResourceSerializer(many=True, read_only=True)
     category_details = CategorySerializer(source="category", read_only=True)
     is_enrolled = serializers.SerializerMethodField()
     thumbnail = serializers.ImageField(required=False, allow_null=True)
@@ -90,7 +91,7 @@ class CourseSerializer(serializers.ModelSerializer):
         fields = [
             "id", "instructor", "title", "description", 
             "category", "category_details", "price", "thumbnail", "thumbnail_url",
-            "created_at", "lessons", "is_enrolled", "status"
+            "created_at", "lessons", "resources", "is_enrolled", "status"
         ]
         read_only_fields = ["id", "instructor", "created_at", "thumbnail_url"]
     

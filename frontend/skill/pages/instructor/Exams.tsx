@@ -236,6 +236,8 @@ const InstructorExams: React.FC<{ lang: Lang; theme: Theme }> = ({
     }
   };
 
+
+
   const openBuilder = () => {
     setIsBuilderOpen(true);
     document.body.style.overflow = "hidden";

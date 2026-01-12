@@ -31,7 +31,9 @@ const CoursePlayer: React.FC<{
   const [courses, setCourses] = useState<any[]>([]);
   const [activeCourse, setActiveCourse] = useState<any>(null);
   const [activeLesson, setActiveLesson] = useState<any>(null);
-  const [tab, setTab] = useState<"lessons" | "ai" | "assignments">("lessons");
+  const [tab, setTab] = useState<
+    "lessons" | "resources" | "ai" | "assignments"
+  >("lessons");
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
   const [showCourseDropdown, setShowCourseDropdown] = useState(false);
@@ -302,10 +304,10 @@ const CoursePlayer: React.FC<{
         } lg:block`}
       >
         <Card className="h-[600px] !p-0 overflow-hidden flex flex-col sticky top-28 shadow-xl border-2 border-primary/10">
-          <div className="flex border-b border-slate-200 dark:border-white/10 shrink-0 bg-slate-50 dark:bg-black/20">
+          <div className="border-b border-slate-200 dark:border-white/10 shrink-0 bg-slate-50 dark:bg-black/20 grid grid-cols-4 gap-0">
             <button
               onClick={() => setTab("lessons")}
-              className={`flex-1 py-4 text-[10px] font-bold flex flex-col items-center gap-1 ${
+              className={`py-4 text-[10px] font-bold flex flex-col items-center gap-1 ${
                 tab === "lessons"
                   ? "text-primary border-b-2 border-primary"
                   : "text-slate-500"
@@ -314,8 +316,18 @@ const CoursePlayer: React.FC<{
               <Video size={16} /> {isEn ? "Lessons" : "الدروس"}
             </button>
             <button
+              onClick={() => setTab("resources")}
+              className={`py-4 text-[10px] font-bold flex flex-col items-center gap-1 ${
+                tab === "resources"
+                  ? "text-primary border-b-2 border-primary"
+                  : "text-slate-500"
+              }`}
+            >
+              <FileText size={16} /> {isEn ? "Resources" : "الموارد"}
+            </button>
+            <button
               onClick={() => setTab("ai")}
-              className={`flex-1 py-4 text-[10px] font-bold flex flex-col items-center gap-1 ${
+              className={`py-4 text-[10px] font-bold flex flex-col items-center gap-1 ${
                 tab === "ai"
                   ? "text-primary border-b-2 border-primary"
                   : "text-slate-500"
@@ -325,7 +337,7 @@ const CoursePlayer: React.FC<{
             </button>
             <button
               onClick={() => setTab("assignments")}
-              className={`flex-1 py-4 text-[10px] font-bold flex flex-col items-center gap-1 ${
+              className={`py-4 text-[10px] font-bold flex flex-col items-center gap-1 ${
                 tab === "assignments"
                   ? "text-primary border-b-2 border-primary"
                   : "text-slate-500"
@@ -366,6 +378,48 @@ const CoursePlayer: React.FC<{
                   )}
                 </div>
               ))}
+
+            {tab === "resources" && (
+              <div className="space-y-3">
+                {activeCourse?.resources &&
+                activeCourse.resources.length > 0 ? (
+                  activeCourse.resources.map((resource: any) => (
+                    <a
+                      key={resource.id}
+                      href={resource.file_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block p-3 rounded-xl border border-amber-500/20 bg-amber-500/5 hover:bg-amber-500/10 hover:border-amber-500/40 transition-all group"
+                    >
+                      <div className="flex items-start gap-3">
+                        <FileText
+                          size={16}
+                          className="text-amber-600 dark:text-amber-400 mt-0.5 shrink-0"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <div className="font-bold text-sm text-slate-900 dark:text-white truncate group-hover:text-amber-500 transition-colors">
+                            {resource.title}
+                          </div>
+                          <div className="text-[10px] text-slate-600 dark:text-slate-400 mt-0.5">
+                            {new Date(resource.created_at).toLocaleDateString()}
+                          </div>
+                        </div>
+                        <Download
+                          size={14}
+                          className="text-amber-600 dark:text-amber-400 group-hover:scale-110 transition-transform shrink-0"
+                        />
+                      </div>
+                    </a>
+                  ))
+                ) : (
+                  <div className="py-8 text-center text-slate-500 text-sm">
+                    {isEn
+                      ? "No resources yet for this course"
+                      : "لا توجد موارد لهذا الكورس بعد"}
+                  </div>
+                )}
+              </div>
+            )}
 
             {tab === "ai" && (
               <div className="flex flex-col h-full">

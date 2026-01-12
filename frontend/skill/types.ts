@@ -19,6 +19,7 @@ export enum ViewMode {
   ASSIGNMENTS = 'ASSIGNMENTS',
   JOIN_PLATFORM = 'JOIN_PLATFORM',
   MENTORS_LIST = 'MENTORS_LIST',
+  CERTIFICATES = 'CERTIFICATES',
 }
 
 export type Theme = 'light' | 'dark';

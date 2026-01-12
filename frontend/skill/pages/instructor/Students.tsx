@@ -28,6 +28,7 @@ const InstructorStudents: React.FC<Props> = ({ lang, theme, targetStudentId }) =
   const [certFile, setCertFile] = useState<File | null>(null);
   const [certCourseTitle, setCertCourseTitle] = useState('');
   const [isSendingCert, setIsSendingCert] = useState(false);
+  const [studentEnrolledCourses, setStudentEnrolledCourses] = useState<string[]>([]);
 
   const isEn = lang === 'en';
 
@@ -74,13 +75,15 @@ const InstructorStudents: React.FC<Props> = ({ lang, theme, targetStudentId }) =
   };
 
   const handleOpenCertModal = (student: InstructorStudent) => {
-      setSelectedStudent(student);
-      setCertCourseTitle('');
-      setCertFile(null);
-      setShowCertModal(true);
-      setShowSuccess(false);
-      setShowProfileModal(false); // Close profile if opening from there
-  };
+       setSelectedStudent(student);
+       setCertCourseTitle('');
+       setCertFile(null);
+       setShowCertModal(true);
+       setShowSuccess(false);
+       setShowProfileModal(false); // Close profile if opening from there
+       // Set student's enrolled courses
+       setStudentEnrolledCourses(student.enrolled_courses || []);
+   };
 
   const closeAllModals = () => {
       setShowProfileModal(false);
@@ -381,13 +384,30 @@ const InstructorStudents: React.FC<Props> = ({ lang, theme, targetStudentId }) =
                           </div>
                       ) : (
                           <form onSubmit={handleSendCertificate} className="space-y-4">
-                              <Input 
-                                  label={isEn ? "Course Title" : "اسم الكورس"}
-                                  placeholder="e.g. Advanced React Patterns"
-                                  value={certCourseTitle}
-                                  onChange={(e) => setCertCourseTitle(e.target.value)}
-                                  required
-                              />
+                              <div>
+                                  <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
+                                      {isEn ? "Select Course" : "اختر الكورس"} <span className="text-red-500">*</span>
+                                  </label>
+                                  {studentEnrolledCourses.length === 0 ? (
+                                      <div className="p-3 bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 rounded-lg text-yellow-700 dark:text-yellow-500 text-sm">
+                                          {isEn ? "This student is not enrolled in any courses" : "هذا الطالب غير مسجل في أي كورسات"}
+                                      </div>
+                                  ) : (
+                                      <select
+                                          value={certCourseTitle}
+                                          onChange={(e) => setCertCourseTitle(e.target.value)}
+                                          className="w-full bg-white dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-lg px-4 py-3 text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                                          required
+                                      >
+                                          <option value="">{isEn ? "Select a course..." : "اختر كورس..."}</option>
+                                          {studentEnrolledCourses.map((course, idx) => (
+                                              <option key={idx} value={course}>
+                                                  {course}
+                                              </option>
+                                          ))}
+                                      </select>
+                                  )}
+                              </div>
                               
                               <div>
                                   <label className="text-slate-800 dark:text-slate-300 text-sm font-bold mb-2 block">

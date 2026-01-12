@@ -1,6 +1,13 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import { Lang, Theme, Course } from "../../types";
 import { api } from "../../api/client";
+import apiClient from "../../api/config";
 import { Button, Card, Input } from "../../components/UI";
 import { Reveal } from "../../components/Reveal";
 import {
@@ -29,9 +36,17 @@ import {
 import { resolveImageUrl, handleImageError } from "../../utils/imageUtils";
 
 // Toast notification system
-const showToast = (message: string, type: "success" | "error" | "info" = "info") => {
+const showToast = (
+  message: string,
+  type: "success" | "error" | "info" = "info"
+) => {
   const toast = document.createElement("div");
-  const bgColor = type === "success" ? "bg-emerald-500" : type === "error" ? "bg-red-500" : "bg-blue-500";
+  const bgColor =
+    type === "success"
+      ? "bg-emerald-500"
+      : type === "error"
+      ? "bg-red-500"
+      : "bg-blue-500";
   toast.className = `fixed bottom-4 right-4 ${bgColor} text-white px-6 py-3 rounded-lg shadow-lg z-[100] animate-in slide-in-from-bottom-4 duration-300`;
   toast.textContent = message;
   document.body.appendChild(toast);
@@ -59,14 +74,19 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
   const [lessons, setLessons] = useState<any[]>([]);
   const [showLessonsManager, setShowLessonsManager] = useState(false);
   const [editingLesson, setEditingLesson] = useState<any | null>(null);
+  const [resources, setResources] = useState<any[]>([]);
 
   // NEW: Search, Filter, Sort, Bulk Operations
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
-  const [sortBy, setSortBy] = useState<"title" | "price" | "students" | "date">("title");
+  const [sortBy, setSortBy] = useState<"title" | "price" | "students" | "date">(
+    "title"
+  );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("asc");
-  const [selectedCourses, setSelectedCourses] = useState<Set<number>>(new Set());
+  const [selectedCourses, setSelectedCourses] = useState<Set<number>>(
+    new Set()
+  );
   const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const [courseStats, setCourseStats] = useState<Record<number, any>>({});
   const [showCoursePreview, setShowCoursePreview] = useState(false);
@@ -74,7 +94,9 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
   const [draggingLesson, setDraggingLesson] = useState<number | null>(null);
   const [draftCourseId, setDraftCourseId] = useState<number | null>(null);
   const [showStatusFilter, setShowStatusFilter] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<"all" | "published" | "draft">("all");
+  const [statusFilter, setStatusFilter] = useState<
+    "all" | "published" | "draft"
+  >("all");
 
   const isEn = lang === "en";
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>();
@@ -110,20 +132,25 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
     try {
       const data = await api.courses.getInstructorDashboard();
       setCourses(data?.my_courses || []);
-      
+
       // Calculate stats for each course
       const stats: Record<number, any> = {};
       data?.my_courses?.forEach((course: any) => {
         stats[course.id] = {
           students: Math.floor(Math.random() * 100) + 1, // Mock data
-          revenue: Math.floor(parseFloat(course.price || 0) * (Math.random() * 50 + 10)),
+          revenue: Math.floor(
+            parseFloat(course.price || 0) * (Math.random() * 50 + 10)
+          ),
           completionRate: Math.floor(Math.random() * 100),
         };
       });
       setCourseStats(stats);
     } catch (error) {
       console.error("Failed to fetch courses:", error);
-      showToast(isEn ? "Failed to load courses" : "فشل تحميل الكورسات", "error");
+      showToast(
+        isEn ? "Failed to load courses" : "فشل تحميل الكورسات",
+        "error"
+      );
     }
   };
 
@@ -134,26 +161,37 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       setCategories(categoryList);
 
       if (categoryList && categoryList.length > 0 && !newCourse.category) {
-        const defaultCat = categoryList.find((c) => c.id > 1) || categoryList[0];
+        const defaultCat =
+          categoryList.find((c) => c.id > 1) || categoryList[0];
         setNewCourse((prev) => ({ ...prev, category: defaultCat.id }));
       }
     } catch (e) {
       console.error("Failed to fetch categories:", e);
-      showToast(isEn ? "Failed to load categories" : "فشل تحميل الفئات", "error");
+      showToast(
+        isEn ? "Failed to load categories" : "فشل تحميل الفئات",
+        "error"
+      );
     }
   };
 
-  const fetchLessons = useCallback(async (courseId: number) => {
-    try {
-      const course = courses.find((c) => c.id === courseId);
-      if (course) {
-        setLessons(course.lessons || []);
+  const fetchLessons = useCallback(
+    async (courseId: number) => {
+      try {
+        const course = courses.find((c) => c.id === courseId);
+        if (course) {
+          setLessons(course.lessons || []);
+          setResources(course.resources || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch lessons:", error);
+        showToast(
+          isEn ? "Failed to load lessons" : "فشل تحميل الدروس",
+          "error"
+        );
       }
-    } catch (error) {
-      console.error("Failed to fetch lessons:", error);
-      showToast(isEn ? "Failed to load lessons" : "فشل تحميل الدروس", "error");
-    }
-  }, [courses, isEn]);
+    },
+    [courses, isEn]
+  );
 
   // Auto-fetch lessons when showing lessons manager
   useEffect(() => {
@@ -168,7 +206,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current);
       }
-      
+
       autoSaveTimeoutRef.current = setTimeout(() => {
         setDraftCourseId(selectedCourse?.id || -1);
         showToast(isEn ? "Draft saved" : "تم حفظ المسودة", "info");
@@ -199,14 +237,14 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       const matchesSearch =
         course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         course.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      
+
       const matchesCategory =
         selectedCategory === null || course.category === selectedCategory;
-      
+
       const matchesPrice =
         parseFloat(course.price || 0) >= priceRange[0] &&
         parseFloat(course.price || 0) <= priceRange[1];
-      
+
       const matchesStatus =
         statusFilter === "all" ||
         (statusFilter === "published" && course.status === "published") ||
@@ -224,16 +262,29 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       } else if (sortBy === "price") {
         compareValue = parseFloat(a.price || 0) - parseFloat(b.price || 0);
       } else if (sortBy === "students") {
-        compareValue = (courseStats[b.id]?.students || 0) - (courseStats[a.id]?.students || 0);
+        compareValue =
+          (courseStats[b.id]?.students || 0) -
+          (courseStats[a.id]?.students || 0);
       } else if (sortBy === "date") {
-        compareValue = new Date(b.created_at || Date.now()).getTime() - new Date(a.created_at || Date.now()).getTime();
+        compareValue =
+          new Date(b.created_at || Date.now()).getTime() -
+          new Date(a.created_at || Date.now()).getTime();
       }
 
       return sortOrder === "asc" ? compareValue : -compareValue;
     });
 
     return sorted;
-  }, [courses, searchQuery, selectedCategory, priceRange, sortBy, sortOrder, statusFilter, courseStats]);
+  }, [
+    courses,
+    searchQuery,
+    selectedCategory,
+    priceRange,
+    sortBy,
+    sortOrder,
+    statusFilter,
+    courseStats,
+  ]);
 
   const handleBulkDelete = async () => {
     if (selectedCourses.size === 0) {
@@ -241,11 +292,13 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       return;
     }
 
-    if (!window.confirm(
-      isEn
-        ? `Delete ${selectedCourses.size} courses?`
-        : `حذف ${selectedCourses.size} كورسات؟`
-    )) {
+    if (
+      !window.confirm(
+        isEn
+          ? `Delete ${selectedCourses.size} courses?`
+          : `حذف ${selectedCourses.size} كورسات؟`
+      )
+    ) {
       return;
     }
 
@@ -263,7 +316,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       fetchCourses();
     } catch (error) {
       console.error("Failed to delete courses:", error);
-      showToast(isEn ? "Failed to delete courses" : "فشل حذف الكورسات", "error");
+      showToast(
+        isEn ? "Failed to delete courses" : "فشل حذف الكورسات",
+        "error"
+      );
     }
   };
 
@@ -280,7 +336,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newCategory.name.trim()) {
-      showToast(isEn ? "Please enter a category name" : "الرجاء إدخال اسم الفئة", "error");
+      showToast(
+        isEn ? "Please enter a category name" : "الرجاء إدخال اسم الفئة",
+        "error"
+      );
       return;
     }
     setIsSubmitting(true);
@@ -293,7 +352,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
         setNewCategory({ name: "" });
       }, 1000);
     } catch (e: any) {
-      showToast(isEn ? "Failed to create category" : "فشل إنشاء الفئة", "error");
+      showToast(
+        isEn ? "Failed to create category" : "فشل إنشاء الفئة",
+        "error"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -303,15 +365,24 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
     e.preventDefault();
 
     if (!newCourse.title.trim()) {
-      showToast(isEn ? "Please enter course title" : "الرجاء إدخال عنوان الكورس", "error");
+      showToast(
+        isEn ? "Please enter course title" : "الرجاء إدخال عنوان الكورس",
+        "error"
+      );
       return;
     }
     if (!newCourse.category) {
-      showToast(isEn ? "Please select a category" : "الرجاء اختيار فئة", "error");
+      showToast(
+        isEn ? "Please select a category" : "الرجاء اختيار فئة",
+        "error"
+      );
       return;
     }
     if (!newCourse.thumbnail) {
-      showToast(isEn ? "Please upload a thumbnail" : "الرجاء رفع صورة الكورس", "error");
+      showToast(
+        isEn ? "Please upload a thumbnail" : "الرجاء رفع صورة الكورس",
+        "error"
+      );
       return;
     }
 
@@ -324,7 +395,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
         category: newCourse.category,
         thumbnail: newCourse.thumbnail,
       });
-      showToast(isEn ? "Course created successfully" : "تم إنشاء الكورس بنجاح", "success");
+      showToast(
+        isEn ? "Course created successfully" : "تم إنشاء الكورس بنجاح",
+        "success"
+      );
       fetchCourses();
       setTimeout(() => {
         setShowAddModal(false);
@@ -431,7 +505,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
         );
       }
 
-      showToast(isEn ? "Lesson added successfully" : "تم إضافة الدرس بنجاح", "success");
+      showToast(
+        isEn ? "Lesson added successfully" : "تم إضافة الدرس بنجاح",
+        "success"
+      );
       fetchCourses();
       if (expandedCourse === selectedCourse.id) {
         fetchLessons(selectedCourse.id);
@@ -476,6 +553,33 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
     } catch (error) {
       console.error("Failed to delete lesson:", error);
       showToast(isEn ? "Failed to delete lesson" : "فشل حذف الدرس", "error");
+    }
+  };
+
+  const handleDeleteResource = async (resourceId: number) => {
+    if (
+      !window.confirm(
+        isEn
+          ? "Are you sure you want to delete this resource?"
+          : "هل أنت متأكد من حذف هذا المورد؟"
+      )
+    ) {
+      return;
+    }
+
+    try {
+      // Note: You may need to add a delete endpoint for resources if it doesn't exist
+      // For now, we'll use a generic delete approach
+      await apiClient.delete(`/api/courses/resources/${resourceId}/`);
+      showToast(isEn ? "Resource deleted" : "تم حذف المورد", "success");
+
+      if (selectedCourse) {
+        fetchLessons(selectedCourse.id);
+      }
+      fetchCourses();
+    } catch (error) {
+      console.error("Failed to delete resource:", error);
+      showToast(isEn ? "Failed to delete resource" : "فشل حذف المورد", "error");
     }
   };
 
@@ -554,7 +658,9 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       <Reveal key={course.id} delay={index * 0.05} width="100%">
         <Card
           className={`!p-0 overflow-hidden group border-2 transition-all h-full flex flex-col ${
-            isSelected ? "border-primary bg-primary/5" : "border-transparent hover:border-primary/50"
+            isSelected
+              ? "border-primary bg-primary/5"
+              : "border-transparent hover:border-primary/50"
           }`}
         >
           {/* Selection Checkbox */}
@@ -572,12 +678,16 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
               src={course.thumbnail_url || resolveImageUrl(course.thumbnail)}
               className="w-full h-full object-cover"
               alt={course.title}
-              onError={(e) =>
-                handleImageError(e, undefined, course.title)
-              }
+              onError={(e) => handleImageError(e, undefined, course.title)}
             />
             <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md text-white text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wide border border-white/10">
-              {course.status === "published" ? (isEn ? "Published" : "منشور") : isEn ? "Draft" : "مسودة"}
+              {course.status === "published"
+                ? isEn
+                  ? "Published"
+                  : "منشور"
+                : isEn
+                ? "Draft"
+                : "مسودة"}
             </div>
 
             {/* Draft indicator */}
@@ -621,19 +731,25 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   <div className="text-sm font-bold text-slate-900 dark:text-white">
                     {stats.students}
                   </div>
-                  <p className="text-[10px] text-slate-500">{isEn ? "Students" : "طلاب"}</p>
+                  <p className="text-[10px] text-slate-500">
+                    {isEn ? "Students" : "طلاب"}
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="text-sm font-bold text-emerald-600 dark:text-emerald-400">
                     ${stats.revenue}
                   </div>
-                  <p className="text-[10px] text-slate-500">{isEn ? "Revenue" : "الإيرادات"}</p>
+                  <p className="text-[10px] text-slate-500">
+                    {isEn ? "Revenue" : "الإيرادات"}
+                  </p>
                 </div>
                 <div className="text-center">
                   <div className="text-sm font-bold text-sky-600 dark:text-sky-400">
                     {stats.completionRate}%
                   </div>
-                  <p className="text-[10px] text-slate-500">{isEn ? "Complete" : "مكتمل"}</p>
+                  <p className="text-[10px] text-slate-500">
+                    {isEn ? "Complete" : "مكتمل"}
+                  </p>
                 </div>
               </div>
             )}
@@ -659,10 +775,21 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
               >
                 <span className="flex items-center gap-2">
                   <BookOpen size={14} />
-                  {isEn ? "Manage Lessons" : "إدارة الدروس"}
+                  {isEn ? "Manage Content" : "إدارة المحتوى"}
                 </span>
-                <span className="bg-primary/20 px-2 py-0.5 rounded text-[10px] font-bold">
-                  {course.lessons?.length || 0}
+                <span className="flex gap-1">
+                  <span
+                    className="bg-primary/20 px-2 py-0.5 rounded text-[10px] font-bold"
+                    title={isEn ? "Lessons" : "الدروس"}
+                  >
+                    {course.lessons?.length || 0}L
+                  </span>
+                  <span
+                    className="bg-amber-500/20 px-2 py-0.5 rounded text-[10px] font-bold text-amber-600 dark:text-amber-400"
+                    title={isEn ? "Resources" : "الموارد"}
+                  >
+                    {course.resources?.length || 0}R
+                  </span>
                 </span>
               </Button>
 
@@ -707,7 +834,8 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
           <div>
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-              {isEn ? "My Courses" : "كورساتي"} ({filteredAndSortedCourses.length})
+              {isEn ? "My Courses" : "كورساتي"} (
+              {filteredAndSortedCourses.length})
             </h1>
             <p className="text-slate-500 dark:text-slate-400 mt-1">
               {isEn
@@ -770,11 +898,15 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                 <select
                   value={selectedCategory || ""}
                   onChange={(e) =>
-                    setSelectedCategory(e.target.value ? parseInt(e.target.value) : null)
+                    setSelectedCategory(
+                      e.target.value ? parseInt(e.target.value) : null
+                    )
                   }
                   className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20"
                 >
-                  <option value="">{isEn ? "All Categories" : "جميع الفئات"}</option>
+                  <option value="">
+                    {isEn ? "All Categories" : "جميع الفئات"}
+                  </option>
                   {categories.map((cat) => (
                     <option key={cat.id} value={cat.id}>
                       {cat.name}
@@ -791,12 +923,16 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                 <select
                   value={statusFilter}
                   onChange={(e) =>
-                    setStatusFilter(e.target.value as "all" | "published" | "draft")
+                    setStatusFilter(
+                      e.target.value as "all" | "published" | "draft"
+                    )
                   }
                   className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20"
                 >
                   <option value="all">{isEn ? "All" : "الكل"}</option>
-                  <option value="published">{isEn ? "Published" : "منشور"}</option>
+                  <option value="published">
+                    {isEn ? "Published" : "منشور"}
+                  </option>
                   <option value="draft">{isEn ? "Draft" : "مسودة"}</option>
                 </select>
               </div>
@@ -835,17 +971,27 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   <select
                     value={sortBy}
                     onChange={(e) =>
-                      setSortBy(e.target.value as "title" | "price" | "students" | "date")
+                      setSortBy(
+                        e.target.value as
+                          | "title"
+                          | "price"
+                          | "students"
+                          | "date"
+                      )
                     }
                     className="flex-1 px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary"
                   >
                     <option value="title">{isEn ? "Title" : "العنوان"}</option>
                     <option value="price">{isEn ? "Price" : "السعر"}</option>
-                    <option value="students">{isEn ? "Students" : "الطلاب"}</option>
+                    <option value="students">
+                      {isEn ? "Students" : "الطلاب"}
+                    </option>
                     <option value="date">{isEn ? "Date" : "التاريخ"}</option>
                   </select>
                   <button
-                    onClick={() => setSortOrder(sortOrder === "asc" ? "desc" : "asc")}
+                    onClick={() =>
+                      setSortOrder(sortOrder === "asc" ? "desc" : "asc")
+                    }
                     className="px-3 py-2 bg-primary/10 text-primary rounded-lg hover:bg-primary/20 transition-all"
                   >
                     {sortOrder === "asc" ? "↑" : "↓"}
@@ -904,7 +1050,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
             <form onSubmit={handleCreateCourse} className="p-6 space-y-4">
               {draftCourseId === -1 && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center gap-2">
-                  <Clock size={16} className="text-amber-600 dark:text-amber-400" />
+                  <Clock
+                    size={16}
+                    className="text-amber-600 dark:text-amber-400"
+                  />
                   <p className="text-sm text-amber-700 dark:text-amber-300">
                     {isEn ? "Draft auto-saved" : "تم حفظ المسودة تلقائياً"}
                   </p>
@@ -957,7 +1106,9 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                     onChange={(e) =>
                       setNewCourse({
                         ...newCourse,
-                        category: e.target.value ? parseInt(e.target.value) : null,
+                        category: e.target.value
+                          ? parseInt(e.target.value)
+                          : null,
                       })
                     }
                     className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -1001,11 +1152,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                 </label>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                isLoading={isSubmitting}
-              >
+              <Button type="submit" className="w-full" isLoading={isSubmitting}>
                 <Plus size={18} /> {isEn ? "Create Course" : "إنشاء الكورس"}
               </Button>
             </form>
@@ -1036,7 +1183,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
             <form onSubmit={handleUpdateCourse} className="p-6 space-y-4">
               {draftCourseId === selectedCourse.id && (
                 <div className="p-3 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-lg flex items-center gap-2">
-                  <Clock size={16} className="text-amber-600 dark:text-amber-400" />
+                  <Clock
+                    size={16}
+                    className="text-amber-600 dark:text-amber-400"
+                  />
                   <p className="text-sm text-amber-700 dark:text-amber-300">
                     {isEn ? "Draft auto-saved" : "تم حفظ المسودة تلقائياً"}
                   </p>
@@ -1088,7 +1238,9 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                     onChange={(e) =>
                       setNewCourse({
                         ...newCourse,
-                        category: e.target.value ? parseInt(e.target.value) : null,
+                        category: e.target.value
+                          ? parseInt(e.target.value)
+                          : null,
                       })
                     }
                     className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20"
@@ -1102,11 +1254,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                 </div>
               </div>
 
-              <Button
-                type="submit"
-                className="w-full"
-                isLoading={isSubmitting}
-              >
+              <Button type="submit" className="w-full" isLoading={isSubmitting}>
                 <Check size={18} /> {isEn ? "Save Changes" : "حفظ التغييرات"}
               </Button>
             </form>
@@ -1166,7 +1314,11 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                 <div className="border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl p-8 text-center">
                   <input
                     type="file"
-                    accept={newContent.type === "video" ? "video/*" : "application/pdf"}
+                    accept={
+                      newContent.type === "video"
+                        ? "video/*"
+                        : "application/pdf"
+                    }
                     onChange={(e) =>
                       setNewContent({
                         ...newContent,
@@ -1209,8 +1361,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   className="w-full"
                   isLoading={isSubmitting}
                 >
-                  <Upload size={18} />{" "}
-                  {isEn ? "Add Content" : "إضافة المحتوى"}
+                  <Upload size={18} /> {isEn ? "Add Content" : "إضافة المحتوى"}
                 </Button>
               </form>
             </div>
@@ -1295,84 +1446,169 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   </div>
                 </form>
               ) : (
-                <div className="space-y-4">
-                  {lessons && lessons.length > 0 ? (
-                    <>
-                      <div className="grid grid-cols-1 gap-3">
-                        {lessons.map((lesson: any, index: number) => (
-                          <div
-                            key={lesson.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, lesson.id)}
-                            onDragOver={handleDragOver}
-                            onDrop={() => handleDropLesson(lesson.id)}
-                            className={`p-4 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-white/5 dark:to-white/10 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary/50 transition-all group cursor-grab active:cursor-grabbing ${
-                              draggingLesson === lesson.id ? "opacity-50" : ""
-                            }`}
-                          >
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex gap-3 flex-1">
-                                <GripVertical
-                                  size={16}
-                                  className="text-slate-400 mt-1 shrink-0"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex items-center gap-3 mb-2">
-                                    <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
-                                      {index + 1}
+                <div className="space-y-6">
+                  {/* LESSONS SECTION */}
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <Video size={16} /> {isEn ? "Lessons" : "الدروس"}
+                    </h4>
+                    {lessons && lessons.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-1 gap-3">
+                          {lessons.map((lesson: any, index: number) => (
+                            <div
+                              key={lesson.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, lesson.id)}
+                              onDragOver={handleDragOver}
+                              onDrop={() => handleDropLesson(lesson.id)}
+                              className={`p-4 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-white/5 dark:to-white/10 rounded-xl border border-slate-200 dark:border-white/10 hover:border-primary/50 transition-all group cursor-grab active:cursor-grabbing ${
+                                draggingLesson === lesson.id ? "opacity-50" : ""
+                              }`}
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex gap-3 flex-1">
+                                  <GripVertical
+                                    size={16}
+                                    className="text-slate-400 mt-1 shrink-0"
+                                  />
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center gap-3 mb-2">
+                                      <div className="w-8 h-8 rounded-lg bg-primary/20 text-primary flex items-center justify-center text-xs font-bold shrink-0">
+                                        {index + 1}
+                                      </div>
+                                      <h4 className="font-bold text-slate-900 dark:text-white truncate">
+                                        {lesson.title}
+                                      </h4>
                                     </div>
-                                    <h4 className="font-bold text-slate-900 dark:text-white truncate">
-                                      {lesson.title}
-                                    </h4>
+                                    {lesson.description && (
+                                      <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 ml-11">
+                                        {lesson.description}
+                                      </p>
+                                    )}
                                   </div>
-                                  {lesson.description && (
-                                    <p className="text-xs text-slate-600 dark:text-slate-400 line-clamp-2 ml-11">
-                                      {lesson.description}
-                                    </p>
-                                  )}
+                                </div>
+                                <div className="flex gap-2 shrink-0">
+                                  <button
+                                    onClick={() => handleEditLesson(lesson)}
+                                    className="p-2 bg-blue-500/20 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all"
+                                    title={isEn ? "Edit" : "تحرير"}
+                                  >
+                                    <Edit2 size={16} />
+                                  </button>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteLesson(lesson.id)
+                                    }
+                                    className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
+                                    title={isEn ? "Delete" : "حذف"}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
                                 </div>
                               </div>
-                              <div className="flex gap-2 shrink-0">
-                                <button
-                                  onClick={() => handleEditLesson(lesson)}
-                                  className="p-2 bg-blue-500/20 text-blue-500 rounded-lg hover:bg-blue-500 hover:text-white transition-all"
-                                  title={isEn ? "Edit" : "تحرير"}
-                                >
-                                  <Edit2 size={16} />
-                                </button>
-                                <button
-                                  onClick={() => handleDeleteLesson(lesson.id)}
-                                  className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
-                                  title={isEn ? "Delete" : "حذف"}
-                                >
-                                  <Trash2 size={16} />
-                                </button>
-                              </div>
                             </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-6 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+                          ))}
+                        </div>
+                        <div className="mt-3 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {isEn
+                              ? `Total: ${lessons.length} lesson${
+                                  lessons.length !== 1 ? "s" : ""
+                                }`
+                              : `الإجمالي: ${lessons.length} درس`}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="py-6 text-center bg-slate-50 dark:bg-white/5 rounded-lg">
+                        <Video
+                          size={32}
+                          className="mx-auto mb-2 text-slate-300"
+                        />
                         <p className="text-xs text-slate-600 dark:text-slate-400">
-                          {isEn
-                            ? `Total: ${lessons.length} lesson${
-                                lessons.length !== 1 ? "s" : ""
-                              }`
-                            : `الإجمالي: ${lessons.length} درس`}
+                          {isEn ? "No Lessons Yet" : "لا توجد دروس بعد"}
                         </p>
                       </div>
-                    </>
-                  ) : (
-                    <div className="py-12 text-center">
-                      <Video
-                        size={48}
-                        className="mx-auto mb-4 text-slate-300"
-                      />
-                      <h4 className="font-bold text-slate-900 dark:text-white mb-2">
-                        {isEn ? "No Lessons Yet" : "لا توجد دروس بعد"}
-                      </h4>
-                    </div>
-                  )}
+                    )}
+                  </div>
+
+                  {/* RESOURCES SECTION */}
+                  <div>
+                    <h4 className="font-bold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
+                      <FileText size={16} /> {isEn ? "Resources" : "الموارد"}
+                    </h4>
+                    {resources && resources.length > 0 ? (
+                      <>
+                        <div className="grid grid-cols-1 gap-3">
+                          {resources.map((resource: any, index: number) => (
+                            <div
+                              key={resource.id}
+                              className="p-4 bg-gradient-to-r from-amber-50 to-amber-100 dark:from-amber-900/20 dark:to-amber-900/10 rounded-xl border border-amber-200 dark:border-amber-700/30 hover:border-amber-400 transition-all"
+                            >
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex gap-3 flex-1 min-w-0">
+                                  <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-xs font-bold shrink-0 mt-0.5">
+                                    {index + 1}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <h4 className="font-bold text-slate-900 dark:text-white truncate mb-1">
+                                      {resource.title}
+                                    </h4>
+                                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                                      {isEn ? "Added" : "تم الإضافة"}:{" "}
+                                      {new Date(
+                                        resource.created_at
+                                      ).toLocaleDateString()}
+                                    </p>
+                                  </div>
+                                </div>
+                                <div className="flex gap-2 shrink-0">
+                                  <a
+                                    href={resource.file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 bg-green-500/20 text-green-600 dark:text-green-400 rounded-lg hover:bg-green-500 hover:text-white transition-all"
+                                    title={isEn ? "Download" : "تحميل"}
+                                  >
+                                    <Upload size={16} />
+                                  </a>
+                                  <button
+                                    onClick={() =>
+                                      handleDeleteResource(resource.id)
+                                    }
+                                    className="p-2 bg-red-500/20 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
+                                    title={isEn ? "Delete" : "حذف"}
+                                  >
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 p-3 bg-amber-500/5 border border-amber-500/20 rounded-lg">
+                          <p className="text-xs text-slate-600 dark:text-slate-400">
+                            {isEn
+                              ? `Total: ${resources.length} resource${
+                                  resources.length !== 1 ? "s" : ""
+                                }`
+                              : `الإجمالي: ${resources.length} مورد`}
+                          </p>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="py-6 text-center bg-slate-50 dark:bg-white/5 rounded-lg">
+                        <FileText
+                          size={32}
+                          className="mx-auto mb-2 text-slate-300"
+                        />
+                        <p className="text-xs text-slate-600 dark:text-slate-400">
+                          {isEn ? "No Resources Yet" : "لا توجد موارد بعد"}
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
@@ -1382,12 +1618,25 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                 <Button
                   onClick={() => {
                     setShowLessonsManager(false);
+                    setNewContent({ ...newContent, type: "video" });
                     setShowLessonModal(true);
                   }}
                   className="flex-1"
                 >
                   <Plus size={18} />
                   {isEn ? "Add Lesson" : "إضافة درس"}
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowLessonsManager(false);
+                    setNewContent({ ...newContent, type: "pdf" });
+                    setShowLessonModal(true);
+                  }}
+                  variant="secondary"
+                  className="flex-1"
+                >
+                  <Plus size={18} />
+                  {isEn ? "Add Resource" : "إضافة مورد"}
                 </Button>
               </div>
             )}
@@ -1457,9 +1706,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   </div>
                 ) : (
                   <div className="p-6 text-center text-slate-500 text-sm border-2 border-dashed border-slate-300 dark:border-white/10 rounded-lg">
-                    {isEn
-                      ? "No categories yet"
-                      : "لا توجد فئات حتى الآن"}
+                    {isEn ? "No categories yet" : "لا توجد فئات حتى الآن"}
                   </div>
                 )}
               </div>
@@ -1478,7 +1725,10 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
           <Card className="w-full max-w-2xl relative z-10 !p-0 shadow-2xl animate-in zoom-in duration-200 max-h-[90vh] overflow-y-auto">
             <div className="relative h-64 overflow-hidden bg-slate-200">
               <img
-                src={previewCourse.thumbnail_url || resolveImageUrl(previewCourse.thumbnail)}
+                src={
+                  previewCourse.thumbnail_url ||
+                  resolveImageUrl(previewCourse.thumbnail)
+                }
                 className="w-full h-full object-cover"
                 alt={previewCourse.title}
               />
@@ -1521,9 +1771,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   </p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-amber-600">
-                    4.8★
-                  </div>
+                  <div className="text-2xl font-bold text-amber-600">4.8★</div>
                   <p className="text-xs text-slate-500 mt-1">
                     {isEn ? "Rating" : "التقييم"}
                   </p>
@@ -1556,9 +1804,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                     </div>
                   )) || (
                     <p className="text-slate-500 text-sm">
-                      {isEn
-                        ? "No lessons added yet"
-                        : "لم يتم إضافة دروس بعد"}
+                      {isEn ? "No lessons added yet" : "لم يتم إضافة دروس بعد"}
                     </p>
                   )}
                 </div>

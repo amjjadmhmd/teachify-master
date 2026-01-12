@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, BookOpen, ShoppingBag, Heart, Users, ShoppingCart, 
-  LogOut, X, Medal, ClipboardList, GraduationCap, Sparkles
+  LogOut, X, Medal, ClipboardList, GraduationCap, Sparkles, Award
 } from 'lucide-react';
 import { User, Lang, ViewMode } from '../types';
 import { ASSETS } from '../constants/assets';
@@ -32,6 +32,7 @@ const Sidebar: React.FC<SidebarProps> = ({
     { id: ViewMode.DASHBOARD, label: isEn ? 'Dashboard' : 'لوحة التحكم', icon: LayoutDashboard },
     { id: ViewMode.WORKSPACE, label: isEn ? 'AI Workspace' : 'مساحة الذكاء', icon: Sparkles },
     { id: ViewMode.EXAM_LIST, label: isEn ? 'Assessments' : 'التقييمات', icon: ClipboardList },
+    { id: ViewMode.CERTIFICATES, label: isEn ? 'Certificates' : 'الشهادات', icon: Award },
     { id: ViewMode.MARKETPLACE, label: isEn ? 'Catalog' : 'الكتالوج', icon: ShoppingBag },
     { id: ViewMode.WISHLIST, label: isEn ? 'Saved' : 'المحفوظات', icon: Heart },
   ];

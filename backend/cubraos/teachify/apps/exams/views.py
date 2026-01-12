@@ -199,22 +199,17 @@ class ExamViewSet(viewsets.ModelViewSet):
         attempt.finished_at = timezone.now()
         attempt.save()
 
-        # 🔹 إنشاء الشهادة لو ناجح
-        if attempt.is_passed:
-            Certificate.objects.get_or_create(
-                attempt=attempt,
-                student=student,
-                exam=exam,
-                defaults={
-                    "certificate_code": uuid.uuid4().hex[:10].upper(),
-                    "verification_code": uuid.uuid4().hex[:10].upper(),
-                }
-            )
+        # 🔹 Certificate creation is now manual only - instructor decides via separate endpoint
+        # No auto-generation of certificates
 
         # Send notification to student about their results
         from apps.common.models import Notification
         result_type = "success" if attempt.is_passed else "warning"
         result_message = f"You {'passed' if attempt.is_passed else 'failed'} the exam '{exam.title}' with a score of {score:.1f}%"
+        
+        # Add message about certificate request for passed exams
+        if attempt.is_passed:
+            result_message += "\n\nWait for your instructor to issue a certificate."
         
         Notification.objects.create(
             user=student,
@@ -306,20 +301,25 @@ class StudentAnswerViewSet(viewsets.ModelViewSet):
 # =====================================================
 
 class CertificateViewSet(viewsets.ModelViewSet):
-    queryset = Certificate.objects.all()
+    queryset = Certificate.objects.select_related('student', 'exam', 'attempt').all()
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         user = self.request.user
         if user.role == "student":
-            return Certificate.objects.filter(student=user)
-        return Certificate.objects.all()
+            return Certificate.objects.select_related('student', 'exam', 'attempt').filter(student=user)
+        return Certificate.objects.select_related('student', 'exam', 'attempt').all()
     
     def get_serializer_class(self):
         if self.action == 'create':
             from .serializers import CertificateCreateSerializer
             return CertificateCreateSerializer
         return CertificateSerializer
+    
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context['request'] = self.request
+        return context
     
     def perform_create(self, serializer):
         serializer.save()

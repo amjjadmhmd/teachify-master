@@ -220,7 +220,7 @@ class DashboardViewSet(viewsets.ViewSet):
         # Get enrolled courses
         enrollments = Enrollment.objects.filter(
             student=student
-        ).select_related('course').prefetch_related('course__lessons')
+        ).select_related('course').prefetch_related('course__lessons', 'course__resources')
         
         courses_data = []
         for enrollment in enrollments:
@@ -254,6 +254,20 @@ class DashboardViewSet(viewsets.ViewSet):
                     'is_completed': is_completed,
                 })
             
+            # Get resources with proper URLs
+            resources_data = []
+            for resource in course.resources.all():
+                resource_url = resource.file.url if resource.file else None
+                if resource_url and request:
+                    resource_url = request.build_absolute_uri(resource_url)
+                resources_data.append({
+                    'id': resource.id,
+                    'title': resource.title,
+                    'file': resource.file.name if resource.file else None,
+                    'file_url': resource_url,
+                    'created_at': resource.created_at.isoformat(),
+                })
+            
             # Use serializer to get proper thumbnail URL
             from .serializers import CourseSerializer
             course_serializer = CourseSerializer(course, context={'request': request})
@@ -271,6 +285,7 @@ class DashboardViewSet(viewsets.ViewSet):
                 'instructor': course.instructor.username,
                 'enrolled_at': enrollment.enrolled_at.strftime('%Y-%m-%d'),
                 'lessons': lessons_data,  # Add lessons with completion status
+                'resources': resources_data,  # Add resources with file URLs
                 'category': course.category.id if course.category else None,
                 'category_name': course.category.name if course.category else None,
             })

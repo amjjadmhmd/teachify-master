@@ -121,11 +121,7 @@ const ExamRunner: React.FC<ExamRunnerProps> = ({ exam, lang, onExit }) => {
       setAnswers(prev => ({ ...prev, [qId]: option }));
   };
 
-  const handleRequestCertificate = async () => {
-    if (!user || certRequested || !exam.instructor_id) return;
-    await api.notifications.requestCertificate(exam.course_title, user, exam.instructor_id);
-    setCertRequested(true);
-  };
+  // Certificate is now manually issued by instructor - no request button
 
   if (loadingQuestions) return <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">Loading Security Protocol...</div>;
 
@@ -153,13 +149,11 @@ const ExamRunner: React.FC<ExamRunnerProps> = ({ exam, lang, onExit }) => {
 
                   <div className="space-y-4">
                       {result.is_passed && (
-                          <Button 
-                            onClick={handleRequestCertificate} 
-                            disabled={certRequested}
-                            className={`w-full bg-gradient-to-r ${certRequested ? 'from-slate-600 to-slate-700' : 'from-amber-500 to-yellow-600'} border-none text-white shadow-xl shadow-amber-500/20`}
-                          >
-                             {certRequested ? (isEn ? "Request Pending..." : "طلبك قيد المراجعة...") : (isEn ? "Request Official Certificate" : "طلب شهادة رسمية")}
-                          </Button>
+                          <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-xl text-blue-400 text-sm text-center">
+                            {isEn 
+                              ? "✓ Passed! Your instructor will issue a certificate." 
+                              : "✓ نجحت! سيقوم المعلم بإصدار شهادة."}
+                          </div>
                       )}
                       
                       <Button onClick={onExit} variant="outline" className="w-full border-white/20 text-white hover:bg-white/10">

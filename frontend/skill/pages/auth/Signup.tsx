@@ -30,6 +30,7 @@ interface FormData {
   confirmPassword: string;
   phone_number: string;
   role: 'student' | 'instructor';
+  instructor_code: string;
 }
 
 interface FormErrors {
@@ -38,6 +39,7 @@ interface FormErrors {
   password?: string;
   confirmPassword?: string;
   phone_number?: string;
+  instructor_code?: string;
   general?: string;
 }
 
@@ -55,7 +57,8 @@ const SignupPage: React.FC<SignupProps> = ({
     password: '',
     confirmPassword: '',
     phone_number: '',
-    role: 'student'
+    role: 'student',
+    instructor_code: ''
   });
   
   const [errors, setErrors] = useState<FormErrors>({});
@@ -99,6 +102,13 @@ const SignupPage: React.FC<SignupProps> = ({
     // Phone validation (optional)
     if (formData.phone_number && !/^\+?[0-9]{10,15}$/.test(formData.phone_number.replace(/\s/g, ''))) {
       newErrors.phone_number = isEn ? 'Invalid phone number' : 'رقم الهاتف غير صحيح';
+    }
+    
+    // Instructor code validation
+    if (formData.role === 'instructor' && !formData.instructor_code) {
+      newErrors.instructor_code = isEn 
+        ? 'Instructor verification code is required' 
+        : 'رمز التحقق من المدرب مطلوب';
     }
     
     setErrors(newErrors);
@@ -149,7 +159,8 @@ const SignupPage: React.FC<SignupProps> = ({
         username: formData.username || undefined,
         password: formData.password,
         role: formData.role,
-        phone_number: formData.phone_number || undefined
+        phone_number: formData.phone_number || undefined,
+        instructor_code: formData.instructor_code || undefined
       };
 
       // Call registration service
@@ -361,6 +372,29 @@ const SignupPage: React.FC<SignupProps> = ({
                           <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.phone_number}</p>
                         )}
                       </div>
+
+                      {/* Instructor Code (Only for Instructors) */}
+                      {formData.role === 'instructor' && (
+                        <div className="md:col-span-2">
+                          <Input 
+                              label={isEn ? "Instructor Verification Code" : "رمز التحقق من المدرب"} 
+                              placeholder={isEn ? "Enter verification code" : "أدخل رمز التحقق"} 
+                              value={formData.instructor_code} 
+                              type="password"
+                              onChange={(e) => handleChange('instructor_code', e.target.value)} 
+                              required={formData.role === 'instructor'}
+                              disabled={loading}
+                          />
+                          {errors.instructor_code && (
+                            <p className="text-red-500 text-[10px] mt-1 font-bold">{errors.instructor_code}</p>
+                          )}
+                          <p className="text-slate-500 text-[10px] mt-2 font-semibold">
+                            {isEn 
+                              ? "Contact an administrator if you don't have a code" 
+                              : "تواصل مع المسؤول إذا لم تكن لديك رمز"}
+                          </p>
+                        </div>
+                      )}
                       
                       {/* Password */}
                       <div className="relative">

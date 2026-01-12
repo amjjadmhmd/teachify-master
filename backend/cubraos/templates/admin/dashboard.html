@@ -1,0 +1,51 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Teachify Dashboard</h1>
+            <p>Welcome to the admin panel!</p>
+        </div>
+    </div>
+    
+    <div class="row mt-4">
+        <div class="col-md-3">
+            <div class="small-box bg-info">
+                <div class="inner">
+                    <h3>{{ total_users }}</h3>
+                    <p>Total Users</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="small-box bg-success">
+                <div class="inner">
+                    <h3>{{ total_courses }}</h3>
+                    <p>Total Courses</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="small-box bg-warning">
+                <div class="inner">
+                    <h3>{{ total_exams }}</h3>
+                    <p>Total Exams</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-3">
+            <div class="small-box bg-danger">
+                <div class="inner">
+                    <h3>{{ total_certificates }}</h3>
+                    <p>Certificates Issued</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

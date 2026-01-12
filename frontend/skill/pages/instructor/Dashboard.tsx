@@ -103,21 +103,32 @@ useEffect(() => {
                       </div>
                    </Card>
 
-                   {/* Pending Assignments Section */}
-                   <Card className="!p-6">
-                       <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><FileCheck size={18} className="text-primary"/> {isEn ? "Pending Assignments" : "مهام بانتظار التصحيح"}</h3>
-                       <div className="space-y-4">
-                           {data.pending_assignments.map((task: any) => (
-                               <div key={task.id} className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 flex justify-between items-center group">
-                                   <div>
-                                       <h4 className="font-bold text-sm text-slate-900 dark:text-white">{task.title}</h4>
-                                       <p className="text-[10px] text-slate-500">{task.student_name} • {task.date}</p>
-                                   </div>
-                                   <Button className="!py-1.5 !px-4 text-[10px] opacity-0 group-hover:opacity-100 transition-opacity">Grade Now</Button>
-                               </div>
-                           ))}
-                       </div>
-                   </Card>
+                   {/* Pending Assessments Section */}
+                    <Card className="!p-6">
+                        <h3 className="font-bold text-slate-900 dark:text-white mb-6 flex items-center gap-2"><Clock size={18} className="text-orange-500"/> {isEn ? "Pending Assessments" : "التقييمات المعلقة"}</h3>
+                        <div className="space-y-4">
+                            {data.pending_assignments && data.pending_assignments.length > 0 ? (
+                                data.pending_assignments.map((task: any) => (
+                                    <div key={task.id} className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 hover:border-orange-500/50 transition-colors">
+                                        <div className="flex justify-between items-start gap-3">
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">{task.title}</h4>
+                                                <p className="text-[10px] text-slate-500 mt-1">{task.student_name}</p>
+                                                <p className="text-[9px] text-slate-400 mt-1">{task.course_title}</p>
+                                                <p className="text-[10px] text-slate-500 mt-2">{isEn ? 'Score' : 'الدرجة'}: {task.score}%</p>
+                                                <p className="text-[9px] text-slate-400 mt-1">{task.date}</p>
+                                            </div>
+                                            <Button className="!py-1.5 !px-3 text-[10px] whitespace-nowrap flex-shrink-0">{isEn ? 'Review' : 'مراجعة'}</Button>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div className="p-8 text-center text-slate-500 dark:text-slate-400">
+                                    <p className="text-sm">{isEn ? 'No pending assessments' : 'لا توجد تقييمات معلقة'}</p>
+                                </div>
+                            )}
+                        </div>
+                    </Card>
                 </div>
 
                 <div className="lg:col-span-1">

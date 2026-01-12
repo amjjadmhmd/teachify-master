@@ -7,6 +7,7 @@ export interface User {
   phone_number?: string;
   avatar?: string;
   is_verified: boolean;
+  instructor_verified?: boolean;
   token?: string;
 }
 
@@ -27,6 +28,7 @@ export interface RegisterRequest {
   password: string;
   role: 'student' | 'instructor';
   phone_number?: string;
+  instructor_code?: string;
 }
 
 export interface TokenRefreshRequest {
@@ -269,12 +271,14 @@ export interface Certificate {
   attempt?: number;
   student: number;
   exam?: number;
-  course_title: string;
+  exam_title?: string;
+  course_title?: string;
   certificate_code: string;
   verification_code: string;
   issued_at: string;
   created_at?: string;
   certificate_url?: string;
+  image?: string;
   image_url?: string;
 }
 

@@ -22,7 +22,10 @@ class User(AbstractUser):
     # 03. الحقول الإضافية (Profile Info)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     avatar = models.ImageField(upload_to="avatars/%Y/%m/", null=True, blank=True)
-    is_verified = models.BooleanField(default=False) 
+    is_verified = models.BooleanField(default=False)
+    
+    # 04. Instructor Verification
+    instructor_verified = models.BooleanField(default=False) 
 
     # 04. إعدادات تسجيل الدخول (Authentication Config)
     USERNAME_FIELD = 'email'  # الدخول بالإيميل بدلاً من الاسم

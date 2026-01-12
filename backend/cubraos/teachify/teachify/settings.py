@@ -11,7 +11,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = config('SECRET_KEY')
 
 DEBUG = config('DEBUG', default=True, cast=bool)
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent
 
 ALLOWED_HOSTS = ['*']
 
@@ -126,9 +126,17 @@ USE_I18N = True
 USE_TZ = True
 
 # 9️⃣ الملفات الثابتة والميديا (عشان الصور والفيديوهات تظهر)
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+# STATIC_URL = 'static/'
+# STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    BASE_DIR / 'static',
+]
+
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -161,10 +169,9 @@ JAZZMIN_SETTINGS = {
     "site_brand": "Teachify",
     "site_logo": "images/logo.png",  # Place your logo in static/images/
     "site_logo_classes": "img-circle",  # Optional: makes logo circular
-    "site_icon": "images/favicon.ico",  # Browser tab icon
-    
-    # Welcome text on the login screen
-    "welcome_sign": "Welcome to Teachify Admin Panel",
+    # "site_icon": "images/favicon.ico",  # Browser tab icon
+    # "login_logo": "images/logo.png",
+    "welcome_sign": "Welcome Back To Teachify Educational Platform",
     
     # Copyright on the footer
     "copyright": "Teachify Educational Platform © 2024",
@@ -198,7 +205,7 @@ JAZZMIN_SETTINGS = {
     
     # ===== SIDE MENU =====
     "show_sidebar": True,
-    "navigation_expanded": True,  # Expand navigation by default
+    "navigation_expanded": True, 
     "hide_apps": [],  # List of apps to hide
     "hide_models": [],  # List of models to hide
     
@@ -281,6 +288,7 @@ JAZZMIN_SETTINGS = {
 # ============================================
 
 JAZZMIN_UI_TWEAKS = {
+      "custom_css": "css/custom_admin.css",
     # ===== THEME =====
     "navbar": "navbar-dark",  # navbar-dark or navbar-light
     "no_navbar_border": False,
@@ -326,99 +334,9 @@ JAZZMIN_UI_TWEAKS = {
     "actions_sticky_top": True,  # Keep action dropdown visible when scrolling
 }
 
-# ============================================
-# OPTIONAL: CUSTOM ADMIN STYLING
-# ============================================
 
-# Create: static/css/custom_admin.css
-"""
-/* Custom Teachify Admin Styles */
-
-/* Logo styling */
-.brand-link .brand-image {
-    max-height: 40px;
-    width: auto;
-}
-
-/* Custom primary color (Educational Purple/Blue) */
-:root {
-    --primary-color: #6366f1;  /* Indigo */
-    --secondary-color: #8b5cf6;  /* Purple */
-    --success-color: #10b981;  /* Green */
-    --info-color: #3b82f6;  /* Blue */
-    --warning-color: #f59e0b;  /* Amber */
-    --danger-color: #ef4444;  /* Red */
-}
-
-/* Sidebar customization */
-.sidebar-dark-primary .nav-sidebar>.nav-item>.nav-link.active {
-    background-color: var(--primary-color);
-    color: #fff;
-}
-
-/* Cards styling */
-.card {
-    border-radius: 8px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-/* Button enhancements */
-.btn-primary {
-    background-color: var(--primary-color);
-    border-color: var(--primary-color);
-}
-
-.btn-primary:hover {
-    background-color: #4f46e5;
-    border-color: #4f46e5;
-}
-
-/* Dashboard stats cards */
-.small-box {
-    border-radius: 8px;
-    transition: transform 0.2s;
-}
-
-.small-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-}
-
-/* Table improvements */
-.table thead th {
-    background-color: #f9fafb;
-    font-weight: 600;
-    border-bottom: 2px solid #e5e7eb;
-}
-
-/* Login page customization */
-.login-page {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.login-box {
-    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-    border-radius: 10px;
-}
-
-/* Form improvements */
-.form-control:focus {
-    border-color: var(--primary-color);
-    box-shadow: 0 0 0 0.2rem rgba(99, 102, 241, 0.25);
-}
-
-/* Breadcrumb styling */
-.breadcrumb {
-    background-color: transparent;
-    padding: 0;
-}
-
-/* Status badges */
-.badge {
-    padding: 0.35em 0.65em;
-    font-size: 0.875rem;
-    font-weight: 500;
-}
-"""
-
+# ==========================================
+# 🔐 INSTRUCTOR VERIFICATION SETTINGS
+# ==========================================
+INSTRUCTOR_VERIFICATION_CODE = config('INSTRUCTOR_VERIFICATION_CODE', default='Tech12@')
 

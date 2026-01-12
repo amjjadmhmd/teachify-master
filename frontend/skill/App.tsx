@@ -241,6 +241,7 @@ import CartPage from "./pages/student/Cart";
 import CoursePlayer from "./pages/student/CoursePlayer";
 import ExamsList from "./pages/student/ExamsList";
 import ExamRunner from "./pages/student/ExamRunner";
+import StudentCertificates from "./pages/student/Certificates";
 import MentorsList from "./pages/MentorsList";
 import WorkspaceCanvas from "./components/WorkspaceCanvas";
 
@@ -500,6 +501,9 @@ const WhiteLabApp: React.FC = () => {
             onExit={() => setView(ViewMode.EXAM_LIST)}
           />
         ) : null;
+
+      case ViewMode.CERTIFICATES:
+        return <StudentCertificates lang={lang} theme={theme} />;
 
       case ViewMode.COURSE_EDITOR:
         return <InstructorCourses lang={lang} theme={theme} />;

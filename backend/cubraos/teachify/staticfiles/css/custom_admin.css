@@ -1,0 +1,17 @@
+/* Teachify Admin Logo Styling - Sidebar Only */
+
+.brand-link .brand-image {
+    max-height: 50px !important;
+    width: auto !important;
+    margin-right: 10px;
+}
+
+/* Make logo fit nicely in sidebar */
+.brand-link {
+    padding: 15px !important;
+}
+
+/* Optional: rounded corners instead of full circle */
+.brand-image.img-circle {
+    border-radius: 8px;
+}

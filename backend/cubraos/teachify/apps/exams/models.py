@@ -76,6 +76,7 @@ class Certificate(models.Model):
 
     certificate_code = models.CharField(max_length=20, unique=True)
     verification_code = models.CharField(max_length=20, unique=True)
+    image = models.ImageField(upload_to="certificates/", null=True, blank=True)
     issued_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

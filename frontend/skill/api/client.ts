@@ -201,6 +201,8 @@ export const api = {
     create: examsService.createExam.bind(examsService),
     createQuestion: examsService.createQuestion.bind(examsService),
     getSubmissions: examsService.getExamSubmissions.bind(examsService),
+    getCertificates: examsService.getCertificates.bind(examsService),
+    listCertificates: examsService.listCertificates.bind(examsService),
   },
 
   // Exam Attempts
