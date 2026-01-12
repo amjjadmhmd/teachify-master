@@ -312,11 +312,11 @@ class NotificationsService {
 class PublicService {
   /**
    * Get platform statistics
-   * GET /api/public/stats/
+   * GET /public/stats/
    */
   async getStats(): Promise<PlatformStats> {
     try {
-      const response = await apiClient.get<PlatformStats>('/api/public/stats/');
+      const response = await apiClient.get<PlatformStats>('/public/stats/');
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));
@@ -325,12 +325,12 @@ class PublicService {
 
   /**
    * Get public instructors list
-   * GET /api/public/instructors/
+   * GET /public/instructors/
    */
   async getInstructors(): Promise<PublicInstructor[]> {
     try {
       const response = await apiClient.get<PublicInstructor[]>(
-        '/api/public/instructors/'
+        '/public/instructors/'
       );
       return response.data;
     } catch (error) {
