@@ -121,11 +121,13 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
     description: string;
     type: "video" | "pdf";
     file: File | null;
+    duration_minutes: number | string;
   }>({
     title: "",
     description: "",
     type: "video",
     file: null,
+    duration_minutes: "",
   });
 
   const fetchCourses = async () => {
@@ -487,14 +489,24 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
 
   const handleAddContent = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedCourse || !newContent.file) return;
+    if (!selectedCourse || !newContent.file || !newContent.title) return;
+    
+    // Duration required only for videos
+    if (newContent.type === "video" && !newContent.duration_minutes) {
+      showToast(isEn ? "Please enter lesson duration" : "الرجاء إدخال مدة الدرس", "error");
+      return;
+    }
 
     setIsSubmitting(true);
     try {
       if (newContent.type === "video") {
         await api.instructor.addLesson(
           selectedCourse.id,
-          { title: newContent.title, description: newContent.description },
+          { 
+            title: newContent.title, 
+            description: newContent.description,
+            duration_minutes: parseInt(newContent.duration_minutes as string) || 0
+          },
           newContent.file
         );
       } else {
@@ -521,7 +533,12 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
           description: "",
           type: "video",
           file: null,
+          duration_minutes: "",
         });
+        // Refresh resources list if resource was added
+        if (expandedCourse === selectedCourse.id) {
+          setTimeout(() => fetchResources(selectedCourse.id), 500);
+        }
       }, 1000);
     } catch (error) {
       console.error("Failed to add content:", error);
@@ -1299,16 +1316,32 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                 />
 
                 {newContent.type === "video" && (
-                  <Input
-                    label={isEn ? "Description" : "الوصف"}
-                    value={newContent.description}
-                    onChange={(e) =>
-                      setNewContent({
-                        ...newContent,
-                        description: e.target.value,
-                      })
-                    }
-                  />
+                  <>
+                    <Input
+                      label={isEn ? "Description" : "الوصف"}
+                      value={newContent.description}
+                      onChange={(e) =>
+                        setNewContent({
+                          ...newContent,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                    <Input
+                      label={isEn ? "Duration (minutes)" : "المدة (دقائق)"}
+                      type="number"
+                      min="1"
+                      value={newContent.duration_minutes}
+                      onChange={(e) =>
+                        setNewContent({
+                          ...newContent,
+                          duration_minutes: e.target.value,
+                        })
+                      }
+                      required
+                      placeholder={isEn ? "Enter lesson duration in minutes" : "أدخل مدة الدرس بالدقائق"}
+                    />
+                  </>
                 )}
 
                 <div className="border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl p-8 text-center">

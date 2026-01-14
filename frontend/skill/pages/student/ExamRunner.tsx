@@ -74,9 +74,7 @@ const ExamRunner: React.FC<ExamRunnerProps> = ({ exam, lang, onExit }) => {
 
         const res = await api.exams.submit(exam.id, { answers: formattedAnswers });
         setResult(res);
-        
-        const attempted = JSON.parse(localStorage.getItem('attempted_exams') || '[]');
-        localStorage.setItem('attempted_exams', JSON.stringify([...attempted, exam.id]));
+        // Exam attempt is now stored in backend - no need for localStorage
         
     } catch (e) {
         console.error("Submission failed", e);

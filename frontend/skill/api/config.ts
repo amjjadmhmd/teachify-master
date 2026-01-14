@@ -13,13 +13,10 @@ const BASE_URL = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 const apiClient: AxiosInstance = axios.create({
   baseURL: BASE_URL,
   timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
 });
 
 /**
- * Request interceptor - Adds JWT token to all requests
+ * Request interceptor - Adds JWT token to all requests and sets Content-Type
  */
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
@@ -27,6 +24,20 @@ apiClient.interceptors.request.use(
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    
+    // Set Content-Type based on data type
+    // Let FormData set its own Content-Type with boundary
+    if (!(config.data instanceof FormData)) {
+      // For non-FormData requests, set JSON content type
+      if (config.headers && !config.headers['Content-Type']) {
+        config.headers['Content-Type'] = 'application/json';
+      }
+    } else {
+      // For FormData, delete Content-Type to let axios/browser set it with boundary
+      if (config.headers && config.headers['Content-Type']) {
+        delete config.headers['Content-Type'];
+      }
     }
     
     return config;

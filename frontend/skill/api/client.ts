@@ -148,14 +148,26 @@ export const api = {
   // Courses Management
   courses: {
     list: coursesService.listCourses.bind(coursesService),
+    listCourses: coursesService.listCourses.bind(coursesService),
     getDetail: coursesService.getCourseDetail.bind(coursesService),
     create: coursesService.createCourse.bind(coursesService),
     update: coursesService.updateCourse.bind(coursesService),
     delete: coursesService.deleteCourse.bind(coursesService),
     enroll: coursesService.enrollInCourse.bind(coursesService),
     getDashboard: coursesService.getStudentDashboard.bind(coursesService),
+    getStudentDashboard: coursesService.getStudentDashboard.bind(coursesService),
     getInstructorDashboard: coursesService.getInstructorDashboard.bind(coursesService),
     getStudents: coursesService.getInstructorStudents.bind(coursesService),
+    getInstructorStudents: coursesService.getInstructorStudents.bind(coursesService),
+    getTopStudents: coursesService.getTopStudents.bind(coursesService),
+    // Task operations (NEW)
+    listTasks: coursesService.listTasks.bind(coursesService),
+    createTask: coursesService.createTask.bind(coursesService),
+    getTaskDetail: coursesService.getTaskDetail.bind(coursesService),
+    getTaskSubmissions: coursesService.getTaskSubmissions.bind(coursesService),
+    submitTask: coursesService.submitTask.bind(coursesService),
+    getMySubmissions: coursesService.getMySubmissions.bind(coursesService),
+    gradeTaskSubmission: coursesService.gradeTaskSubmission.bind(coursesService),
   },
 
   // Lessons
@@ -165,6 +177,11 @@ export const api = {
     addWithVideo: coursesService.addLessonWithVideo.bind(coursesService),
     update: coursesService.updateLesson.bind(coursesService),
     delete: coursesService.deleteLesson.bind(coursesService),
+  },
+
+  // Resources
+  resources: {
+    add: coursesService.addResource.bind(coursesService),
   },
 
   // Categories

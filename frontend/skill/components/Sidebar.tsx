@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, BookOpen, ShoppingBag, Heart, Users, ShoppingCart, 
-  LogOut, X, Medal, ClipboardList, GraduationCap, Sparkles, Award
+  LogOut, X, Medal, ClipboardList, GraduationCap, Sparkles, Award, Trophy, FileText
 } from 'lucide-react';
 import { User, Lang, ViewMode } from '../types';
 import { ASSETS } from '../constants/assets';
@@ -26,8 +26,11 @@ const Sidebar: React.FC<SidebarProps> = ({
   const menuItems = isInstructor ? [
     { id: ViewMode.DASHBOARD, label: isEn ? 'Dashboard' : 'لوحة التحكم', icon: LayoutDashboard },
     { id: ViewMode.COURSE_EDITOR, label: isEn ? 'Course Library' : 'مكتبة الكورسات', icon: BookOpen },
+    { id: ViewMode.INSTRUCTOR_TASKS, label: isEn ? 'Tasks' : 'المهام', icon: FileText },
     { id: ViewMode.INSTRUCTOR_EXAMS, label: isEn ? 'Exams' : 'الامتحانات', icon: ClipboardList },
+    { id: ViewMode.INSTRUCTOR_CERTIFICATES, label: isEn ? 'Certificates' : 'الشهادات', icon: Award },
     { id: ViewMode.STUDENTS_LIST, label: isEn ? 'Student Hub' : 'مركز الطلاب', icon: Users },
+    { id: ViewMode.TOP_STUDENTS, label: isEn ? 'Top Students' : 'أفضل الطلاب', icon: Trophy },
   ] : [
     { id: ViewMode.DASHBOARD, label: isEn ? 'Dashboard' : 'لوحة التحكم', icon: LayoutDashboard },
     { id: ViewMode.WORKSPACE, label: isEn ? 'AI Workspace' : 'مساحة الذكاء', icon: Sparkles },

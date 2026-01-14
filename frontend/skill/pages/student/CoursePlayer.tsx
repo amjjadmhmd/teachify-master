@@ -1,5 +1,13 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Course, Lang, Theme, Lesson, Assignment } from "../../types";
+import {
+  Course,
+  Lang,
+  Theme,
+  Lesson,
+  Assignment,
+  Task,
+  TaskSubmission,
+} from "../../types";
 import { api } from "../../api/client";
 import { geminiService } from "../../services/geminiService";
 import { Card, Button, Input } from "../../components/UI";
@@ -37,6 +45,11 @@ const CoursePlayer: React.FC<{
   const [sidebarOpen, setSidebarOpen] = useState(!isMobile);
   const [isMarkingComplete, setIsMarkingComplete] = useState(false);
   const [showCourseDropdown, setShowCourseDropdown] = useState(false);
+  const [courseTasks, setCourseTasks] = useState<Task[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [submittingTask, setSubmittingTask] = useState(false);
+  const [submissionFile, setSubmissionFile] = useState<File | null>(null);
 
   // AI Chat States
   const [aiQuestion, setAiQuestion] = useState("");
@@ -94,20 +107,38 @@ const CoursePlayer: React.FC<{
             if (courseInDashboard) {
               setActiveCourse(courseInDashboard);
               setActiveLesson(courseInDashboard.lessons?.[0] || null);
+              loadCourseTasks(courseInDashboard.id);
             } else {
               // Fallback if not found
               setActiveCourse(dash.active_courses[0]);
               setActiveLesson(dash.active_courses[0].lessons?.[0] || null);
+              loadCourseTasks(dash.active_courses[0].id);
             }
           } else {
             // Set first course as active
             setActiveCourse(dash.active_courses[0]);
             setActiveLesson(dash.active_courses[0].lessons?.[0] || null);
+            loadCourseTasks(dash.active_courses[0].id);
           }
         }
       })
       .catch(console.error);
   }, [selectedCourse]);
+
+  // Load tasks for the active course
+  const loadCourseTasks = async (courseId: number) => {
+    setTasksLoading(true);
+    try {
+      const res = await api.courses.listTasks({ course: courseId });
+      // Handle both paginated and non-paginated responses
+      const tasks = Array.isArray(res) ? res : res.results || [];
+      setCourseTasks(tasks);
+    } catch (error) {
+      console.error("Failed to load tasks:", error);
+    } finally {
+      setTasksLoading(false);
+    }
+  };
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -176,6 +207,34 @@ const CoursePlayer: React.FC<{
     setActiveCourse(course);
     setActiveLesson(course.lessons?.[0] || null);
     setShowCourseDropdown(false);
+    loadCourseTasks(course.id);
+  };
+
+  const handleSubmitTask = async () => {
+    if (!selectedTask || !submissionFile) {
+      alert(isEn ? "Please select a task and file" : "يرجى تحديد مهمة وملف");
+      return;
+    }
+
+    setSubmittingTask(true);
+    try {
+      const res = await api.courses.submitTask({
+        task: selectedTask.id,
+        submission_file: submissionFile,
+      });
+      alert(isEn ? "Task submitted successfully!" : "تم تقديم المهمة بنجاح!");
+      setSelectedTask(null);
+      setSubmissionFile(null);
+      // Reload tasks
+      if (activeCourse) {
+        loadCourseTasks(activeCourse.id);
+      }
+    } catch (error) {
+      console.error("Failed to submit task:", error);
+      alert(isEn ? "Failed to submit task" : "فشل تقديم المهمة");
+    } finally {
+      setSubmittingTask(false);
+    }
   };
 
   if (!activeCourse)
@@ -211,8 +270,22 @@ const CoursePlayer: React.FC<{
                     <div className="font-medium text-slate-200 dark:text-white truncate">
                       {course.title}
                     </div>
-                    <div className="text-xs text-slate-500 mt-1">
-                      {course.completed_lessons}/{course.total_lessons} lessons
+                    <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
+                      <span>
+                        {course.completed_lessons}/{course.total_lessons}{" "}
+                        lessons
+                      </span>
+                      {course.total_duration_minutes && (
+                        <>
+                          <span>•</span>
+                          <span className="flex items-center gap-1">
+                            <Clock size={12} />
+                            {Math.floor(
+                              course.total_duration_minutes / 60
+                            )}h {course.total_duration_minutes % 60}m
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
                   <div className="ml-4 text-sm font-bold text-cyan-400">
@@ -263,6 +336,14 @@ const CoursePlayer: React.FC<{
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                 {activeLesson?.title || activeCourse.title}
               </h1>
+              {activeLesson && activeLesson.duration_minutes && (
+                <div className="flex items-center gap-3 mb-3 text-sm text-slate-500 dark:text-slate-400">
+                  <Clock size={16} className="text-cyan-500" />
+                  <span className="font-semibold">
+                    {activeLesson.duration_minutes} {isEn ? "minutes" : "دقيقة"}
+                  </span>
+                </div>
+              )}
               <p className="text-slate-500 dark:text-slate-400 text-sm">
                 {activeLesson?.description || activeCourse.description}
               </p>
@@ -364,11 +445,19 @@ const CoursePlayer: React.FC<{
                       <span>{idx + 1}.</span>
                       <span>{l.title}</span>
                     </div>
-                    <span className="text-[10px] opacity-70">
-                      {l.description
-                        ? l.description.substring(0, 40) + "..."
-                        : ""}
-                    </span>
+                    <div className="flex items-center gap-2 text-[10px] opacity-70 mt-1">
+                      {l.duration_minutes && (
+                        <span className="flex items-center gap-1">
+                          <Clock size={10} />
+                          {l.duration_minutes} {isEn ? "min" : "دقيقة"}
+                        </span>
+                      )}
+                      {l.description && (
+                        <span className="truncate">
+                          {l.description.substring(0, 30)}...
+                        </span>
+                      )}
+                    </div>
                   </div>
                   {l.is_completed && (
                     <CheckCircle
@@ -468,27 +557,138 @@ const CoursePlayer: React.FC<{
 
             {tab === "assignments" && (
               <div className="space-y-4">
-                <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl">
-                  <h4 className="font-bold text-sm text-emerald-500 mb-2">
-                    Final Project Task
-                  </h4>
-                  <p className="text-xs text-slate-500 mb-4">
-                    Build a fully responsive dashboard using Next.js and
-                    Tailwind CSS.
-                  </p>
-                  <div className="border-2 border-dashed border-slate-300 dark:border-white/10 rounded-xl p-6 text-center group cursor-pointer hover:bg-white/5">
-                    <Upload
-                      size={24}
-                      className="mx-auto mb-2 text-slate-400 group-hover:text-primary transition-colors"
-                    />
-                    <span className="text-[10px] font-bold text-slate-500">
-                      {isEn ? "Upload Project (ZIP/PDF)" : "ارفع المشروع"}
-                    </span>
+                {tasksLoading ? (
+                  <div className="text-center py-6">
+                    <p className="text-xs text-slate-500">
+                      {isEn ? "Loading tasks..." : "جاري تحميل المهام..."}
+                    </p>
                   </div>
-                  <Button className="w-full mt-4 !py-2 text-xs shadow-neon">
-                    Submit Task
-                  </Button>
-                </div>
+                ) : courseTasks.length === 0 ? (
+                  <div className="text-center py-6">
+                    <p className="text-xs text-slate-500">
+                      {isEn
+                        ? "No tasks for this course"
+                        : "لا توجد مهام لهذا الكورس"}
+                    </p>
+                  </div>
+                ) : (
+                  courseTasks.map((task) => (
+                    <div
+                      key={task.id}
+                      className={`p-4 rounded-xl border transition-all cursor-pointer ${
+                        selectedTask?.id === task.id
+                          ? "bg-primary/10 border-primary/30"
+                          : "bg-slate-700/30 dark:bg-white/5 border-slate-600 dark:border-white/10 hover:border-primary/30"
+                      }`}
+                      onClick={() => setSelectedTask(task)}
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <h4 className="font-bold text-sm text-slate-100">
+                          {task.title}
+                        </h4>
+                        <span
+                          className={`text-[9px] font-bold px-2 py-1 rounded ${
+                            task.priority === "critical"
+                              ? "bg-red-500/20 text-red-400"
+                              : task.priority === "high"
+                              ? "bg-orange-500/20 text-orange-400"
+                              : "bg-blue-500/20 text-blue-400"
+                          }`}
+                        >
+                          {task.priority.toUpperCase()}
+                        </span>
+                      </div>
+                      {task.description && (
+                        <p className="text-[10px] text-slate-400 mb-2 line-clamp-2">
+                          {task.description}
+                        </p>
+                      )}
+                      {task.due_date && (
+                        <p className="text-[9px] text-slate-500">
+                          {isEn ? "Due:" : "تاريخ الاستحقاق:"}{" "}
+                          {new Date(task.due_date).toLocaleDateString()}
+                        </p>
+                      )}
+                    </div>
+                  ))
+                )}
+
+                {selectedTask && (
+                   <div className="mt-4 space-y-4">
+                     {/* Task File Section */}
+                     {selectedTask.file_url && (
+                       <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                         <div className="flex items-center justify-between mb-2">
+                           <h4 className="font-bold text-sm text-slate-100">
+                             {isEn ? "Task File:" : "ملف المهمة:"}
+                           </h4>
+                           <a
+                             href={selectedTask.file_url}
+                             target="_blank"
+                             rel="noopener noreferrer"
+                             className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-lg transition-colors"
+                           >
+                             <Download size={12} />
+                             {isEn ? "Download/View" : "تحميل/عرض"}
+                           </a>
+                         </div>
+                         <p className="text-[10px] text-slate-400">
+                           {isEn
+                             ? "Click to download or view the task file"
+                             : "انقر لتحميل أو عرض ملف المهمة"}
+                         </p>
+                       </div>
+                     )}
+
+                     {/* Submission Section */}
+                     <div className="p-4 bg-slate-700/50 dark:bg-white/5 rounded-xl border border-slate-600 dark:border-white/10">
+                       <h4 className="font-bold text-sm text-slate-100 mb-3">
+                         {isEn ? "Submit Your Work:" : "قدم عملك:"}
+                       </h4>
+                       <div className="border-2 border-dashed border-slate-400 dark:border-white/20 rounded-xl p-6 text-center group cursor-pointer hover:bg-white/5 mb-3">
+                         <input
+                           type="file"
+                           onChange={(e) => {
+                             if (e.target.files && e.target.files[0]) {
+                               setSubmissionFile(e.target.files[0]);
+                             }
+                           }}
+                           className="hidden"
+                           id="task-file-upload"
+                         />
+                         <label
+                           htmlFor="task-file-upload"
+                           className="flex flex-col items-center gap-2 cursor-pointer"
+                         >
+                           <Upload
+                             size={24}
+                             className="text-slate-400 group-hover:text-primary transition-colors"
+                           />
+                           <span className="text-[10px] font-bold text-slate-500">
+                             {submissionFile
+                               ? submissionFile.name
+                               : isEn
+                               ? "Click to upload file"
+                               : "انقر لتحميل الملف"}
+                           </span>
+                         </label>
+                       </div>
+                       <Button
+                         className="w-full !py-2 text-xs shadow-neon"
+                         onClick={handleSubmitTask}
+                         disabled={!submissionFile || submittingTask}
+                       >
+                         {submittingTask
+                           ? isEn
+                             ? "Submitting..."
+                             : "جاري التقديم..."
+                           : isEn
+                           ? "Submit Task"
+                           : "تقديم المهمة"}
+                       </Button>
+                     </div>
+                   </div>
+                 )}
               </div>
             )}
           </div>

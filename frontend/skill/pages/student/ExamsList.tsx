@@ -26,15 +26,17 @@ const ExamsList: React.FC<ExamsListProps> = ({ lang, theme, onStartExam }) => {
             
             // Fetch exam attempts for history
             const attempts = await api.attempts.list();
-            setHistory(Array.isArray(attempts) ? attempts : attempts?.results || []);
+            console.log('Exam attempts fetched:', attempts);
+            setHistory(attempts || []);
 
-            // Fetch attempt history from local storage for UI logic
-            const attempted = localStorage.getItem('attempted_exams');
-            if (attempted) {
-                setAttemptedIds(JSON.parse(attempted));
-            }
+            // Get attempted exam IDs from API attempts (source of truth)
+            // Do NOT rely on localStorage - use actual backend data
+            const attemptedExamIds = attempts?.map((attempt: ExamAttempt) => attempt.exam) || [];
+            setAttemptedIds(attemptedExamIds);
         } catch (e) {
-            console.error(e);
+            console.error('Error fetching exams or attempts:', e);
+            setHistory([]);
+            setAttemptedIds([]);
         }
     };
     fetchData();
@@ -150,7 +152,7 @@ const ExamsList: React.FC<ExamsListProps> = ({ lang, theme, onStartExam }) => {
                                     <td className="p-4 text-slate-500 dark:text-slate-400">{exam.course_title}</td>
                                     <td className="p-4 text-center text-slate-500 dark:text-slate-400">{exam.taken_at}</td>
                                     <td className="p-4 text-center font-bold text-slate-900 dark:text-white">
-                                        {exam.score} / {exam.total_score}
+                                        {exam.score.toFixed(1)}%
                                     </td>
                                     <td className="p-4 flex justify-center">
                                         {exam.is_passed ? (

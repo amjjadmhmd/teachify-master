@@ -87,15 +87,19 @@ class ExamsService {
   }
 
   /**
-   * Get exam attempts
-   * GET /api/attempts/
-   */
+    * Get exam attempts
+    * GET /api/attempts/
+    */
   async listAttempts(): Promise<ExamAttempt[]> {
     try {
-      const response = await apiClient.get<PaginatedResponse<ExamAttempt>>(
+      const response = await apiClient.get<PaginatedResponse<ExamAttempt> | ExamAttempt[]>(
         '/api/attempts/'
       );
-      return response.data.results;
+      // Handle both paginated and non-paginated responses
+      if (Array.isArray(response.data)) {
+        return response.data;
+      }
+      return (response.data as PaginatedResponse<ExamAttempt>).results || [];
     } catch (error) {
       throw new Error(handleApiError(error));
     }

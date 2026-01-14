@@ -14,8 +14,11 @@ export enum ViewMode {
   EXAM_RUNNER = 'EXAM_RUNNER',
   COURSE_EDITOR = 'COURSE_EDITOR', 
   STUDENTS_LIST = 'STUDENTS_LIST', 
+  TOP_STUDENTS = 'TOP_STUDENTS',
   INSTRUCTOR_EXAMS = 'INSTRUCTOR_EXAMS',
+  INSTRUCTOR_TASKS = 'INSTRUCTOR_TASKS',
   INSTRUCTOR_WALLET = 'INSTRUCTOR_WALLET',
+  INSTRUCTOR_CERTIFICATES = 'INSTRUCTOR_CERTIFICATES',
   ASSIGNMENTS = 'ASSIGNMENTS',
   JOIN_PLATFORM = 'JOIN_PLATFORM',
   MENTORS_LIST = 'MENTORS_LIST',
@@ -134,6 +137,7 @@ export interface DashboardData {
   my_assignments: Assignment[];
   average_quiz_score?: number;
   total_hours_studied?: number;
+  total_minutes_studied?: number;
   upcoming_tasks?: { id: number; title: string; due_date: string }[];
 }
 

@@ -88,7 +88,7 @@ SIMPLE_JWT = {
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'master',
+        'NAME': 'teachify_db',
         'USER': 'postgres',
         'PASSWORD': 'cubra2004',
         'HOST': 'localhost',

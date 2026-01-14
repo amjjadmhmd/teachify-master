@@ -44,6 +44,8 @@ const StudentDashboard: React.FC<DashboardProps> = ({
 }) => {
   const [data, setData] = useState<DashboardData | null>(null);
   const [showProgressModal, setShowProgressModal] = useState(false);
+  const [criticalTasks, setCriticalTasks] = useState<any[]>([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
 
   const isEn = lang === "en";
 
@@ -56,7 +58,33 @@ const StudentDashboard: React.FC<DashboardProps> = ({
 
   useEffect(() => {
     api.courses.getDashboard().then(setData).catch(console.error);
+    loadCriticalTasks();
   }, [refreshTrigger]);
+
+  const loadCriticalTasks = async () => {
+    setTasksLoading(true);
+    try {
+      const res = await api.courses.listTasks();
+      // Handle both paginated and non-paginated responses
+      const tasks = Array.isArray(res) ? res : res.results || [];
+      // Filter only critical and high priority tasks
+      const filtered = tasks
+        .filter(
+          (task: any) =>
+            task.priority === "critical" || task.priority === "high"
+        )
+        .sort((a: any, b: any) => {
+          if (a.priority === "critical") return -1;
+          if (b.priority === "critical") return 1;
+          return 0;
+        });
+      setCriticalTasks(filtered.slice(0, 5)); // Show top 5
+    } catch (error) {
+      console.error("Failed to load critical tasks:", error);
+    } finally {
+      setTasksLoading(false);
+    }
+  };
 
   if (!data)
     return (
@@ -211,7 +239,7 @@ const StudentDashboard: React.FC<DashboardProps> = ({
                 <Card className="flex items-center gap-4 !p-5 border-white/5">
                   <Timer size={20} className="text-eden-accent" />
                   <div className="font-black text-white text-lg">
-                    {data.total_hours_studied}h{" "}
+                    {data.total_hours_studied}h {data.total_minutes_studied}m{" "}
                     <span className="text-[10px] uppercase tracking-widest text-slate-500 ml-2">
                       {isEn ? "Air Time" : "وقت التعلم"}
                     </span>
@@ -274,22 +302,50 @@ const StudentDashboard: React.FC<DashboardProps> = ({
                 {isEn ? "Critical Tasks" : "المهام الحرجة"}
               </div>
               <div className="divide-y divide-white/5">
-                {data.upcoming_tasks?.map((t) => (
-                  <div
-                    key={t.id}
-                    className="p-6 text-xs flex justify-between items-center group hover:bg-white/5 transition-colors cursor-pointer"
-                  >
-                    <span className="text-slate-300 font-bold group-hover:text-white">
-                      {t.title}
-                    </span>
-                    <span className="text-eden-accent font-black">
-                      {t.due_date}
-                    </span>
+                {tasksLoading ? (
+                  <div className="p-10 text-center text-[10px] font-bold uppercase tracking-widest text-slate-600 animate-pulse">
+                    {isEn ? "Loading tasks..." : "جاري تحميل المهام..."}
                   </div>
-                ))}
-                {(!data.upcoming_tasks || data.upcoming_tasks.length === 0) && (
+                ) : criticalTasks.length > 0 ? (
+                  criticalTasks.map((t) => (
+                    <div
+                      key={t.id}
+                      className={`p-6 text-xs flex flex-col gap-2 group hover:bg-white/5 transition-colors cursor-pointer border-l-4 ${
+                        t.priority === "critical"
+                          ? "border-red-500"
+                          : "border-orange-500"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start">
+                        <span className="text-slate-300 font-bold group-hover:text-white flex-1">
+                          {t.title}
+                        </span>
+                        <span
+                          className={`text-[9px] font-black px-2 py-1 rounded whitespace-nowrap ml-2 ${
+                            t.priority === "critical"
+                              ? "bg-red-500/20 text-red-400"
+                              : "bg-orange-500/20 text-orange-400"
+                          }`}
+                        >
+                          {t.priority.toUpperCase()}
+                        </span>
+                      </div>
+                      {t.course_title && (
+                        <span className="text-[9px] text-slate-500">
+                          {t.course_title}
+                        </span>
+                      )}
+                      {t.due_date && (
+                        <span className="text-eden-accent font-black text-[9px]">
+                          {isEn ? "Due:" : "الاستحقاق:"}{" "}
+                          {new Date(t.due_date).toLocaleDateString()}
+                        </span>
+                      )}
+                    </div>
+                  ))
+                ) : (
                   <div className="p-10 text-center text-[10px] font-bold uppercase tracking-widest text-slate-600">
-                    {isEn ? "Zero backlog" : "لا يوجد مهام"}
+                    {isEn ? "Zero critical tasks" : "لا توجد مهام حرجة"}
                   </div>
                 )}
               </div>

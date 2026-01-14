@@ -80,19 +80,39 @@ class StudentExamAttemptSerializer(serializers.ModelSerializer):
     is_passed = serializers.ReadOnlyField()
     started_at = serializers.ReadOnlyField()
     finished_at = serializers.ReadOnlyField()
+    # Add fields that frontend expects
+    exam_title = serializers.CharField(source="exam.title", read_only=True)
+    course_title = serializers.CharField(source="exam.course.title", read_only=True)
+    taken_at = serializers.SerializerMethodField()
+    total_score = serializers.SerializerMethodField()
 
     class Meta:
         model = StudentExamAttempt
         fields = [
             "id",
             "exam",
+            "exam_title",
+            "course_title",
             "student",
             "score",
+            "total_score",
+            "taken_at",
             "started_at",
             "finished_at",
             "is_passed",
             "answers",
         ]
+    
+    def get_taken_at(self, obj):
+        """Return finished_at as taken_at for frontend compatibility"""
+        return obj.finished_at.strftime('%Y-%m-%d') if obj.finished_at else obj.started_at.strftime('%Y-%m-%d') if obj.started_at else None
+    
+    def get_total_score(self, obj):
+        """Return the actual total marks from questions"""
+        if obj.exam:
+            questions = obj.exam.questions.all()
+            return sum(q.mark for q in questions) if questions else obj.exam.total_marks
+        return 0
 
 
 # =========================

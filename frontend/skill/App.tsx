@@ -234,7 +234,10 @@ import StudentDashboard from "./pages/student/Dashboard";
 import InstructorDashboard from "./pages/instructor/Dashboard";
 import InstructorCourses from "./pages/instructor/Courses";
 import InstructorExams from "./pages/instructor/Exams";
+import InstructorTasks from "./pages/instructor/Tasks";
 import InstructorStudents from "./pages/instructor/Students";
+import InstructorCertificates from "./pages/instructor/Certificates";
+import TopStudentsPage from "./pages/instructor/TopStudents";
 import Marketplace from "./pages/student/Marketplace";
 import Wishlist from "./pages/student/Wishlist";
 import CartPage from "./pages/student/Cart";
@@ -511,14 +514,23 @@ const WhiteLabApp: React.FC = () => {
       case ViewMode.INSTRUCTOR_EXAMS:
         return <InstructorExams lang={lang} theme={theme} />;
 
+      case ViewMode.INSTRUCTOR_TASKS:
+        return <InstructorTasks lang={lang} theme={theme} />;
+
       case ViewMode.STUDENTS_LIST:
-        return (
-          <InstructorStudents
-            lang={lang}
-            theme={theme}
-            targetStudentId={targetStudentId}
-          />
-        );
+         return (
+           <InstructorStudents
+             lang={lang}
+             theme={theme}
+             targetStudentId={targetStudentId}
+           />
+         );
+
+       case ViewMode.INSTRUCTOR_CERTIFICATES:
+         return <InstructorCertificates lang={lang} theme={theme} />;
+
+       case ViewMode.TOP_STUDENTS:
+         return <TopStudentsPage lang={lang} theme={theme} />;
 
       case ViewMode.LANDING:
       default:

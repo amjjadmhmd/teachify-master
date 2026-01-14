@@ -6,6 +6,8 @@ from .models import (
     Enrollment,
     LessonProgress,
     WishlistItem,
+    Task,
+    TaskSubmission,
 )
 
 admin.site.register(Course)
@@ -14,4 +16,6 @@ admin.site.register(Category)
 admin.site.register(Enrollment)
 admin.site.register(LessonProgress)
 admin.site.register(WishlistItem)
+admin.site.register(Task)
+admin.site.register(TaskSubmission)
 

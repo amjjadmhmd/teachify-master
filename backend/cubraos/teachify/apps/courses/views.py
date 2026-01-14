@@ -250,6 +250,7 @@ class DashboardViewSet(viewsets.ViewSet):
                     'title': lesson.title,
                     'description': lesson.description,
                     'video_url': lesson.video_url,
+                    'duration_minutes': lesson.duration_minutes,
                     'order': lesson.order,
                     'is_completed': is_completed,
                 })
@@ -299,6 +300,37 @@ class DashboardViewSet(viewsets.ViewSet):
         total_enrolled_courses = len(courses_data)
         overall_progress = sum(c['progress'] for c in courses_data) / len(courses_data) if courses_data else 0
         
+        # Calculate average quiz score from exam attempts
+        from apps.exams.models import StudentExamAttempt, Certificate
+        from django.db.models import Avg
+        
+        attempts = StudentExamAttempt.objects.filter(
+            student=student,
+            finished_at__isnull=False
+        )
+        average_score = 0
+        if attempts.exists():
+            average_score = round(float(attempts.aggregate(Avg('score'))['score__avg'] or 0), 1)
+        
+        # Get earned certificates
+        certificates = Certificate.objects.filter(student=student)
+        earned_certificates = [{
+            'id': cert.id,
+            'course_title': cert.exam.course.title,
+            'issued_at': cert.issued_at.strftime('%Y-%m-%d'),
+            'image_url': request.build_absolute_uri(cert.image.url) if cert.image else '',
+            'certificate_url': '',
+        } for cert in certificates]
+        
+        # Calculate total hours and minutes studied (from completed lessons)
+        from django.db.models import Sum
+        total_minutes = LessonProgress.objects.filter(
+            student=student,
+            is_completed=True  # Only count completed lessons
+        ).aggregate(Sum('time_spent_minutes'))['time_spent_minutes__sum'] or 0
+        total_hours = total_minutes // 60
+        remaining_minutes = total_minutes % 60
+        
         return Response({
             'active_courses': courses_data,  # Match frontend expectation
             'enrolled_courses': courses_data,  # Keep for backward compatibility
@@ -309,47 +341,71 @@ class DashboardViewSet(viewsets.ViewSet):
             'total_enrolled_courses': total_enrolled_courses,
             'wishlist_count': 0,  # Add default values to match DashboardData interface
             'latest_completed_lessons': [],
-            'earned_certificates': [],
+            'earned_certificates': earned_certificates,
             'past_results': [],
             'my_assignments': [],
-            'average_quiz_score': 0,
-            'total_hours_studied': 0,
+            'average_quiz_score': average_score,
+            'total_hours_studied': total_hours,
+            'total_minutes_studied': remaining_minutes,
             'upcoming_tasks': [],
         })
 
 
 class TopStudentsViewSet(viewsets.ViewSet):
     """
-    Top Students Leaderboard
+    Top Students Leaderboard (Instructor Only)
+    Returns top 10 students enrolled in THIS instructor's courses
     GET /api/courses/top-students/
     """
     permission_classes = [permissions.IsAuthenticated]
     
     def list(self, request):
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        
-        # Get students with most completed lessons
-        students = User.objects.filter(
-            role='student'
-        ).annotate(
-            completed_count=Count(
-                'lesson_progress',
-                filter=Q(lesson_progress__is_completed=True)
+        try:
+            # Check if user is instructor
+            if request.user.role != 'instructor':
+                return Response(
+                    {'detail': 'Only instructors can view the top students leaderboard.'},
+                    status=status.HTTP_403_FORBIDDEN
+                )
+            
+            instructor = request.user
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            
+            # Get all courses by this instructor
+            instructor_courses = Course.objects.filter(instructor=instructor)
+            
+            # Get unique students enrolled in these courses, ranked by completed lessons
+            students = User.objects.filter(
+                role='student',
+                enrollments__course__in=instructor_courses
+            ).distinct().annotate(
+                completed_count=Count(
+                    'lesson_progress',
+                    filter=Q(
+                        lesson_progress__is_completed=True
+                    ) & Q(
+                        lesson_progress__lesson__course__in=instructor_courses
+                    )
+                )
+            ).order_by('-completed_count')[:10]
+            
+            leaderboard = []
+            for idx, student in enumerate(students, 1):
+                leaderboard.append({
+                    'rank': idx,
+                    'id': student.id,
+                    'name': student.username,
+                    'completed_lessons': student.completed_count,
+                    'avatar': request.build_absolute_uri(student.avatar.url) if hasattr(student, 'avatar') and student.avatar else None
+                })
+            
+            return Response(leaderboard)
+        except Exception as e:
+            return Response(
+                {'detail': f'Error fetching top students: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        ).order_by('-completed_count')[:10]
-        
-        leaderboard = []
-        for idx, student in enumerate(students, 1):
-            leaderboard.append({
-                'rank': idx,
-                'id': student.id,
-                'name': student.username,
-                'completed_lessons': student.completed_count,
-                'avatar': request.build_absolute_uri(student.avatar.url) if hasattr(student, 'avatar') and student.avatar else None
-            })
-        
-        return Response(leaderboard)
 
 
 @api_view(['GET'])
@@ -383,3 +439,214 @@ def placeholder_thumbnail(request, course_id):
             {'error': f'Error generating thumbnail: {str(e)}'},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
+
+
+# ============================
+#   TASK VIEWS (NEW)
+# ============================
+from rest_framework.decorators import action
+from rest_framework import viewsets, status
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from .models import Task, TaskSubmission
+from .serializers import TaskSerializer, TaskSubmissionSerializer, TaskSubmissionCreateSerializer
+from apps.common.permissions import IsInstructor, IsStudent
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+
+
+class TaskViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Task management.
+    Instructors can create, read, update, delete tasks.
+    Students can only view tasks for their enrolled courses.
+    """
+    serializer_class = TaskSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = Task.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'instructor':
+            # Instructors see only their own tasks
+            return Task.objects.filter(instructor=user)
+        elif user.role == 'student':
+            # Students see tasks from courses they're enrolled in
+            from .models import Enrollment
+            enrolled_courses = Enrollment.objects.filter(
+                student=user
+            ).values_list('course', flat=True)
+            return Task.objects.filter(course__in=enrolled_courses)
+        return Task.objects.none()
+
+    def list(self, request, *args, **kwargs):
+        """
+        Override list to support course filtering.
+        Students can filter by course parameter.
+        """
+        queryset = self.get_queryset()
+        
+        # Support filtering by course
+        course_id = request.query_params.get('course')
+        if course_id:
+            queryset = queryset.filter(course_id=course_id)
+        
+        # Support filtering by priority
+        priority = request.query_params.get('priority')
+        if priority:
+            queryset = queryset.filter(priority=priority)
+        
+        serializer = self.get_serializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def perform_create(self, serializer):
+        # Set the instructor as the current user
+        serializer.save(instructor=self.request.user)
+
+    def create(self, request, *args, **kwargs):
+        # Only instructors can create tasks
+        if request.user.role != 'instructor':
+            return Response(
+                {'detail': 'Only instructors can create tasks'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().create(request, *args, **kwargs)
+
+    def update(self, request, *args, **kwargs):
+        # Only the task creator can update
+        task = self.get_object()
+        if task.instructor != request.user:
+            return Response(
+                {'detail': 'You can only update your own tasks'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().update(request, *args, **kwargs)
+
+    def destroy(self, request, *args, **kwargs):
+        # Only the task creator can delete
+        task = self.get_object()
+        if task.instructor != request.user:
+            return Response(
+                {'detail': 'You can only delete your own tasks'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().destroy(request, *args, **kwargs)
+
+    @action(detail=True, methods=['get'], permission_classes=[IsAuthenticated])
+    def submissions(self, request, pk=None):
+        """
+        Get all submissions for a task.
+        Only the task instructor and submitting student can see this.
+        """
+        task = self.get_object()
+        
+        # Only instructor of the course can see submissions
+        if task.instructor != request.user:
+            return Response(
+                {'detail': 'You do not have permission to view these submissions'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        submissions = task.submissions.all()
+        serializer = TaskSubmissionSerializer(
+            submissions,
+            many=True,
+            context={'request': request}
+        )
+        return Response(serializer.data)
+
+
+class TaskSubmissionViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet for Task Submissions.
+    Students can submit their work.
+    Instructors can grade submissions.
+    """
+    serializer_class = TaskSubmissionSerializer
+    permission_classes = [IsAuthenticated]
+    queryset = TaskSubmission.objects.all()
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.role == 'instructor':
+            # Instructors see submissions for their tasks
+            return TaskSubmission.objects.filter(task__instructor=user)
+        elif user.role == 'student':
+            # Students see only their own submissions
+            return TaskSubmission.objects.filter(student=user)
+        return TaskSubmission.objects.none()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return TaskSubmissionCreateSerializer
+        return TaskSubmissionSerializer
+
+    def create(self, request, *args, **kwargs):
+        # Only students can submit
+        if request.user.role != 'student':
+            return Response(
+                {'detail': 'Only students can submit tasks'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().create(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        serializer.save(student=self.request.user)
+
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def grade(self, request, pk=None):
+        """
+        Grade a task submission.
+        Only the task instructor can grade.
+        """
+        submission = self.get_object()
+        
+        # Only the task instructor can grade
+        if submission.task.instructor != request.user:
+            return Response(
+                {'detail': 'Only the task instructor can grade submissions'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        score = request.data.get('score')
+        feedback = request.data.get('feedback', '')
+        
+        if score is None or not (0 <= score <= 100):
+            return Response(
+                {'detail': 'Score must be between 0 and 100'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        submission.score = score
+        submission.feedback = feedback
+        submission.status = 'graded'
+        submission.graded_at = timezone.now()
+        submission.save()
+        
+        serializer = TaskSubmissionSerializer(
+            submission,
+            context={'request': request}
+        )
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'], permission_classes=[IsAuthenticated])
+    def my_submissions(self, request):
+        """
+        Get the current student's submissions for all tasks.
+        """
+        if request.user.role != 'student':
+            return Response(
+                {'detail': 'Only students can view their submissions'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        submissions = TaskSubmission.objects.filter(student=request.user)
+        serializer = TaskSubmissionSerializer(
+            submissions,
+            many=True,
+            context={'request': request}
+        )
+        return Response({
+            'count': submissions.count(),
+            'results': serializer.data
+        })

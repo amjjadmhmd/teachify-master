@@ -385,6 +385,43 @@ export interface ExamSubmission {
 }
 
 // ==========================================
+// Task Types (NEW)
+// ==========================================
+
+export interface Task {
+  id: number;
+  instructor: number;
+  instructor_name: string;
+  course: number;
+  course_title: string;
+  title: string;
+  description: string;
+  file: string | File;
+  file_url?: string;
+  priority: 'low' | 'medium' | 'high' | 'critical';
+  due_date?: string;
+  created_at: string;
+  updated_at: string;
+  submission_count: number;
+}
+
+export interface TaskSubmission {
+  id: number;
+  task: number;
+  task_title: string;
+  student: number;
+  student_name: string;
+  student_username: string;
+  submission_file: string | File;
+  submission_file_url?: string;
+  submitted_at: string;
+  score?: number;
+  feedback?: string;
+  status: 'submitted' | 'graded' | 'pending_review';
+  graded_at?: string;
+}
+
+// ==========================================
 // API Response Wrappers
 // ==========================================
 

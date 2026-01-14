@@ -19,6 +19,8 @@ import {
   PaginatedResponse,
   InstructorWallet,
   InstructorStudent,
+  Task,
+  TaskSubmission,
 } from "../types";
 
 class CoursesService {
@@ -200,13 +202,14 @@ class CoursesService {
    */
   async addLessonWithVideo(
     courseId: number,
-    data: { title: string; description: string },
+    data: { title: string; description: string; duration_minutes?: number },
     videoFile: File
   ): Promise<Lesson> {
     try {
       const formData = new FormData();
       formData.append("title", data.title);
       formData.append("description", data.description);
+      formData.append("duration_minutes", (data.duration_minutes || 0).toString());
       formData.append("video", videoFile);
 
       const response = await apiClient.post<Lesson>(
@@ -518,6 +521,176 @@ class CoursesService {
             "Content-Type": "multipart/form-data",
           },
         }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Get top students leaderboard
+   * GET /api/courses/top-students/
+   */
+  async getTopStudents(): Promise<
+    Array<{
+      rank: number;
+      id: number;
+      name: string;
+      completed_lessons: number;
+      avatar: string | null;
+    }>
+  > {
+    try {
+      const response = await apiClient.get<
+        Array<{
+          rank: number;
+          id: number;
+          name: string;
+          completed_lessons: number;
+          avatar: string | null;
+        }>
+      >("/api/courses/top-students/");
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  // ==========================================
+  // Task Operations (NEW)
+  // ==========================================
+
+  /**
+   * Get all tasks (instructor/student based on role)
+   * GET /api/courses/tasks/
+   */
+  async listTasks(params?: { course?: number; priority?: string }): Promise<
+    PaginatedResponse<Task>
+  > {
+    try {
+      const response = await apiClient.get<PaginatedResponse<Task>>(
+        "/api/courses/tasks/",
+        { params }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Create a new task (Instructor only)
+   * POST /api/courses/tasks/
+   */
+  async createTask(data: {
+    course: number;
+    title: string;
+    description?: string;
+    priority: "low" | "medium" | "high" | "critical";
+    due_date?: string;
+    file: File;
+  }): Promise<Task> {
+    try {
+      const formData = new FormData();
+      formData.append("course", data.course.toString());
+      formData.append("title", data.title);
+      if (data.description) formData.append("description", data.description);
+      formData.append("priority", data.priority);
+      if (data.due_date) formData.append("due_date", data.due_date);
+      formData.append("file", data.file);
+
+      const response = await apiClient.post<Task>(
+        "/api/courses/tasks/",
+        formData
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Get task details
+   * GET /api/courses/tasks/{id}/
+   */
+  async getTaskDetail(id: number): Promise<Task> {
+    try {
+      const response = await apiClient.get<Task>(
+        `/api/courses/tasks/${id}/`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Get task submissions (Instructor only)
+   * GET /api/courses/tasks/{id}/submissions/
+   */
+  async getTaskSubmissions(taskId: number): Promise<TaskSubmission[]> {
+    try {
+      const response = await apiClient.get<TaskSubmission[]>(
+        `/api/courses/tasks/${taskId}/submissions/`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Submit a task (Student only)
+   * POST /api/courses/task-submissions/
+   */
+  async submitTask(data: {
+    task: number;
+    submission_file: File;
+  }): Promise<TaskSubmission> {
+    try {
+      const formData = new FormData();
+      formData.append("task", data.task.toString());
+      formData.append("submission_file", data.submission_file);
+
+      const response = await apiClient.post<TaskSubmission>(
+        "/api/courses/task-submissions/",
+        formData
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Get student's task submissions
+   * GET /api/courses/task-submissions/my_submissions/
+   */
+  async getMySubmissions(): Promise<{ count: number; results: TaskSubmission[] }> {
+    try {
+      const response = await apiClient.get<{
+        count: number;
+        results: TaskSubmission[];
+      }>("/api/courses/task-submissions/my_submissions/");
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Grade a task submission (Instructor only)
+   * POST /api/courses/task-submissions/{id}/grade/
+   */
+  async gradeTaskSubmission(
+    submissionId: number,
+    data: { score: number; feedback?: string }
+  ): Promise<TaskSubmission> {
+    try {
+      const response = await apiClient.post<TaskSubmission>(
+        `/api/courses/task-submissions/${submissionId}/grade/`,
+        data
       );
       return response.data;
     } catch (error) {

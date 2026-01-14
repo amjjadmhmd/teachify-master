@@ -140,11 +140,26 @@ def create_course_lesson(request, course_id):
     # Extract form data
     title = request.data.get('title')
     description = request.data.get('description', '')
+    duration_minutes = request.data.get('duration_minutes', 0)
     video_file = request.FILES.get('video')
     
     if not title:
         return Response(
             {'error': 'Title is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Validate duration
+    try:
+        duration_minutes = int(duration_minutes) if duration_minutes else 0
+        if duration_minutes <= 0:
+            return Response(
+                {'error': 'Duration must be greater than 0 minutes'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+    except (ValueError, TypeError):
+        return Response(
+            {'error': 'Duration must be a valid number'},
             status=status.HTTP_400_BAD_REQUEST
         )
     
@@ -183,6 +198,7 @@ def create_course_lesson(request, course_id):
             title=title,
             description=description,
             video_url=video_url,  # Store the actual video URL
+            duration_minutes=duration_minutes,  # Save duration
             order=next_order
         )
         
@@ -223,6 +239,35 @@ def create_course_resource(request, course_id):
             status=status.HTTP_400_BAD_REQUEST
         )
     
+    # Validate file size (max 50MB)
+    max_size = 50 * 1024 * 1024  # 50MB
+    if file.size > max_size:
+        return Response(
+            {'error': f'File size exceeds {max_size // (1024*1024)}MB limit'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Validate file type
+    allowed_extensions = ['.pdf', '.doc', '.docx', '.xls', '.xlsx', '.ppt', '.pptx', '.txt', '.zip']
+    allowed_mimetypes = [
+        'application/pdf',
+        'application/msword',
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        'application/vnd.ms-excel',
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'application/vnd.ms-powerpoint',
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+        'text/plain',
+        'application/zip'
+    ]
+    
+    file_ext = file.name[file.name.rfind('.'):].lower()
+    if file_ext not in allowed_extensions or file.content_type not in allowed_mimetypes:
+        return Response(
+            {'error': f'File type not allowed. Allowed: {", ".join(allowed_extensions)}'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
     try:
         # Create resource
         resource = Resource.objects.create(
@@ -233,6 +278,47 @@ def create_course_resource(request, course_id):
         
         serializer = ResourceSerializer(resource, context={'request': request})
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+    except Exception as e:
+        return Response(
+            {'error': str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(['DELETE'])
+@permission_classes([IsInstructor])
+def delete_resource(request, resource_id):
+    """
+    DELETE /api/courses/resources/{resource_id}/
+    Delete a resource file
+    """
+    from .models import Resource
+    
+    try:
+        resource = Resource.objects.get(id=resource_id)
+        # Verify user is instructor of the course
+        if resource.course.instructor != request.user:
+            return Response(
+                {'error': 'You do not have permission to delete this resource'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Delete the file from storage
+        if resource.file:
+            resource.file.delete()
+        
+        # Delete the resource record
+        resource.delete()
+        
+        return Response(
+            {'message': 'Resource deleted successfully'},
+            status=status.HTTP_204_NO_CONTENT
+        )
+    except Resource.DoesNotExist:
+        return Response(
+            {'error': 'Resource not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
     except Exception as e:
         return Response(
             {'error': str(e)},
