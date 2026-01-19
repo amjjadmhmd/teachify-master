@@ -283,10 +283,25 @@ const WhiteLabApp: React.FC = () => {
       setView(ViewMode.DASHBOARD);
     }
     if (user) {
+      // Fetch wishlist
       api.wishlist
         .list()
         .then(setWishlist)
         .catch(() => console.log("Offline mode active"));
+      
+      // Fetch cart items to sync with backend
+      api.payment
+        .getCart()
+        .then((cartItems: any[]) => {
+          const courses = cartItems.map((item: any) => ({
+            id: item.course,
+            title: item.course_title,
+            price: item.course_price,
+            thumbnail: item.course_thumbnail,
+          }));
+          setCart(courses);
+        })
+        .catch(() => console.log("Failed to fetch cart"));
     }
   }, [user]);
 

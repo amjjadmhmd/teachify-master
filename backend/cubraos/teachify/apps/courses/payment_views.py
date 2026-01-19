@@ -51,7 +51,20 @@ class CartViewSet(mixins.ListModelMixin, mixins.CreateModelMixin,
         return CartItem.objects.filter(student=self.request.user)
 
     def perform_create(self, serializer):
-        serializer.save(student=self.request.user)
+        """
+        Create or get CartItem to prevent duplicate key errors
+        If item already in cart, return existing item (don't error)
+        """
+        course_id = self.request.data.get('course')
+        if course_id:
+            # Use get_or_create to handle duplicates gracefully
+            CartItem.objects.get_or_create(
+                student=self.request.user,
+                course_id=course_id
+            )
+        else:
+            # Fallback to normal save if no course specified
+            serializer.save(student=self.request.user)
 
     @action(detail=False, methods=['post'])
     def clear_cart(self, request):
@@ -276,12 +289,12 @@ class PaymentRequestViewSet(viewsets.ModelViewSet):
             payment_request.processed_by = request.user
             payment_request.save()
             
-            # Re-add courses to student's cart for retry
-            for course in payment_request.courses.all():
-                CartItem.objects.get_or_create(
-                    student=payment_request.student,
-                    course=course
-                )
+            # Delete CartItems for rejected courses
+            # Forces student to add them fresh and decide again
+            CartItem.objects.filter(
+                student=payment_request.student,
+                course__in=payment_request.courses.all()
+            ).delete()
             
             # Send notification to student
             message = 'Your payment has been rejected. '

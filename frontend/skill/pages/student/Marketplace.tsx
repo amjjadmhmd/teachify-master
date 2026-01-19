@@ -38,7 +38,20 @@ const Marketplace: React.FC<MarketplaceProps> = ({
 
   useEffect(() => {
     api.courses.list().then(setCourses).catch(console.error);
+    
+    // Fetch cart items on mount to sync frontend state with backend
+    fetchCartItems();
   }, []);
+
+  const fetchCartItems = async () => {
+    try {
+      const cartItems = await api.payment.getCart();
+      const courseIds = cartItems.map((item: any) => item.course);
+      setCartCourseIds(courseIds);
+    } catch (err) {
+      console.error('Failed to fetch cart items:', err);
+    }
+  };
 
   // Handle clicking on an enrolled course to open CoursePlayer
   const handleCourseClick = (course: Course) => {
@@ -53,7 +66,9 @@ const Marketplace: React.FC<MarketplaceProps> = ({
     try {
       await api.payment.addToCart(course.id);
       addToCart(course);
-      setCartCourseIds(prev => [...prev, course.id]);
+      
+      // Fetch fresh cart state from backend to ensure sync
+      await fetchCartItems();
     } catch (err) {
       console.error('Failed to add to cart:', err);
       alert('Failed to add course to cart. Please try again.');
