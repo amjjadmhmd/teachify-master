@@ -16,6 +16,7 @@ interface MarketplaceProps {
   onBack?: () => void;
   setView?: (view: ViewMode) => void;
   onEnrolledCourseClick?: (course: Course) => void;
+  onRefreshCart?: () => void;
 }
 
 const Marketplace: React.FC<MarketplaceProps> = ({
@@ -28,20 +29,83 @@ const Marketplace: React.FC<MarketplaceProps> = ({
   onBack,
   setView,
   onEnrolledCourseClick,
+  onRefreshCart,
 }) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [addingToCart, setAddingToCart] = useState<{[key: number]: boolean}>({});
   const isEn = lang === "en";
 
-  // Track which courses are in cart
+  // Track payment request status for each course
+  const [paymentRequestStatus, setPaymentRequestStatus] = useState<{[key: number]: 'pending' | 'approved' | 'rejected'}>({});
+  // Fallback: Track which courses are in cart (for before payment submission)
   const [cartCourseIds, setCartCourseIds] = useState<number[]>([]);
 
   useEffect(() => {
     api.courses.list().then(setCourses).catch(console.error);
     
-    // Fetch cart items on mount to sync frontend state with backend
-    fetchCartItems();
+    // Fetch payment requests and cart items on mount
+    fetchPaymentStatus();
   }, []);
+
+  const fetchPaymentStatus = async () => {
+    try {
+      // Try to use the main endpoint which filters by student automatically
+      // GET /api/courses/payment-requests/ returns only student's own requests
+      const apiClient = (await import('../../api/config')).default;
+      const response = await apiClient.get('/api/courses/payment-requests/');
+      const paymentRequests = Array.isArray(response.data) ? response.data : response.data?.results || [];
+      
+      console.log('Payment Requests Raw:', paymentRequests);
+      
+      // Build map of course -> payment status
+      const statusMap: {[key: number]: 'pending' | 'approved' | 'rejected'} = {};
+      
+      console.log('Payment Requests Array:', paymentRequests);
+      
+      // Sort by submitted date (newest first) for better UX
+      const sortedRequests = [...paymentRequests].sort((a, b) => {
+        const dateA = new Date(a.submitted_at).getTime();
+        const dateB = new Date(b.submitted_at).getTime();
+        return dateB - dateA; // Newest first
+      });
+
+      sortedRequests.forEach((request: any) => {
+        console.log('Processing request:', request.id, 'Status:', request.status, 'Courses:', request.courses, 'Date:', request.submitted_at);
+        // Only consider non-approved requests (approved means already enrolled)
+        if (request.status === 'pending' || request.status === 'rejected') {
+          const courses = request.courses || [];
+          console.log('Adding to status map - courses:', courses);
+          courses.forEach((courseId: number) => {
+            // Smart priority: 
+            // 1. PENDING always takes priority (most actionable)
+            // 2. REJECTED only if no pending exists
+            // 3. Use newest request for that course
+            if (!statusMap[courseId]) {
+              // First time seeing this course
+              statusMap[courseId] = request.status;
+              console.log(`Mapped course ${courseId} -> ${request.status} (first time)`);
+            } else if (request.status === 'pending' && statusMap[courseId] !== 'pending') {
+              // Found a pending, replace rejected
+              statusMap[courseId] = request.status;
+              console.log(`Mapped course ${courseId} -> ${request.status} (prioritized pending)`);
+            }
+            // If current is rejected and we already have pending, skip
+            // This ensures pending is always shown
+          });
+        }
+      });
+      
+      console.log('Final Status Map:', statusMap);
+      setPaymentRequestStatus(statusMap);
+      
+      // Also fetch cart items as fallback (for courses added but not yet submitted)
+      fetchCartItems();
+    } catch (err) {
+      console.error('Failed to fetch payment status:', err);
+      // Fallback to cart items only
+      fetchCartItems();
+    }
+  };
 
   const fetchCartItems = async () => {
     try {
@@ -52,6 +116,18 @@ const Marketplace: React.FC<MarketplaceProps> = ({
       console.error('Failed to fetch cart items:', err);
     }
   };
+
+  // Expose refresh method for external calls (e.g., when payment is rejected)
+  const refreshCart = async () => {
+    await fetchPaymentStatus();
+  };
+
+  // Call parent callback when status is refreshed
+  useEffect(() => {
+    if (onRefreshCart) {
+      onRefreshCart();
+    }
+  }, [paymentRequestStatus, cartCourseIds, onRefreshCart]);
 
   // Handle clicking on an enrolled course to open CoursePlayer
   const handleCourseClick = (course: Course) => {
@@ -105,7 +181,11 @@ const Marketplace: React.FC<MarketplaceProps> = ({
       </Reveal>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {courses.map((course, i) => (
+        {courses.map((course, i) => {
+          const isPending = paymentRequestStatus[course.id] === 'pending' || cartCourseIds.includes(course.id);
+          const paymentStatus = paymentRequestStatus[course.id];
+          console.log(`Course ${course.id}: is_enrolled=${course.is_enrolled}, paymentStatus=${paymentStatus}, isPending=${isPending}`);
+          return (
           <Reveal key={course.id} delay={i * 0.1} width="100%">
             <div
               onClick={() => handleCourseClick(course)}
@@ -121,24 +201,27 @@ const Marketplace: React.FC<MarketplaceProps> = ({
                   onError={(e) => handleImageError(e, undefined, course.title)}
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                   {!course.is_enrolled && (
-                     <button
-                       onClick={(e) => {
-                         e.stopPropagation();
-                         handleAddToCart(course);
-                       }}
-                       disabled={addingToCart[course.id] || cartCourseIds.includes(course.id)}
-                       className={`p-2 rounded-full transition-all ${
-                         addingToCart[course.id]
-                           ? 'bg-blue-500 text-white scale-110'
-                           : cartCourseIds.includes(course.id)
-                           ? 'bg-green-500 text-white'
-                           : 'bg-white text-slate-900 hover:scale-110'
-                       }`}
-                     >
-                       <ShoppingBag size={20} />
-                     </button>
-                   )}
+                   {(paymentRequestStatus[course.id] === 'pending' || !course.is_enrolled) && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (!paymentRequestStatus[course.id]) {
+                            handleAddToCart(course);
+                          }
+                        }}
+                        disabled={addingToCart[course.id] || paymentRequestStatus[course.id] === 'pending' || cartCourseIds.includes(course.id)}
+                        title={paymentRequestStatus[course.id] === 'pending' ? (isEn ? "Payment pending - awaiting approval" : "الدفع قيد الانتظار - في انتظار الموافقة") : cartCourseIds.includes(course.id) ? (isEn ? "Payment pending - awaiting approval" : "الدفع قيد الانتظار - في انتظار الموافقة") : ""}
+                        className={`p-2 rounded-full transition-all ${
+                          addingToCart[course.id]
+                            ? 'bg-blue-500 text-white scale-110'
+                            : paymentRequestStatus[course.id] === 'pending' || cartCourseIds.includes(course.id)
+                            ? 'bg-yellow-600 text-white cursor-not-allowed'
+                            : 'bg-white text-slate-900 hover:scale-110'
+                        }`}
+                      >
+                        <ShoppingBag size={20} />
+                      </button>
+                    )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -172,26 +255,33 @@ const Marketplace: React.FC<MarketplaceProps> = ({
                    <span className="text-2xl font-bold text-primary">
                      ${course.price}
                    </span>
-                   {!course.is_enrolled && (
+                   {(paymentRequestStatus[course.id] === 'pending' || !course.is_enrolled) && (
                      <Button
-                       onClick={() => handleAddToCart(course)}
-                       disabled={addingToCart[course.id] || cartCourseIds.includes(course.id)}
+                       onClick={() => {
+                         if (!paymentRequestStatus[course.id]) {
+                           handleAddToCart(course);
+                         }
+                       }}
+                       disabled={addingToCart[course.id] || paymentRequestStatus[course.id] === 'pending' || cartCourseIds.includes(course.id)}
                        isLoading={addingToCart[course.id]}
-                       className="!py-2 !px-4 text-xs"
+                       className={`!py-2 !px-4 text-xs transition-colors ${
+                         paymentRequestStatus[course.id] === 'pending' || cartCourseIds.includes(course.id) ? '!bg-yellow-600 hover:!bg-yellow-700' : ''
+                       }`}
                      >
                        {addingToCart[course.id]
                          ? (isEn ? "Adding..." : "جاري الإضافة...")
-                         : cartCourseIds.includes(course.id)
-                         ? (isEn ? "✓ In Cart" : "✓ في السلة")
+                         : paymentRequestStatus[course.id] === 'pending' || cartCourseIds.includes(course.id)
+                         ? (isEn ? "⏳ Pending" : "⏳ قيد الانتظار")
                          : (isEn ? "Add to Cart" : "أضف للسلة")}
                      </Button>
                    )}
                  </div>
               </div>
-            </div>
-          </Reveal>
-        ))}
-      </div>
+              </div>
+              </Reveal>
+              );
+              })}
+              </div>
     </div>
   );
 };

@@ -259,8 +259,15 @@ class CartItemSerializer(serializers.ModelSerializer):
         read_only_fields = ["id", "added_at"]
 
     def get_course_thumbnail(self, obj):
+        # Handle both model instances and validated data (OrderedDict)
+        if isinstance(obj, dict):
+            course = obj.get('course')
+            if isinstance(course, dict):
+                return course.get('thumbnail')
+            return None
+        
         request = self.context.get('request')
-        if obj.course.thumbnail:
+        if hasattr(obj, 'course') and obj.course and hasattr(obj.course, 'thumbnail') and obj.course.thumbnail:
             try:
                 return request.build_absolute_uri(obj.course.thumbnail.url) if request else obj.course.thumbnail.url
             except:
