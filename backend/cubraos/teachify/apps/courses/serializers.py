@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Course, Lesson, Category, Enrollment, LessonProgress, WishlistItem, Resource, Task, TaskSubmission
+from .models import Course, Lesson, Category, Enrollment, LessonProgress, WishlistItem, Resource, Task, TaskSubmission , CartItem, PaymentRequest
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -243,3 +243,86 @@ class TaskSubmissionCreateSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         validated_data['student'] = self.context['request'].user
         return super().create(validated_data)
+
+
+# ==========================================
+# CART ITEM SERIALIZERS
+# ==========================================
+class CartItemSerializer(serializers.ModelSerializer):
+    course_title = serializers.ReadOnlyField(source="course.title")
+    course_price = serializers.ReadOnlyField(source="course.price")
+    course_thumbnail = serializers.SerializerMethodField()
+
+    class Meta:
+        model = CartItem
+        fields = ["id", "course", "course_title", "course_price", "course_thumbnail", "added_at"]
+        read_only_fields = ["id", "added_at"]
+
+    def get_course_thumbnail(self, obj):
+        request = self.context.get('request')
+        if obj.course.thumbnail:
+            try:
+                return request.build_absolute_uri(obj.course.thumbnail.url) if request else obj.course.thumbnail.url
+            except:
+                return None
+        return None
+
+
+# ==========================================
+# PAYMENT REQUEST SERIALIZERS
+# ==========================================
+class PaymentRequestSerializer(serializers.ModelSerializer):
+    course_titles = serializers.SerializerMethodField()
+    payment_proof_url = serializers.SerializerMethodField()
+    student_email = serializers.ReadOnlyField(source="student.email")
+    processed_by_email = serializers.ReadOnlyField(source="processed_by.email")
+
+    class Meta:
+        model = PaymentRequest
+        fields = [
+            "id", "student", "student_email", "instructor", "courses", "course_titles",
+            "total_amount", "payment_proof_image", "payment_proof_url", "status",
+            "rejection_reason", "submitted_at", "processed_at", "processed_by", "processed_by_email"
+        ]
+        read_only_fields = ["id", "submitted_at", "processed_at", "processed_by", "student"]
+
+    def get_course_titles(self, obj):
+        return [course.title for course in obj.courses.all()]
+
+    def get_payment_proof_url(self, obj):
+        request = self.context.get('request')
+        if obj.payment_proof_image:
+            try:
+                return request.build_absolute_uri(obj.payment_proof_image.url) if request else obj.payment_proof_image.url
+            except:
+                return None
+        return None
+
+
+class PaymentRequestCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PaymentRequest
+        fields = ["courses", "total_amount", "payment_proof_image"]
+
+    def create(self, validated_data):
+        validated_data['student'] = self.context['request'].user
+        courses = validated_data.pop('courses', [])
+        
+        # Create the PaymentRequest instance
+        payment_request = PaymentRequest.objects.create(**validated_data)
+        
+        # Add courses to the M2M relationship
+        if courses:
+            payment_request.courses.set(courses)
+        
+        return payment_request
+
+
+class PaymentRequestApproveSerializer(serializers.Serializer):
+    """Serializer for instructor to approve payment request"""
+    pass
+
+
+class PaymentRequestRejectSerializer(serializers.Serializer):
+    """Serializer for instructor to reject payment request"""
+    rejection_reason = serializers.CharField(required=False, allow_blank=True, max_length=500)

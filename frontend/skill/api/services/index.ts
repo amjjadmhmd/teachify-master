@@ -4,6 +4,7 @@
  */
 import authService from './authService';
 import coursesService from './coursesService';
+import paymentService from './paymentService';
 import apiClient, { handleApiError } from '../config';
 import {
   Exam,
@@ -389,6 +390,7 @@ const instructorService = new InstructorService();
 export {
   authService,
   coursesService,
+  paymentService,
   examsService,
   notificationsService,
   publicService,
@@ -399,6 +401,7 @@ export {
 export default {
   auth: authService,
   courses: coursesService,
+  payment: paymentService,
   exams: examsService,
   notifications: notificationsService,
   public: publicService,

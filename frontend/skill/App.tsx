@@ -240,7 +240,10 @@ import InstructorCertificates from "./pages/instructor/Certificates";
 import TopStudentsPage from "./pages/instructor/TopStudents";
 import Marketplace from "./pages/student/Marketplace";
 import Wishlist from "./pages/student/Wishlist";
-import CartPage from "./pages/student/Cart";
+import CartPayment from "./pages/student/CartPayment"; // UPDATED: Changed from Cart to CartPayment
+import PaymentSubmission from "./pages/student/PaymentSubmission"; // NEW
+import PaymentHistory from "./pages/student/PaymentHistory"; // NEW
+import PaymentRequests from "./pages/instructor/PaymentRequests"; // NEW
 import CoursePlayer from "./pages/student/CoursePlayer";
 import ExamsList from "./pages/student/ExamsList";
 import ExamRunner from "./pages/student/ExamRunner";
@@ -297,12 +300,41 @@ const WhiteLabApp: React.FC = () => {
 
   const toggleLang = () => setLang((l) => (l === "en" ? "ar" : "en"));
 
-  const addToCart = (course: Course) => {
-    if (!cart.find((c) => c.id === course.id)) setCart([...cart, course]);
+  const addToCart = async (course: Course) => {
+    if (!cart.find((c) => c.id === course.id)) {
+      setCart([...cart, course]);
+      // Save to backend
+      try {
+        await api.payment.addToCart(course.id);
+      } catch (err) {
+        console.error('Failed to save cart item:', err);
+        // Remove from local state if backend failed
+        setCart(cart.filter(c => c.id !== course.id));
+      }
+    }
   };
-  const removeFromCart = (id: number) =>
+  const removeFromCart = async (id: number) => {
+    const cartItem = cart.find(c => c.id === id);
+    if (!cartItem) return;
+    
     setCart(cart.filter((c) => c.id !== id));
-  const clearCart = () => setCart([]);
+    // Delete from backend
+    try {
+      // TODO: Need to track cartItemIds separately for proper deletion
+      // await api.payment.removeFromCart(cartItemId);
+    } catch (err) {
+      console.error('Failed to remove cart item:', err);
+    }
+  };
+  const clearCart = async () => {
+    setCart([]);
+    // Clear from backend
+    try {
+      await api.payment.clearCart();
+    } catch (err) {
+      console.error('Failed to clear cart:', err);
+    }
+  };
 
   const toggleWishlist = async (course: Course) => {
     const currentWishlist = wishlist || [];
@@ -480,7 +512,7 @@ const WhiteLabApp: React.FC = () => {
 
       case ViewMode.CART:
         return (
-          <CartPage
+          <CartPayment
             cart={cart}
             removeFromCart={removeFromCart}
             clearCart={clearCart}
@@ -489,6 +521,30 @@ const WhiteLabApp: React.FC = () => {
             setView={setView}
           />
         );
+
+      case ViewMode.PAYMENT_SUBMISSION:
+        return (
+          <PaymentSubmission
+            cartItems={cart.map(c => ({
+              id: c.id,
+              course: c.id,
+              course_title: c.title,
+              course_price: c.price,
+              course_thumbnail: c.thumbnail,
+              added_at: new Date().toISOString()
+            }))}
+            totalAmount={cart.reduce((sum, c) => sum + parseFloat(c.price || '0'), 0)}
+            lang={lang}
+            setView={setView}
+            refreshCart={() => setDashboardRefreshTrigger((p) => p + 1)}
+          />
+        );
+
+      case ViewMode.PAYMENT_HISTORY:
+        return <PaymentHistory lang={lang} />;
+
+      case ViewMode.INSTRUCTOR_PAYMENTS:
+        return <PaymentRequests lang={lang} />;
 
       case ViewMode.COURSE_PLAYER:
         return <CoursePlayer lang={lang} theme={theme} isMobile={isMobile} selectedCourse={selectedCourse} />;

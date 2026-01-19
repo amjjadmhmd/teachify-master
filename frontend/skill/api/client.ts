@@ -125,7 +125,8 @@ import {
   examsService,
   notificationsService,
   publicService,
-  instructorService
+  instructorService,
+  paymentService
 } from './services';
 
 /**
@@ -261,6 +262,21 @@ export const api = {
     getExamSubmissions: examsService.getExamSubmissions.bind(examsService),
     deleteExam: examsService.deleteExam.bind(examsService),
   },
+
+  // Payment & Cart
+  payment: {
+    getCart: paymentService.getCart.bind(paymentService),
+    getCartTotal: paymentService.getCartTotal.bind(paymentService),
+    addToCart: paymentService.addToCart.bind(paymentService),
+    removeFromCart: paymentService.removeFromCart.bind(paymentService),
+    clearCart: paymentService.clearCart.bind(paymentService),
+    submitPayment: paymentService.submitPayment.bind(paymentService),
+    getPaymentHistory: paymentService.getPaymentHistory.bind(paymentService),
+    getPendingPayments: paymentService.getPendingPayments.bind(paymentService),
+    getPaymentHistoryForInstructor: paymentService.getPaymentHistoryForInstructor.bind(paymentService),
+    approvePayment: paymentService.approvePayment.bind(paymentService),
+    rejectPayment: paymentService.rejectPayment.bind(paymentService),
+  },
 };
 
 // Export individual services for advanced use cases
@@ -270,7 +286,8 @@ export {
   examsService,
   notificationsService,
   publicService,
-  instructorService
+  instructorService,
+  paymentService
 };
 
 // Export types

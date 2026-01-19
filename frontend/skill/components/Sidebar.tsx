@@ -2,7 +2,7 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   LayoutDashboard, BookOpen, ShoppingBag, Heart, Users, ShoppingCart, 
-  LogOut, X, Medal, ClipboardList, GraduationCap, Sparkles, Award, Trophy, FileText
+  LogOut, X, Medal, ClipboardList, GraduationCap, Sparkles, Award, Trophy, FileText, CreditCard
 } from 'lucide-react';
 import { User, Lang, ViewMode } from '../types';
 import { ASSETS } from '../constants/assets';
@@ -26,6 +26,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const menuItems = isInstructor ? [
     { id: ViewMode.DASHBOARD, label: isEn ? 'Dashboard' : 'لوحة التحكم', icon: LayoutDashboard },
     { id: ViewMode.COURSE_EDITOR, label: isEn ? 'Course Library' : 'مكتبة الكورسات', icon: BookOpen },
+    { id: ViewMode.INSTRUCTOR_PAYMENTS, label: isEn ? 'Payments' : 'الدفعات', icon: CreditCard },
     { id: ViewMode.INSTRUCTOR_TASKS, label: isEn ? 'Tasks' : 'المهام', icon: FileText },
     { id: ViewMode.INSTRUCTOR_EXAMS, label: isEn ? 'Exams' : 'الامتحانات', icon: ClipboardList },
     { id: ViewMode.INSTRUCTOR_CERTIFICATES, label: isEn ? 'Certificates' : 'الشهادات', icon: Award },

@@ -266,3 +266,86 @@ class TaskSubmission(models.Model):
 
     def __str__(self):
         return f"{self.student.email} - {self.task.title}"
+
+
+# ============================
+#   SHOPPING CART MODEL
+# ============================
+class CartItem(models.Model):
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="cart_items"
+    )
+    course = models.ForeignKey(
+        Course,
+        on_delete=models.CASCADE,
+        related_name="cart_items"
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ("student", "course")
+        ordering = ["-added_at"]
+
+    def __str__(self):
+        return f"{self.student.email} - {self.course.title}"
+
+
+# ============================
+#   PAYMENT REQUEST MODEL
+# ============================
+class PaymentRequest(models.Model):
+    STATUS_CHOICES = (
+        ("pending", "Pending"),
+        ("approved", "Approved"),
+        ("rejected", "Rejected"),
+    )
+
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="payment_requests"
+    )
+    instructor = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name="received_payment_requests",
+        null=True,
+        blank=True
+    )
+    
+    # Track courses in this payment request (many-to-many)
+    courses = models.ManyToManyField(
+        Course,
+        related_name="payment_requests"
+    )
+    
+    # Payment details
+    total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+    payment_proof_image = models.ImageField(upload_to="payment_proofs/")
+    
+    # Status tracking
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending"
+    )
+    rejection_reason = models.TextField(blank=True, null=True)
+    
+    # Timestamps
+    submitted_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+    processed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="processed_payment_requests"
+    )
+
+    class Meta:
+        ordering = ["-submitted_at"]
+
+    def __str__(self):
+        return f"{self.student.email} - Payment Request #{self.id} ({self.status})"

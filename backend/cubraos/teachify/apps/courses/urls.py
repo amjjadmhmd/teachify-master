@@ -58,6 +58,7 @@ from .views import (
     TaskViewSet,
     TaskSubmissionViewSet,
 )
+from .payment_views import CartViewSet, PaymentRequestViewSet
 from .public_views import PublicCourseViewSet
 from .instructor_views import instructor_wallet, instructor_students, create_course_lesson, create_course_resource, delete_resource
 
@@ -88,6 +89,10 @@ router.register("public/courses", PublicCourseViewSet, basename="public-courses"
 # Task routes (new)
 router.register("tasks", TaskViewSet, basename="tasks")
 router.register("task-submissions", TaskSubmissionViewSet, basename="task-submissions")
+
+# Payment & Cart routes (new)
+router.register("cart", CartViewSet, basename="cart")
+router.register("payment-requests", PaymentRequestViewSet, basename="payment-requests")
 
 urlpatterns = router.urls + [
     # Public endpoints
