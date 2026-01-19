@@ -49,8 +49,9 @@ const LoginPage: React.FC<LoginProps> = ({
       // Success - notify parent component
       onLogin(user);
     } catch (err: any) {
-      // Handle error from service
-      setError(err.message || (isEn ? 'Login failed. Please try again.' : 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.'));
+      // Handle error from service - show specific error message
+      const errorMessage = err.message || (isEn ? 'Login failed. Please try again.' : 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
+      setError(errorMessage);
       console.error('Login error:', err);
     } finally {
       setLoading(false);

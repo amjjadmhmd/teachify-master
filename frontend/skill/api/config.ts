@@ -156,11 +156,24 @@ export const handleApiError = (error: any): string => {
     if (status === 400) {
       // Validation errors
       if (typeof data === 'object') {
+        // Check for specific error messages
+        if (data.detail) {
+          return data.detail;
+        }
+        if (data.message) {
+          return data.message;
+        }
+        // Handle field-level errors
         const firstError = Object.values(data)[0];
         return Array.isArray(firstError) ? firstError[0] : String(firstError);
       }
+      return data?.detail || 'Invalid request. Please check your information.';
     } else if (status === 401) {
-      return 'Authentication required. Please login again.';
+      // Check for specific authentication error messages
+      if (data?.detail) {
+        return data.detail;
+      }
+      return 'Invalid email or password. Please try again.';
     } else if (status === 403) {
       return 'You do not have permission to perform this action.';
     } else if (status === 404) {
