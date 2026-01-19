@@ -160,12 +160,12 @@ const InstructorTasks: React.FC<{ lang: Lang; theme: Theme }> = ({
       return;
     }
     try {
-      // You would need to implement the delete endpoint
-      // await api.courses.deleteTask(taskId);
+      await api.courses.deleteTask(taskId);
       setTasks(tasks.filter((t) => t.id !== taskId));
       alert(isEn ? "Task deleted successfully" : "تم حذف المهمة بنجاح");
     } catch (error) {
       console.error("Failed to delete task:", error);
+      alert(isEn ? "Failed to delete task" : "فشل حذف المهمة");
     }
   };
 

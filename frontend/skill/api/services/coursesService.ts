@@ -680,10 +680,10 @@ class CoursesService {
   }
 
   /**
-   * Grade a task submission (Instructor only)
-   * POST /api/courses/task-submissions/{id}/grade/
-   */
-  async gradeTaskSubmission(
+    * Grade a task submission (Instructor only)
+    * POST /api/courses/task-submissions/{id}/grade/
+    */
+   async gradeTaskSubmission(
     submissionId: number,
     data: { score: number; feedback?: string }
   ): Promise<TaskSubmission> {
@@ -693,6 +693,18 @@ class CoursesService {
         data
       );
       return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+    * Delete a task (Instructor only)
+    * DELETE /api/courses/tasks/{id}/
+    */
+  async deleteTask(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/api/courses/tasks/${id}/`);
     } catch (error) {
       throw new Error(handleApiError(error));
     }

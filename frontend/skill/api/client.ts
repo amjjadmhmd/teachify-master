@@ -168,6 +168,7 @@ export const api = {
     submitTask: coursesService.submitTask.bind(coursesService),
     getMySubmissions: coursesService.getMySubmissions.bind(coursesService),
     gradeTaskSubmission: coursesService.gradeTaskSubmission.bind(coursesService),
+    deleteTask: coursesService.deleteTask.bind(coursesService),
   },
 
   // Lessons
