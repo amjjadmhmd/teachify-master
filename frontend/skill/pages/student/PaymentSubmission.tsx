@@ -121,7 +121,22 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
   }
 
   return (
-    <div className="pt-32 sm:pt-40 pb-10 px-4 max-w-4xl mx-auto min-h-screen">
+    <div className="pt-32 sm:pt-40 pb-10 px-4 max-w-4xl mx-auto min-h-screen relative">
+      {/* Submitting Overlay */}
+      {loading && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-xl p-8 text-center shadow-2xl">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-slate-200 border-t-primary mx-auto mb-4"></div>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+              Submitting Payment
+            </h3>
+            <p className="text-slate-600 dark:text-slate-400 text-sm">
+              Please wait, do not refresh or close this window
+            </p>
+          </div>
+        </div>
+      )}
+
       <Reveal width="100%">
         <div className="flex items-center gap-4 mb-8">
           <button
@@ -166,14 +181,19 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
                   Payment Proof Image *
                 </label>
                 <div
-                  className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-8 text-center cursor-pointer hover:border-primary hover:bg-primary/5 transition-colors"
-                  onClick={() => fileInputRef.current?.click()}
+                  className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                    loading
+                      ? 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50 cursor-not-allowed opacity-50'
+                      : 'border-slate-300 dark:border-slate-600 cursor-pointer hover:border-primary hover:bg-primary/5'
+                  }`}
+                  onClick={() => !loading && fileInputRef.current?.click()}
                 >
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
                     onChange={handleImageChange}
+                    disabled={loading}
                     className="hidden"
                   />
 
@@ -204,20 +224,22 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
               <Button
                 type="submit"
                 onClick={handleSubmit}
-                disabled={!image || cartItems.length === 0}
+                disabled={!image || cartItems.length === 0 || loading}
                 isLoading={loading}
                 className="w-full"
               >
-                Submit Payment Request
+                {loading ? 'Submitting Payment...' : 'Submit Payment Request'}
               </Button>
             </Card>
           </Reveal>
         </div>
 
         {/* Summary Sidebar */}
-        <div className="lg:col-span-1">
-          <Reveal delay={0.2} width="100%">
-            <Card className="sticky top-40 !p-6 border-primary/20 shadow-primary/5 space-y-6">
+         <div className="lg:col-span-1">
+           <Reveal delay={0.2} width="100%">
+             <Card className={`sticky top-40 !p-6 border-primary/20 shadow-primary/5 space-y-6 ${
+               loading ? 'opacity-50 pointer-events-none' : ''
+             }`}>
               <div>
                 <h3 className="text-xl font-bold mb-4 border-b border-slate-200 dark:border-white/10 pb-4 text-slate-900 dark:text-white">
                   Summary

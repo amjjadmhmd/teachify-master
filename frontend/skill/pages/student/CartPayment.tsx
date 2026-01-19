@@ -100,7 +100,7 @@ const CartPayment: React.FC<CartPaymentProps> = ({
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
+          <div className={`lg:col-span-2 space-y-4 ${loading ? 'opacity-50 pointer-events-none' : ''}`}>
             {cart.map((item, i) => (
               <Reveal key={item.id} delay={i * 0.1} width="100%">
                 <Card className="flex flex-col sm:flex-row gap-4 items-center !p-4">
@@ -115,8 +115,9 @@ const CartPayment: React.FC<CartPaymentProps> = ({
                   <div className="flex flex-col items-end gap-2">
                     <span className="text-xl font-bold text-slate-900 dark:text-white">${item.price}</span>
                     <button 
-                      onClick={() => removeFromCart(item.id)} 
-                      className="text-red-500 text-xs flex gap-1 hover:text-red-600"
+                      onClick={() => removeFromCart(item.id)}
+                      disabled={loading}
+                      className="text-red-500 text-xs flex gap-1 hover:text-red-600 disabled:opacity-50"
                     >
                       <Trash2 size={14} /> Remove
                     </button>
@@ -129,7 +130,9 @@ const CartPayment: React.FC<CartPaymentProps> = ({
           {/* Payment Method Selection */}
           <div className="lg:col-span-1">
             <Reveal delay={0.2} width="100%">
-              <Card className="sticky top-40 !p-6 border-primary/20 shadow-primary/5 space-y-6">
+              <Card className={`sticky top-40 !p-6 border-primary/20 shadow-primary/5 space-y-6 ${
+                loading ? 'opacity-50 pointer-events-none' : ''
+              }`}>
                 <div>
                   <h3 className="text-xl font-bold mb-6 border-b border-slate-200 dark:border-white/10 pb-4 text-slate-900 dark:text-white">
                     Summary

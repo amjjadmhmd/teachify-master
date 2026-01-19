@@ -30,7 +30,11 @@ const Marketplace: React.FC<MarketplaceProps> = ({
   onEnrolledCourseClick,
 }) => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [addingToCart, setAddingToCart] = useState<{[key: number]: boolean}>({});
   const isEn = lang === "en";
+
+  // Track which courses are in cart
+  const [cartCourseIds, setCartCourseIds] = useState<number[]>([]);
 
   useEffect(() => {
     api.courses.list().then(setCourses).catch(console.error);
@@ -40,6 +44,21 @@ const Marketplace: React.FC<MarketplaceProps> = ({
   const handleCourseClick = (course: Course) => {
     if (course.is_enrolled && onEnrolledCourseClick) {
       onEnrolledCourseClick(course);
+    }
+  };
+
+  // Handle add to cart with loading state
+  const handleAddToCart = async (course: Course) => {
+    setAddingToCart(prev => ({ ...prev, [course.id]: true }));
+    try {
+      await api.payment.addToCart(course.id);
+      addToCart(course);
+      setCartCourseIds(prev => [...prev, course.id]);
+    } catch (err) {
+      console.error('Failed to add to cart:', err);
+      alert('Failed to add course to cart. Please try again.');
+    } finally {
+      setAddingToCart(prev => ({ ...prev, [course.id]: false }));
     }
   };
 
@@ -87,17 +106,24 @@ const Marketplace: React.FC<MarketplaceProps> = ({
                   onError={(e) => handleImageError(e, undefined, course.title)}
                 />
                 <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                  {!course.is_enrolled && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        addToCart(course);
-                      }}
-                      className="bg-white text-slate-900 p-2 rounded-full hover:scale-110 transition-transform"
-                    >
-                      <ShoppingBag size={20} />
-                    </button>
-                  )}
+                   {!course.is_enrolled && (
+                     <button
+                       onClick={(e) => {
+                         e.stopPropagation();
+                         handleAddToCart(course);
+                       }}
+                       disabled={addingToCart[course.id] || cartCourseIds.includes(course.id)}
+                       className={`p-2 rounded-full transition-all ${
+                         addingToCart[course.id]
+                           ? 'bg-blue-500 text-white scale-110'
+                           : cartCourseIds.includes(course.id)
+                           ? 'bg-green-500 text-white'
+                           : 'bg-white text-slate-900 hover:scale-110'
+                       }`}
+                     >
+                       <ShoppingBag size={20} />
+                     </button>
+                   )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -128,18 +154,24 @@ const Marketplace: React.FC<MarketplaceProps> = ({
                   {course.description}
                 </p>
                 <div className="mt-auto flex justify-between items-center pt-4 border-t border-slate-100 dark:border-white/10">
-                  <span className="text-2xl font-bold text-primary">
-                    ${course.price}
-                  </span>
-                  {!course.is_enrolled && (
-                    <Button
-                      onClick={() => addToCart(course)}
-                      className="!py-2 !px-4 text-xs"
-                    >
-                      {isEn ? "Add to Cart" : "أضف للسلة"}
-                    </Button>
-                  )}
-                </div>
+                   <span className="text-2xl font-bold text-primary">
+                     ${course.price}
+                   </span>
+                   {!course.is_enrolled && (
+                     <Button
+                       onClick={() => handleAddToCart(course)}
+                       disabled={addingToCart[course.id] || cartCourseIds.includes(course.id)}
+                       isLoading={addingToCart[course.id]}
+                       className="!py-2 !px-4 text-xs"
+                     >
+                       {addingToCart[course.id]
+                         ? (isEn ? "Adding..." : "جاري الإضافة...")
+                         : cartCourseIds.includes(course.id)
+                         ? (isEn ? "✓ In Cart" : "✓ في السلة")
+                         : (isEn ? "Add to Cart" : "أضف للسلة")}
+                     </Button>
+                   )}
+                 </div>
               </div>
             </div>
           </Reveal>
