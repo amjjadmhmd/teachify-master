@@ -289,12 +289,8 @@ class PaymentRequestViewSet(viewsets.ModelViewSet):
             payment_request.processed_by = request.user
             payment_request.save()
             
-            # Delete CartItems for rejected courses
-            # Forces student to add them fresh and decide again
-            CartItem.objects.filter(
-                student=payment_request.student,
-                course__in=payment_request.courses.all()
-            ).delete()
+            # NOTE: Cart items were already deleted when payment was submitted (perform_create line 137-138)
+            # No need to delete them again. Student can freely add courses back to cart
             
             # Send notification to student
             message = 'Your payment has been rejected. '
