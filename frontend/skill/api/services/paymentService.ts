@@ -100,12 +100,13 @@ class PaymentService {
 
   /**
    * Get student's payment history
-   * GET /api/courses/payment-requests/my-history/
+   * GET /api/courses/payment-requests/
+   * Students automatically see only their own requests (filtered by backend)
    */
   async getPaymentHistory(): Promise<any[]> {
     try {
       const response = await apiClient.get(
-        "/api/courses/payment-requests/my-history/"
+        "/api/courses/payment-requests/"
       );
       return response.data;
     } catch (error) {

@@ -5,6 +5,8 @@ import apiClient from '../../api/config';
 import { Button, Card, Input } from '../../components/UI';
 import { Reveal } from '../../components/Reveal';
 import { ArrowLeft, Upload, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { toast } from 'sonner';
+import { usePayment } from '../../context/PaymentContext';
 
 interface CartItem {
   id: number;
@@ -36,6 +38,8 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { isPendingForCourse } = usePayment();
+  const isEn = lang === 'en';
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -78,6 +82,20 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
       return;
     }
 
+    // ✨ NEW: Check if any course has pending payment before submitting
+    const pendingCourses = cartItems.filter(item => isPendingForCourse(item.course));
+    
+    if (pendingCourses.length > 0) {
+      const courseNames = pendingCourses.map(c => c.course_title).join(', ');
+      toast.info(
+        isEn 
+          ? `You have submitted payment successfully for: ${courseNames}. It's pending from instructor approval.`
+          : `تم إرسال الدفع بنجاح للـ: ${courseNames}. قيد الانتظار من معتمد الكورس.`,
+        { duration: 5000 }
+      );
+      return; // Stop form submission
+    }
+
     setLoading(true);
 
     try {
@@ -92,6 +110,15 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
       const response = await apiClient.post('/api/courses/payment-requests/', formData);
 
       setSuccess(true);
+      
+      // ✨ NEW: Show success toast with course names
+      const courseNames = cartItems.map(c => c.course_title).join(', ');
+      toast.success(
+        isEn
+          ? `Payment submitted successfully for: ${courseNames}. It's pending from instructor approval.`
+          : `تم إرسال الدفع بنجاح للـ: ${courseNames}. قيد الانتظار من معتمد الكورس.`
+      );
+
       setTimeout(() => {
         setSuccess(false);
         refreshCart();

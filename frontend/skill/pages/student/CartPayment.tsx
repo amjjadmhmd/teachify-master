@@ -4,6 +4,8 @@ import { api } from '../../api/client';
 import { Button, Card, Input } from '../../components/UI';
 import { Reveal } from '../../components/Reveal';
 import { ShoppingBag, ArrowLeft, Trash2, CreditCard, Lock, CheckCircle, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
+import { usePayment } from '../../context/PaymentContext';
 
 interface CartPaymentProps {
   cart: Course[];
@@ -26,13 +28,37 @@ const CartPayment: React.FC<CartPaymentProps> = ({
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState('');
+  const { isPendingForCourse } = usePayment();
+  const isEn = lang === 'en';
 
   const total = cart.reduce((sum, item) => sum + (parseFloat(item.price) || 0), 0).toFixed(2);
 
   const handleCardPayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    // ✨ NEW: Check if any course has pending payment
+    console.log('🛒 Cart Items:', cart);
+    const pendingCourses = cart.filter(item => {
+      const isPending = isPendingForCourse(item.id);
+      console.log(`Checking course ${item.id} (${item.title}): isPending=${isPending}`);
+      return isPending;
+    });
+    console.log('⏳ Pending Courses Found:', pendingCourses);
+    
+    if (pendingCourses.length > 0) {
+      const courseNames = pendingCourses.map(c => c.title).join(', ');
+      console.log('🔔 Showing toast for pending courses:', courseNames);
+      toast.info(
+        isEn 
+          ? `You have submitted payment successfully for: ${courseNames}. It's pending from instructor approval.`
+          : `تم إرسال الدفع بنجاح للـ: ${courseNames}. قيد الانتظار من معتمد الكورس.`,
+        { duration: 5000 }
+      );
+      return; // Stop payment
+    }
+
+    setLoading(true);
     
     try {
       // Simulate card payment processing
@@ -57,6 +83,33 @@ const CartPayment: React.FC<CartPaymentProps> = ({
   };
 
   const handleManualPayment = () => {
+    // ✨ NEW: Check if any course has pending payment before navigating
+    console.log('🔵 handleManualPayment() called');
+    console.log('🛒 Cart items in manual payment:', cart);
+    console.log('Cart item IDs:', cart.map(c => c.id));
+    
+    const pendingCourses = cart.filter(item => {
+      const isPending = isPendingForCourse(item.id);
+      console.log(`  → Checking course ${item.id}: isPending=${isPending}`);
+      return isPending;
+    });
+    
+    console.log('⏳ Pending courses after filter:', pendingCourses);
+    
+    if (pendingCourses.length > 0) {
+      const courseNames = pendingCourses.map(c => c.title).join(', ');
+      console.log('🔔 About to show toast for:', courseNames);
+      toast.info(
+        isEn 
+          ? `You have submitted payment successfully for: ${courseNames}. It's pending from instructor approval.`
+          : `تم إرسال الدفع بنجاح للـ: ${courseNames}. قيد الانتظار من معتمد الكورس.`,
+        { duration: 5000 }
+      );
+      console.log('✅ Toast should be visible now');
+      return; // Stop navigation to payment submission
+    }
+
+    console.log('➡️ No pending courses, navigating to payment submission');
     // This would navigate to the payment submission page
     // The view would be changed in the parent component
     setView(ViewMode.PAYMENT_SUBMISSION);

@@ -212,6 +212,7 @@
  * Main App Component - Updated with Signup Page
  */
 import React, { useState, useEffect } from "react";
+import { Toaster } from "sonner";
 import {
   ViewMode,
   Course,
@@ -223,7 +224,9 @@ import {
 } from "./types";
 import { api } from "./api/client";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { PaymentProvider } from "./context/PaymentContext";
 import Layout from "./components/Layout";
+import PaymentNotificationListener from "./components/PaymentNotificationListener";
 import { useIsMobile } from "./hooks/useIsMobile";
 
 // Import Pages
@@ -266,6 +269,7 @@ const WhiteLabApp: React.FC = () => {
   const [activeExam, setActiveExam] = useState<PendingQuiz | null>(null);
   const [targetStudentId, setTargetStudentId] = useState<number | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
   const isMobile = useIsMobile();
 
@@ -302,6 +306,22 @@ const WhiteLabApp: React.FC = () => {
           setCart(courses);
         })
         .catch(() => console.log("Failed to fetch cart"));
+      
+      // Fetch notifications
+      api.notifications
+        .list()
+        .then(setNotifications)
+        .catch(() => console.log("Failed to fetch notifications"));
+      
+      // Poll for new notifications every 10 seconds
+      const notificationInterval = setInterval(() => {
+        api.notifications
+          .list()
+          .then(setNotifications)
+          .catch(() => {});
+      }, 10000);
+      
+      return () => clearInterval(notificationInterval);
     }
   }, [user]);
 
@@ -335,10 +355,16 @@ const WhiteLabApp: React.FC = () => {
     setCart(cart.filter((c) => c.id !== id));
     // Delete from backend
     try {
-      // TODO: Need to track cartItemIds separately for proper deletion
-      // await api.payment.removeFromCart(cartItemId);
+      // Fetch the CartItem ID by getting the full cart and finding the matching item
+      const cartItems = await api.payment.getCart();
+      const cartItemToDelete = cartItems.find((item: any) => item.course === id);
+      if (cartItemToDelete) {
+        await api.payment.removeFromCart(cartItemToDelete.id);
+      }
     } catch (err) {
       console.error('Failed to remove cart item:', err);
+      // Restore cart if deletion fails
+      setCart([...cart, cartItem]);
     }
   };
   const clearCart = async () => {
@@ -629,32 +655,39 @@ const WhiteLabApp: React.FC = () => {
   }
 
   return (
-    <Layout
-      view={view}
-      setView={setView}
-      user={user}
-      theme={theme}
-      toggleTheme={toggleTheme}
-      lang={lang}
-      toggleLang={toggleLang}
-      cartCount={cart.length}
-      isSidebarOpen={isSidebarOpen}
-      setIsSidebarOpen={setIsSidebarOpen}
-      isSettingsOpen={isSettingsOpen}
-      setIsSettingsOpen={setIsSettingsOpen}
-      onLogout={handleLogout}
-      onNavigateToStudent={handleNavigateToStudent}
-      onUpdateUser={login}
-    >
-      {renderView()}
-    </Layout>
+    <>
+      <PaymentNotificationListener notifications={notifications} />
+      <Layout
+        view={view}
+        setView={setView}
+        user={user}
+        theme={theme}
+        toggleTheme={toggleTheme}
+        lang={lang}
+        toggleLang={toggleLang}
+        cartCount={cart.length}
+        isSidebarOpen={isSidebarOpen}
+        setIsSidebarOpen={setIsSidebarOpen}
+        isSettingsOpen={isSettingsOpen}
+        setIsSettingsOpen={setIsSettingsOpen}
+        onLogout={handleLogout}
+        onNavigateToStudent={handleNavigateToStudent}
+        onUpdateUser={login}
+      >
+        {renderView()}
+      </Layout>
+    </>
   );
 };
 
 const App: React.FC = () => {
   return (
     <AuthProvider>
-      <WhiteLabApp />
+      <PaymentProvider>
+        <WhiteLabApp />
+        {/* ✨ Toast notification container - required for sonner to display toasts */}
+        <Toaster position="top-right" richColors />
+      </PaymentProvider>
     </AuthProvider>
   );
 };

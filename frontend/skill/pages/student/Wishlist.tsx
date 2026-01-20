@@ -95,7 +95,7 @@ const Wishlist: React.FC<WishlistProps> = ({
                     ${item.course_price}
                   </span>
                   <div className="flex gap-2">
-                    <button
+                    {/* <button
                       onClick={() =>
                         onAddToCart(
                           item.course,
@@ -108,7 +108,7 @@ const Wishlist: React.FC<WishlistProps> = ({
                       title={isEn ? "Add to Cart" : "أضف للسلة"}
                     >
                       <ShoppingBag size={20} />
-                    </button>
+                    </button> */}
                     <button
                       onClick={() => onRemove(item.course)}
                       className="bg-red-500 text-white p-2 rounded-full hover:scale-110 transition-transform"
