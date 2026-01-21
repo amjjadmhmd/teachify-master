@@ -33,6 +33,12 @@ interface PaymentRequestsProps {
   lang: Lang;
 }
 
+const REJECTION_REASONS = [
+  { value: 'unclear_payment_proof', label: 'Payment proof unclear' },
+  { value: 'incomplete_price', label: 'Course price not completed' },
+  { value: 'other', label: 'Other (please specify)' },
+];
+
 const PaymentRequests: React.FC<PaymentRequestsProps> = ({ lang }) => {
   const [activeTab, setActiveTab] = useState<'pending' | 'history'>('pending');
   const [pendingPayments, setPendingPayments] = useState<PaymentRequest[]>([]);
@@ -41,6 +47,7 @@ const PaymentRequests: React.FC<PaymentRequestsProps> = ({ lang }) => {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [selectedPayment, setSelectedPayment] = useState<PaymentRequest | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [rejectionReasonSelect, setRejectionReasonSelect] = useState('');
   const [showRejectModal, setShowRejectModal] = useState(false);
   const [processing, setProcessing] = useState(false);
 
@@ -404,17 +411,53 @@ const PaymentRequests: React.FC<PaymentRequestsProps> = ({ lang }) => {
               Payment of ${selectedPayment.total_amount} from {selectedPayment.student_email}
             </p>
 
-            <textarea
-              placeholder="Optional: Explain the rejection reason"
-              value={rejectionReason}
-              onChange={(e) => setRejectionReason(e.target.value)}
-              className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
-              rows={4}
-            />
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Rejection Reason
+              </label>
+              <select
+                value={rejectionReasonSelect}
+                onChange={(e) => {
+                  setRejectionReasonSelect(e.target.value);
+                  if (e.target.value !== 'other') {
+                    setRejectionReason(e.target.value);
+                  } else {
+                    setRejectionReason('');
+                  }
+                }}
+                className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+              >
+                <option value="">Select a reason</option>
+                {REJECTION_REASONS.map((reason) => (
+                  <option key={reason.value} value={reason.value}>
+                    {reason.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {rejectionReasonSelect === 'other' && (
+              <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  Please specify the reason
+                </label>
+                <textarea
+                  placeholder="Explain the rejection reason"
+                  value={rejectionReason}
+                  onChange={(e) => setRejectionReason(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400"
+                  rows={4}
+                />
+              </div>
+            )}
 
             <div className="flex gap-3">
               <Button
-                onClick={() => setShowRejectModal(false)}
+                onClick={() => {
+                  setShowRejectModal(false);
+                  setRejectionReasonSelect('');
+                  setRejectionReason('');
+                }}
                 className="flex-1 bg-slate-600 hover:bg-slate-700"
               >
                 Cancel
@@ -422,7 +465,8 @@ const PaymentRequests: React.FC<PaymentRequestsProps> = ({ lang }) => {
               <Button
                 onClick={handleReject}
                 isLoading={processing}
-                className="flex-1 bg-red-600 hover:bg-red-700"
+                disabled={!rejectionReasonSelect || (rejectionReasonSelect === 'other' && !rejectionReason.trim())}
+                className="flex-1 bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 Reject Payment
               </Button>
