@@ -1,0 +1,29 @@
+TEACHIFY - EMAIL VERIFICATION
+========================================
+
+Hello {{ user.first_name|default:user.email }},
+
+Welcome to Teachify! We're excited to have you join our community of learners and educators.
+
+To complete your registration and get started, please verify your email address by using the code below:
+
+YOUR VERIFICATION CODE:
+{{ otp }}
+
+⏱️ This code expires in {{ expiry_hours }} hour(s).
+
+IMPORTANT TIPS:
+- This code is unique to your account
+- Never share this code with anyone
+- If you didn't create this account, please ignore this email
+
+WHAT YOU CAN DO WITH TEACHIFY:
+✓ Access exclusive courses from top instructors
+✓ Track your learning progress in real-time
+✓ Earn certificates upon course completion
+
+If you have any questions or need assistance, please don't hesitate to reach out.
+
+Best regards,
+The Teachify Team
+© 2026 Teachify. All rights reserved.

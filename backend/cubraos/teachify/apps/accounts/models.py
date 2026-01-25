@@ -129,3 +129,33 @@ class EmailVerificationLog(models.Model):
         self.verified = True
         self.verified_at = timezone.now()
         self.save()
+
+
+class PasswordResetLog(models.Model):
+    """Track password reset OTP codes"""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='password_reset_logs'
+    )
+    email = models.EmailField()
+    otp = models.CharField(max_length=6, db_index=True)
+    used = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(null=True, blank=True)
+    
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['otp']),
+            models.Index(fields=['user', 'used']),
+        ]
+    
+    def __str__(self):
+        status = 'Used' if self.used else 'Pending'
+        return f"{self.user.email} - Password Reset - {status}"
+    
+    def is_expired(self):
+        """Check if OTP expired"""
+        return timezone.now() > self.expires_at

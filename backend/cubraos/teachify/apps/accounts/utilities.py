@@ -37,8 +37,13 @@ class EmailVerificationService:
     """Handle email verification logic"""
     
     @staticmethod
+    def generate_otp(length=6):
+        """Generate 6-digit OTP"""
+        return ''.join(secrets.choice(string.digits) for _ in range(length))
+    
+    @staticmethod
     def send_verification_email(user, token, otp=None):
-        """Send verification email to user"""
+        """Send verification email to user with modern HTML template"""
         try:
             subject = "Verify Your Teachify Email"
             context = {
@@ -49,26 +54,22 @@ class EmailVerificationService:
                 'expiry_hours': getattr(settings, 'EMAIL_VERIFICATION_EXPIRY_HOURS', 24),
             }
             
-            # Try to render HTML template
-            try:
-                html_message = render_to_string(
-                    'accounts/emails/verify_email.html', 
-                    context
-                )
-            except:
-                # Fallback to plain text if template not found
-                html_message = f"""
-                <h2>Verify Your Email</h2>
-                <p>Hi {user.email},</p>
-                <p>Your verification code is: <strong>{otp}</strong></p>
-                <p>Or use this link: <a href="{context['verification_url']}">Verify Email</a></p>
-                <p>This code expires in {context['expiry_hours']} hours.</p>
-                """
+            # Render HTML template
+            html_message = render_to_string(
+                'accounts/emails/verify_email.html', 
+                context
+            )
             
-            # Send email
+            # Render plain text template
+            text_message = render_to_string(
+                'accounts/emails/verify_email.txt',
+                context
+            )
+            
+            # Send email with both HTML and plain text
             send_mail(
                 subject=subject,
-                message=f"Use this code to verify: {otp or token}",
+                message=text_message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
                 html_message=html_message,

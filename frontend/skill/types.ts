@@ -5,6 +5,8 @@ export enum ViewMode {
   LANDING = 'LANDING',
   AUTH = 'AUTH',
   VERIFY_EMAIL = 'VERIFY_EMAIL', // NEW: Email verification page
+  FORGOT_PASSWORD = 'FORGOT_PASSWORD', // NEW: Forgot password page
+  RESET_PASSWORD = 'RESET_PASSWORD', // NEW: Reset password page
   DASHBOARD = 'DASHBOARD',
   WORKSPACE = 'WORKSPACE', // Added Workspace view
   MARKETPLACE = 'MARKETPLACE',

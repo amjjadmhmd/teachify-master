@@ -1,4 +1,7 @@
 from django.contrib.auth import get_user_model
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework import generics, status
 from rest_framework.views import APIView
 from rest_framework.response import Response
@@ -138,3 +141,147 @@ class StudentListView(generics.ListAPIView):
 
     def get_queryset(self):
         return User.objects.filter(role='student').order_by('-date_joined')
+
+
+# ==========================================
+# 04. PASSWORD RESET
+# ==========================================
+
+class ForgotPasswordView(APIView):
+    """Send password reset OTP to email"""
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {"error": "Email required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            # Security: don't reveal if user exists
+            return Response(
+                {"message": "If email exists, reset code sent"},
+                status=status.HTTP_200_OK
+            )
+        
+        # Generate OTP
+        otp = EmailVerificationService.generate_otp()
+        expires_at = timezone.now() + timedelta(hours=1)
+        
+        # Save OTP to database
+        from .models import PasswordResetLog
+        PasswordResetLog.objects.create(
+            user=user,
+            email=email,
+            otp=otp,
+            expires_at=expires_at
+        )
+        
+        # Send email with modern template
+        try:
+            from django.template.loader import render_to_string
+            from django.core.mail import send_mail
+            
+            context = {
+                'user': user,
+                'otp': otp,
+                'expiry_hours': getattr(settings, 'PASSWORD_RESET_EXPIRY_HOURS', 1),
+            }
+            
+            # Render HTML template
+            html_message = render_to_string(
+                'accounts/emails/reset_password.html',
+                context
+            )
+            
+            # Render plain text template
+            text_message = render_to_string(
+                'accounts/emails/reset_password.txt',
+                context
+            )
+            
+            send_mail(
+                subject="Your Password Reset Code - Teachify",
+                message=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+        except Exception as e:
+            print(f"Error sending password reset email: {str(e)}")
+            return Response(
+                {"error": "Failed to send email"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        
+        return Response(
+            {"message": "Reset code sent to email"},
+            status=status.HTTP_200_OK
+        )
+
+
+class ResetPasswordView(APIView):
+    """Verify OTP and reset password"""
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        otp = request.data.get('otp')
+        new_password = request.data.get('new_password')
+        confirm_password = request.data.get('confirm_password')
+        
+        # Validate
+        if not all([otp, new_password, confirm_password]):
+            return Response(
+                {"error": "All fields required"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if new_password != confirm_password:
+            return Response(
+                {"error": "Passwords do not match"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        if len(new_password) < 6:
+            return Response(
+                {"error": "Password must be at least 6 characters"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Find OTP
+        from .models import PasswordResetLog
+        try:
+            reset_log = PasswordResetLog.objects.get(otp=otp, used=False)
+        except PasswordResetLog.DoesNotExist:
+            return Response(
+                {"error": "Invalid OTP"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if expired
+        if reset_log.is_expired():
+            return Response(
+                {"error": "OTP expired"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Reset password
+        user = reset_log.user
+        user.set_password(new_password)
+        user.save()
+        
+        # Mark OTP as used
+        reset_log.used = True
+        reset_log.used_at = timezone.now()
+        reset_log.save()
+        
+        return Response(
+            {"message": "Password reset successfully"},
+            status=status.HTTP_200_OK
+        )

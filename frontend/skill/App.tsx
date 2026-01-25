@@ -234,6 +234,8 @@ import LandingPage from "./pages/Landing";
 import LoginPage from "./pages/auth/Login";
 import SignupPage from "./pages/auth/Signup"; // NEW: Import Signup page
 import VerifyEmailPage from "./pages/auth/VerifyEmail"; // NEW: Import Email Verification page
+import ForgotPassword from "./pages/auth/ForgotPassword"; // NEW: Import Forgot Password page
+import ResetPassword from "./pages/auth/ResetPassword"; // NEW: Import Reset Password page
 import StudentDashboard from "./pages/student/Dashboard";
 import InstructorDashboard from "./pages/instructor/Dashboard";
 import InstructorCourses from "./pages/instructor/Courses";
@@ -272,6 +274,7 @@ const WhiteLabApp: React.FC = () => {
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
+  const [pendingResetPasswordEmail, setPendingResetPasswordEmail] = useState<string | null>(null);
 
   const isMobile = useIsMobile();
 
@@ -423,23 +426,24 @@ const WhiteLabApp: React.FC = () => {
     if (!user) {
       switch (view) {
         case ViewMode.AUTH:
-            return (
-              <LoginPage
-                onLogin={(u) => {
-                  login(u);
-                  setView(ViewMode.DASHBOARD);
-                }}
-                onBack={() => setView(ViewMode.LANDING)}
-                lang={lang}
-                toggleLang={toggleLang}
-                theme={theme}
-                toggleTheme={toggleTheme}
-                onLoginAttempt={() => {
-                  // User attempted to login - app stays on login page
-                  // Error handling is done within LoginPage component
-                }}
-              />
-            );
+          return (
+            <LoginPage
+              onLogin={(u) => {
+                login(u);
+                setView(ViewMode.DASHBOARD);
+              }}
+              onBack={() => setView(ViewMode.LANDING)}
+              onForgotPassword={() => setView(ViewMode.FORGOT_PASSWORD)}
+              lang={lang}
+              toggleLang={toggleLang}
+              theme={theme}
+              toggleTheme={toggleTheme}
+              onLoginAttempt={() => {
+                // User attempted to login - app stays on login page
+                // Error handling is done within LoginPage component
+              }}
+            />
+          );
 
         // NEW: Use Signup page instead of JoinPlatform
         case ViewMode.JOIN_PLATFORM:
@@ -470,6 +474,35 @@ const WhiteLabApp: React.FC = () => {
               onSuccess={() => {
                 // After verification, redirect to login
                 setPendingVerificationEmail(null);
+                setView(ViewMode.AUTH);
+              }}
+            />
+          );
+
+        // NEW: Forgot Password page
+        case ViewMode.FORGOT_PASSWORD:
+          return (
+            <ForgotPassword
+              onBack={() => setView(ViewMode.AUTH)}
+              onNext={(email: string) => {
+                setPendingResetPasswordEmail(email);
+                setView(ViewMode.RESET_PASSWORD);
+              }}
+            />
+          );
+
+        // NEW: Reset Password page
+        case ViewMode.RESET_PASSWORD:
+          return (
+            <ResetPassword
+              email={pendingResetPasswordEmail || ""}
+              onBack={() => {
+                setPendingResetPasswordEmail(null);
+                setView(ViewMode.AUTH);
+              }}
+              onSuccess={() => {
+                // After successful password reset, redirect to login
+                setPendingResetPasswordEmail(null);
                 setView(ViewMode.AUTH);
               }}
             />

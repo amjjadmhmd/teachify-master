@@ -158,6 +158,38 @@ class AuthService {
   }
 
   /**
+   * Request password reset
+   * POST /api/accounts/forgot-password/
+   */
+  async forgotPassword(email: string): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.post<{ message: string }>(
+        '/api/accounts/forgot-password/',
+        { email }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Reset password with OTP
+   * POST /api/accounts/reset-password/
+   */
+  async resetPassword(otp: string, newPassword: string, confirmPassword: string): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.post<{ message: string }>(
+        '/api/accounts/reset-password/',
+        { otp, new_password: newPassword, confirm_password: confirmPassword }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
    * Logout user (clear local storage)
    */
   logout(): void {

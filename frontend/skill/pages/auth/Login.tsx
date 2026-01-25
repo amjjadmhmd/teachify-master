@@ -10,6 +10,7 @@ import { ASSETS } from '../../constants/assets';
 interface LoginProps {
   onLogin: (u: User) => void;
   onBack: () => void;
+  onForgotPassword?: () => void;
   onLoginAttempt?: () => void;
   lang: Lang;
   toggleLang: () => void;
@@ -19,7 +20,8 @@ interface LoginProps {
 
 const LoginPage: React.FC<LoginProps> = ({ 
   onLogin, 
-  onBack, 
+  onBack,
+  onForgotPassword,
   onLoginAttempt,
   lang, 
   toggleLang, 
@@ -221,6 +223,17 @@ const LoginPage: React.FC<LoginProps> = ({
                         disabled={loading}
                         autoComplete="current-password"
                     />
+                    
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={onForgotPassword}
+                        disabled={loading}
+                        className="text-[10px] text-slate-400 hover:text-eden-accent transition-colors uppercase tracking-[0.2em] disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {isEn ? "Forgot Password?" : "هل نسيت كلمة المرور؟"}
+                      </button>
+                    </div>
                     
                     <Button 
                       type="submit" 
