@@ -233,6 +233,7 @@ import { useIsMobile } from "./hooks/useIsMobile";
 import LandingPage from "./pages/Landing";
 import LoginPage from "./pages/auth/Login";
 import SignupPage from "./pages/auth/Signup"; // NEW: Import Signup page
+import VerifyEmailPage from "./pages/auth/VerifyEmail"; // NEW: Import Email Verification page
 import StudentDashboard from "./pages/student/Dashboard";
 import InstructorDashboard from "./pages/instructor/Dashboard";
 import InstructorCourses from "./pages/instructor/Courses";
@@ -270,6 +271,7 @@ const WhiteLabApp: React.FC = () => {
   const [targetStudentId, setTargetStudentId] = useState<number | null>(null);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [pendingVerificationEmail, setPendingVerificationEmail] = useState<string | null>(null);
 
   const isMobile = useIsMobile();
 
@@ -421,30 +423,55 @@ const WhiteLabApp: React.FC = () => {
     if (!user) {
       switch (view) {
         case ViewMode.AUTH:
-          return (
-            <LoginPage
-              onLogin={(u) => {
-                login(u);
-                setView(ViewMode.DASHBOARD);
-              }}
-              onBack={() => setView(ViewMode.LANDING)}
-              lang={lang}
-              toggleLang={toggleLang}
-              theme={theme}
-              toggleTheme={toggleTheme}
-            />
-          );
+            return (
+              <LoginPage
+                onLogin={(u) => {
+                  login(u);
+                  setView(ViewMode.DASHBOARD);
+                }}
+                onBack={() => setView(ViewMode.LANDING)}
+                lang={lang}
+                toggleLang={toggleLang}
+                theme={theme}
+                toggleTheme={toggleTheme}
+                onLoginAttempt={() => {
+                  // User attempted to login - app stays on login page
+                  // Error handling is done within LoginPage component
+                }}
+              />
+            );
 
         // NEW: Use Signup page instead of JoinPlatform
         case ViewMode.JOIN_PLATFORM:
           return (
             <SignupPage
               onBack={() => setView(ViewMode.LANDING)}
-              onSuccess={() => setView(ViewMode.AUTH)} // Redirect to login after successful signup
+              onSuccess={(email: string) => {
+                // After successful signup, redirect to email verification
+                setPendingVerificationEmail(email);
+                setView(ViewMode.VERIFY_EMAIL);
+              }}
               lang={lang}
               toggleLang={toggleLang}
               theme={theme}
               toggleTheme={toggleTheme}
+            />
+          );
+        
+        // NEW: Email Verification page
+        case ViewMode.VERIFY_EMAIL:
+          return (
+            <VerifyEmailPage
+              email={pendingVerificationEmail || undefined}
+              onBack={() => {
+                setPendingVerificationEmail(null);
+                setView(ViewMode.LANDING);
+              }}
+              onSuccess={() => {
+                // After verification, redirect to login
+                setPendingVerificationEmail(null);
+                setView(ViewMode.AUTH);
+              }}
             />
           );
 

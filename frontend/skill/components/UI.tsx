@@ -7,8 +7,10 @@ export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'primary' | 'secondary' | 'outline' | 'danger' | 'accent', 
   isLoading?: boolean 
 }> = ({ 
-  children, variant = 'primary', isLoading, className, ...props 
+  children, variant = 'primary', isLoading, className,disabled, ...props 
 }) => {
+  const isDisabled = isLoading || disabled;
+
   // استخدام rounded-2xl (16px) لمظهر أكثر عصرية وتناسقاً
   const baseStyles = "relative px-8 py-3 rounded-2xl font-bold transition-all duration-300 ease-out flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed tracking-tight text-[11px] uppercase tracking-widest h-14 select-none outline-none border-0";
   
@@ -22,23 +24,38 @@ export const Button: React.FC<React.ButtonHTMLAttributes<HTMLButtonElement> & {
   };
 
   return (
+    // <motion.button 
+    //   whileHover={{ scale: 1.05 }}
+    //   whileTap={{ scale: 0.95 }}
+    //   transition={{ type: "spring", stiffness: 400, damping: 20 }}
+    //   className={`${baseStyles} ${variants[variant]} ${className}`}
+    //   disabled={isLoading || props.disabled}
+    //   {...(props as any)}
+    // >
+    //   <span className="relative z-10 flex items-center gap-2">
+    //     {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : children}
+    //   </span>
+      
+    //   {/* طبقة لمعان داخلية تتبع الانحناءات بدقة */}
+    //   <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+    // </motion.button>
     <motion.button 
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
+      whileHover={isDisabled ? {} : { scale: 1.05 }}  // ✅ منع animation عند disabled
+      whileTap={isDisabled ? {} : { scale: 0.95 }}    // ✅ منع animation عند disabled
       transition={{ type: "spring", stiffness: 400, damping: 20 }}
       className={`${baseStyles} ${variants[variant]} ${className}`}
-      disabled={isLoading || props.disabled}
-      {...(props as any)}
+      disabled={isDisabled}  // ✅ استخدام المتغير المدمج
+      {...props}  // ✅ تمرير بقية props بدون disabled
     >
       <span className="relative z-10 flex items-center gap-2">
         {isLoading ? <Loader2 className="animate-spin w-4 h-4" /> : children}
       </span>
       
-      {/* طبقة لمعان داخلية تتبع الانحناءات بدقة */}
       <div className="absolute inset-0 rounded-2xl bg-gradient-to-tr from-white/0 via-white/5 to-white/0 opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
     </motion.button>
   );
 };
+// ✅ Extract disabled from props to avoid duplicate
 
 export const Card: React.FC<React.HTMLAttributes<HTMLDivElement> & { variant?: 'glass' | 'solid' }> = ({ children, className, variant = 'solid', ...props }) => (
   <div className={`

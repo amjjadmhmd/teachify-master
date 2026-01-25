@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import { Sun, Moon, ArrowLeft, ShieldCheck, AlertCircle } from 'lucide-react';
 import { Button, Card, Input } from '../../components/UI';
 import { User, Lang, Theme } from '../../types';
@@ -9,6 +10,7 @@ import { ASSETS } from '../../constants/assets';
 interface LoginProps {
   onLogin: (u: User) => void;
   onBack: () => void;
+  onLoginAttempt?: () => void;
   lang: Lang;
   toggleLang: () => void;
   theme: Theme;
@@ -18,6 +20,7 @@ interface LoginProps {
 const LoginPage: React.FC<LoginProps> = ({ 
   onLogin, 
   onBack, 
+  onLoginAttempt,
   lang, 
   toggleLang, 
   theme, 
@@ -27,34 +30,105 @@ const LoginPage: React.FC<LoginProps> = ({
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isLoadingRef = React.useRef(false);
   
   const isEn = lang === 'en';
 
+  // Track component lifecycle
+  React.useEffect(() => {
+    console.log('🟣 LoginPage MOUNTED');
+    return () => {
+      console.log('🟣 LoginPage UNMOUNTING');
+    };
+  }, []);
+
+  // Track loading state changes
+  React.useEffect(() => {
+    console.log('📊 Loading state changed to:', loading);
+  }, [loading]);
+
+  // Track error state changes
+  React.useEffect(() => {
+    console.log('📊 Error state changed to:', error);
+  }, [error]);
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    e.stopPropagation();
+    
+    console.log('🔵 handleLogin START - isLoadingRef:', isLoadingRef.current);
+    
+    // Check ref first - synchronous, not affected by React batching
+    if (isLoadingRef.current) {
+      console.log('🔴 Already loading, returning');
+      e.preventDefault();
+      return;
+    }
     
     // Validation
     if (!email || !password) {
-      setError(isEn ? 'Please fill in all fields' : 'يرجى ملء جميع الحقول');
+      const validationError = isEn ? 'Please fill in all fields' : 'يرجى ملء جميع الحقول';
+      setError(validationError);
+      toast.error(validationError);
       return;
     }
 
+    // Set ref immediately
+    console.log('🟡 Setting isLoadingRef = true');
+    isLoadingRef.current = true;
     setLoading(true);
     setError(null);
 
     try {
-      // Call authentication service
+      console.log('📡 Making API call...');
       const user = await authService.login({ email, password });
+      console.log('✅ Login success:', user);
       
-      // Success - notify parent component
+      if (!user || !user.id) {
+        throw new Error('Invalid user data returned from login');
+      }
+      
+      const successMessage = isEn ? 'Login successful!' : 'تم تسجيل الدخول بنجاح!';
+      toast.success(successMessage);
       onLogin(user);
     } catch (err: any) {
-      // Handle error from service - show specific error message
+      console.log('❌ Catch block entered');
+      console.log('❌ Error object:', err);
+      console.log('❌ Error name:', err.name);
+      console.log('❌ Error message:', err.message);
+      
       const errorMessage = err.message || (isEn ? 'Login failed. Please try again.' : 'فشل تسجيل الدخول. يرجى المحاولة مرة أخرى.');
-      setError(errorMessage);
-      console.error('Login error:', err);
+      console.log('Setting error state to:', errorMessage);
+      
+      try {
+        setError(errorMessage);
+        console.log('✅ setError called');
+      } catch (stateErr) {
+        console.error('❌ setError failed:', stateErr);
+      }
+      
+      try {
+        toast.error(errorMessage);
+        console.log('✅ toast.error called');
+      } catch (toastErr) {
+        console.error('❌ toast failed:', toastErr);
+      }
     } finally {
-      setLoading(false);
+      console.log('🟢 Finally block - STARTING');
+      try {
+        isLoadingRef.current = false;
+        console.log('✅ Ref reset');
+      } catch (refErr) {
+        console.error('❌ Ref reset failed:', refErr);
+      }
+      
+      try {
+        setLoading(false);
+        console.log('✅ setLoading(false) called');
+      } catch (loadErr) {
+        console.error('❌ setLoading failed:', loadErr);
+      }
+      console.log('🟢 Finally block - DONE');
     }
   };
 
@@ -132,6 +206,7 @@ const LoginPage: React.FC<LoginProps> = ({
                         }} 
                         required
                         disabled={loading}
+                        autoComplete="email"
                     />
                     <Input 
                         label={isEn ? "Access Code" : "رمز الوصول"} 
@@ -144,6 +219,7 @@ const LoginPage: React.FC<LoginProps> = ({
                         }} 
                         required
                         disabled={loading}
+                        autoComplete="current-password"
                     />
                     
                     <Button 
@@ -152,7 +228,10 @@ const LoginPage: React.FC<LoginProps> = ({
                       isLoading={loading}
                       disabled={loading}
                     >
-                        {isEn ? "Authorize Session" : "مصادقة الجلسة"}
+                        {loading 
+                          ? (isEn ? "Authorizing..." : "جاري المصادقة...")
+                          : (isEn ? "Authorize Session" : "مصادقة الجلسة")
+                        }
                     </Button>
                 </form>
 

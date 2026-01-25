@@ -56,14 +56,12 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'teachify.urls'
 
-# 5️⃣ إعدادات الـ CORS (تسمح للفرونت إند بالتحدث مع الباكيند)
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
 CORS_ALLOW_CREDENTIALS = True
 
-# 6️⃣ إعدادات REST Framework و JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
@@ -157,7 +155,7 @@ LOCALE_PATHS = [
 ]
 
 
-##################################################################################################
+
 # ============================================
 # JAZZMIN SETTINGS - TEACHIFY CONFIGURATION
 # ============================================
@@ -339,4 +337,39 @@ JAZZMIN_UI_TWEAKS = {
 # 🔐 INSTRUCTOR VERIFICATION SETTINGS
 # ==========================================
 INSTRUCTOR_VERIFICATION_CODE = config('INSTRUCTOR_VERIFICATION_CODE', default='Tech12@')
+# ==========================================
+# 📧 EMAIL CONFIGURATION
+# ==========================================
+# Always use SMTP (not console) to send real emails
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
+EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
+EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='mahmoudwafi33@gmail.com')
+EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='pvay rygl gzzg vaan')
+EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
+
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='mahmoudwafi33@gmail.com')
+
+
+
+
+
+# EMAIL_HOST_USER = "itifoods.newcapital@gmail.com"
+# # EMAIL_HOST_PASSWORD = "sfkw hogm ozkm fgaf"
+# EMAIL_HOST_USER="mahmoudwafi33@gmail.com"
+# EMAIL_HOST_PASSWORD="egjv ffdo kaxm pest"
+# EMAIL_USE_TLS = True
+# # DEFAULT_FROM_EMAIL = "iticafe@gmail.com"
+
+# ==========================================
+# 📧 EMAIL VERIFICATION CONFIGURATION
+# ==========================================
+EMAIL_VERIFICATION_REQUIRED = config('EMAIL_VERIFICATION_REQUIRED', default=True, cast=bool)
+EMAIL_VERIFICATION_EXPIRY_HOURS = config('EMAIL_VERIFICATION_EXPIRY_HOURS', default=24, cast=int)
+OTP_EXPIRY_MINUTES = config('OTP_EXPIRY_MINUTES', default=15, cast=int)
+MAX_VERIFICATION_ATTEMPTS = config('MAX_VERIFICATION_ATTEMPTS', default=5, cast=int)
+VERIFICATION_EMAIL_RATE_LIMIT = config('VERIFICATION_EMAIL_RATE_LIMIT', default=3, cast=int)
+
+# Frontend URL for verification link
+FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 

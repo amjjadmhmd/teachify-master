@@ -9,8 +9,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (
     RegisterSerializer, 
     CustomTokenObtainPairSerializer, 
-    UserSerializer
+    UserSerializer,
+    EmailVerificationSerializer,
+    ResendVerificationEmailSerializer
 )
+from .models import EmailVerificationLog
+from .utilities import EmailVerificationService
 
 User = get_user_model()
 
@@ -23,6 +27,13 @@ class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
     permission_classes = [AllowAny]
+    
+    def create(self, request, *args, **kwargs):
+        response = super().create(request, *args, **kwargs)
+        # Add custom message
+        response.data['message'] = "Account created. Check your email for verification link."
+        response.data['verification_required'] = True
+        return response
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -40,7 +51,75 @@ class MeView(APIView):
 
 
 # ==========================================
-# 02. USER MANAGEMENT (إدارة المستخدمين)
+# 02. EMAIL VERIFICATION
+# ==========================================
+
+class VerifyEmailView(APIView):
+    """Verify user email with OTP code"""
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = EmailVerificationSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        otp = serializer.validated_data['otp']
+        
+        try:
+            log = EmailVerificationLog.objects.get(otp=otp, verified=False)
+            user = log.user
+            
+            if log.is_expired():
+                return Response(
+                    {"error": "OTP has expired. Please request a new one."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Mark as verified
+            log.mark_verified()
+            user.mark_email_verified()
+            
+            return Response({
+                "message": "Email verified successfully",
+                "user": UserSerializer(user).data
+            }, status=status.HTTP_200_OK)
+            
+        except EmailVerificationLog.DoesNotExist:
+            return Response(
+                {"error": "Invalid OTP code"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+
+class ResendVerificationEmailView(APIView):
+    """Resend verification email"""
+    permission_classes = [AllowAny]
+    
+    def post(self, request):
+        serializer = ResendVerificationEmailSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(
+                serializer.errors,
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        email = serializer.validated_data['email']
+        user = User.objects.get(email=email)
+        
+        success, message = EmailVerificationService.resend_verification_email(user)
+        
+        status_code = status.HTTP_200_OK if success else status.HTTP_429_TOO_MANY_REQUESTS
+        return Response(
+            {"message": message},
+            status=status_code
+        )
+
+
+# ==========================================
+# 03. USER MANAGEMENT (إدارة المستخدمين)
 # ==========================================
 
 class InstructorListView(generics.ListAPIView):

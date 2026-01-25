@@ -1,8 +1,4 @@
-// File: frontend/skill/api/services/authService.ts
-/**
- * Authentication Service
- * Handles login, registration, token refresh, and user profile
- */
+
 import apiClient, { handleApiError } from '../config';
 import {
   User,
@@ -123,6 +119,38 @@ class AuthService {
       const updatedUser = { ...currentUser, ...response.data };
       localStorage.setItem('user_data', JSON.stringify(updatedUser));
       
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Verify email with token
+   * POST /api/accounts/verify-email/
+   */
+  async verifyEmail(token: string): Promise<{ message: string; user: User }> {
+    try {
+      const response = await apiClient.post<{ message: string; user: User }>(
+        '/api/accounts/verify-email/',
+        { token }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Resend verification email
+   * POST /api/accounts/resend-verification/
+   */
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    try {
+      const response = await apiClient.post<{ message: string }>(
+        '/api/accounts/resend-verification/',
+        { email }
+      );
       return response.data;
     } catch (error) {
       throw new Error(handleApiError(error));

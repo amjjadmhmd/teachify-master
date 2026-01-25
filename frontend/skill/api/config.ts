@@ -135,14 +135,15 @@ apiClient.interceptors.response.use(
 
 /**
  * Logout helper function
+ * Note: Do NOT redirect here - let the app handle navigation
  */
 const handleLogout = () => {
   localStorage.removeItem('token');
   localStorage.removeItem('refresh_token');
   localStorage.removeItem('user_data');
   
-  // Redirect to login page
-  window.location.href = '/';
+  // DO NOT use window.location.href - it causes full page reloads
+  // The app will handle showing the login page when user state becomes null
 };
 
 /**

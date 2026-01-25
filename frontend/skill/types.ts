@@ -4,6 +4,7 @@ import React from 'react';
 export enum ViewMode {
   LANDING = 'LANDING',
   AUTH = 'AUTH',
+  VERIFY_EMAIL = 'VERIFY_EMAIL', // NEW: Email verification page
   DASHBOARD = 'DASHBOARD',
   WORKSPACE = 'WORKSPACE', // Added Workspace view
   MARKETPLACE = 'MARKETPLACE',

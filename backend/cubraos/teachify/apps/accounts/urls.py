@@ -1,6 +1,12 @@
 from django.urls import path
 from rest_framework_simplejwt.views import TokenRefreshView
-from .views import RegisterView, CustomTokenObtainPairView, MeView
+from .views import (
+    RegisterView, 
+    CustomTokenObtainPairView, 
+    MeView,
+    VerifyEmailView,
+    ResendVerificationEmailView
+)
 
 urlpatterns = [
     # 1. إنشاء حساب جديد    
@@ -14,4 +20,8 @@ urlpatterns = [
 
     # 4. جلب بيانات المستخدم الحالي
     path("me/", MeView.as_view(), name="me"),
+    
+    # 5. Email verification
+    path("verify-email/", VerifyEmailView.as_view(), name="verify_email"),
+    path("resend-verification/", ResendVerificationEmailView.as_view(), name="resend_verification"),
 ]

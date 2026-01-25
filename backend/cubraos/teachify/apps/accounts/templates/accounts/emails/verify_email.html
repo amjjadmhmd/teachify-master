@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+            margin: -20px -20px 20px -20px;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+        }
+        .content {
+            padding: 20px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .greeting {
+            font-size: 16px;
+            margin-bottom: 20px;
+        }
+        .otp-section {
+            background-color: #f9f9f9;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .otp {
+            font-size: 48px;
+            font-weight: bold;
+            letter-spacing: 8px;
+            color: #667eea;
+            margin: 10px 0;
+            font-family: 'Courier New', monospace;
+        }
+        .otp-label {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .button-section {
+            text-align: center;
+            margin: 30px 0;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+        .button:hover {
+            opacity: 0.9;
+        }
+        .divider {
+            border: none;
+            border-top: 1px solid #e0e0e0;
+            margin: 20px 0;
+        }
+        .note {
+            background-color: #fffbea;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }
+        .note strong {
+            color: #f57f17;
+        }
+        .footer {
+            text-align: center;
+            color: #999;
+            font-size: 12px;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e0e0e0;
+        }
+        .security-note {
+            background-color: #f0f4ff;
+            border-left: 4px solid #667eea;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎓 Teachify</h1>
+            <p>Email Verification</p>
+        </div>
+        
+        <div class="content">
+            <div class="greeting">
+                <p>Hi {{ user.first_name|default:user.email }},</p>
+                <p>Thank you for signing up for Teachify! We're excited to have you on board.</p>
+            </div>
+            
+            <p>To complete your registration, please verify your email address using one of the methods below:</p>
+            
+            <!-- OTP Section -->
+            <div class="otp-section">
+                <div class="otp-label">Your Verification Code:</div>
+                <div class="otp">{{ otp }}</div>
+                <p style="color: #666; font-size: 12px; margin: 10px 0;">Valid for 24 hours</p>
+            </div>
+            
+            <!-- OR Section -->
+            <p style="text-align: center; color: #999;">— OR —</p>
+            
+            <!-- Button Section -->
+            <div class="button-section">
+                <p>Click the button below to verify your email:</p>
+                <a href="{{ verification_url }}" class="button">Verify My Email</a>
+            </div>
+            
+            <hr class="divider">
+            
+            <!-- Important Notes -->
+            <div class="security-note">
+                <strong>🔒 Security Notice:</strong><br>
+                Never share your verification code with anyone. Teachify staff will never ask for your code.
+            </div>
+            
+            <div class="note">
+                <strong>⏰ Expires in:</strong> {{ expiry_hours }} hours
+            </div>
+            
+            <!-- Trouble Accessing -->
+            <p style="font-size: 14px; color: #666;">
+                Having trouble? If the button above doesn't work, copy and paste this link in your browser:<br>
+                <code style="background: #f5f5f5; padding: 5px 10px; border-radius: 3px; word-break: break-all;">{{ verification_url }}</code>
+            </p>
+            
+            <hr class="divider">
+            
+            <p style="font-size: 13px; color: #999;">
+                If you didn't create this account, please ignore this email or <a href="#" style="color: #667eea;">contact our support team</a>.
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2026 Teachify. All rights reserved.</p>
+            <p>
+                <a href="#" style="color: #999; text-decoration: none;">Privacy Policy</a> | 
+                <a href="#" style="color: #999; text-decoration: none;">Terms of Service</a> | 
+                <a href="#" style="color: #999; text-decoration: none;">Contact Support</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

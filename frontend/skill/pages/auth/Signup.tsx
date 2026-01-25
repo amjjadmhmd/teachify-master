@@ -16,7 +16,7 @@ import { ASSETS } from '../../constants/assets';
 
 interface SignupProps {
   onBack: () => void;
-  onSuccess: () => void;
+  onSuccess: (email: string) => void;
   lang: Lang;
   toggleLang: () => void;
   theme: Theme;
@@ -169,9 +169,9 @@ const SignupPage: React.FC<SignupProps> = ({
       // Success - show success message
       setSuccess(true);
       
-      // Redirect to login after 2 seconds
+      // Redirect to email verification after 2 seconds
       setTimeout(() => {
-        onSuccess();
+        onSuccess(formData.email); // Pass email to verification page
       }, 2000);
       
     } catch (err: any) {
