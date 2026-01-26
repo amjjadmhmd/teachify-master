@@ -1,0 +1,65 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Welcome to Teachify{% endblock %}
+
+{% block email_content %}
+<div class="email-header">
+    <h1>🎓 Welcome to Teachify</h1>
+    <p>Your Learning Journey Starts Now</p>
+</div>
+
+<div class="email-content">
+    <h2>Hello {{ user_name }}!</h2>
+    
+    <p>Welcome to <span class="highlight">Teachify</span>, your gateway to world-class education and skill development!</p>
+    
+    <p>We're thrilled to have you on board as a <strong>{{ role }}</strong>. Whether you're here to learn new skills, share your expertise, or build a community, you're in the right place.</p>
+    
+    <div class="info-box">
+        <strong>📧 Your Email:</strong> {{ user_email }}<br>
+        <strong>👤 Role:</strong> {{ role }}<br>
+        <strong>📅 Join Date:</strong> Today!
+    </div>
+    
+    <h3 style="color: #667eea; font-size: 18px; margin-top: 30px;">What's Next?</h3>
+    
+    {% if role == "Student" %}
+        <p><strong>✨ As a Student, you can:</strong></p>
+        <ul style="margin-left: 20px; color: #666;">
+            <li>Browse our marketplace and explore courses</li>
+            <li>Enroll in courses that interest you</li>
+            <li>Track your learning progress</li>
+            <li>Take exams and earn certificates</li>
+            <li>Connect with instructors and peers</li>
+        </ul>
+        
+        <a href="{{ site_url }}/marketplace" class="cta-button">Explore Courses</a>
+    {% else %}
+        <p><strong>✨ As an Instructor, you can:</strong></p>
+        <ul style="margin-left: 20px; color: #666;">
+            <li>Create and publish your courses</li>
+            <li>Design exams and assessments</li>
+            <li>Track student progress</li>
+            <li>Grade submissions and provide feedback</li>
+            <li>Monitor your earnings and payouts</li>
+        </ul>
+        
+        <a href="{{ site_url }}/instructor/dashboard" class="cta-button">Go to Dashboard</a>
+    {% endif %}
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">Get Started:</h3>
+    <ol style="margin-left: 20px; color: #666;">
+        <li><strong>Complete Your Profile:</strong> Add a profile picture and bio to build trust</li>
+        <li><strong>Verify Your Email:</strong> Check your inbox for verification link</li>
+        <li><strong>Explore:</strong> Browse our platform and discover amazing content</li>
+    </ol>
+    
+    <hr class="divider">
+    
+    <p>If you have any questions or need assistance getting started, our support team is here to help. Just reply to this email or visit our help center.</p>
+    
+    <p style="margin-top: 30px; color: #999; font-size: 13px;">Best regards,<br><strong>The Teachify Team</strong></p>
+</div>
+{% endblock %}

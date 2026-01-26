@@ -1,0 +1,74 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Payment Request Rejected - Teachify{% endblock %}
+
+{% block email_content %}
+<div class="email-header">
+    <h1>❌ Payment Request Rejected</h1>
+    <p>Please Review and Resubmit</p>
+</div>
+
+<div class="email-content">
+    <h2>Hello {{ user_name }}!</h2>
+    
+    <p>Unfortunately, your payment request could not be processed. Please see the details below:</p>
+    
+    <div class="info-box" style="border-left-color: #dc3545;">
+        <strong style="color: #dc3545;">📋 Payment Request ID:</strong> #{{ payment_request_id }}<br>
+        <strong style="color: #dc3545;">💰 Amount:</strong> ${{ total_amount }}<br>
+        <strong style="color: #dc3545;">❌ Status:</strong> <span class="status-badge status-rejected">REJECTED</span><br>
+        <strong style="color: #dc3545;">📝 Reason:</strong> {{ rejection_reason }}
+    </div>
+    
+    <h3 style="color: #667eea; font-size: 18px; margin-top: 30px;">Requested Courses:</h3>
+    
+    <div class="course-list">
+        <ul>
+            {% for course in courses %}
+                <li>📚 {{ course }}</li>
+            {% endfor %}
+        </ul>
+        <p style="text-align: center; color: #667eea; font-weight: 600; margin-top: 10px;">
+            Total: <strong>{{ course_count }} Course{{ course_count|pluralize }}</strong>
+        </p>
+    </div>
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">What Can You Do?</h3>
+    
+    <p>Don't worry! Here are your options:</p>
+    
+    <ol style="margin-left: 20px; color: #666;">
+        <li><strong>Review the rejection reason</strong> above</li>
+        <li><strong>Correct the issue</strong> (e.g., provide clear payment proof, correct amount, etc.)</li>
+        <li><strong>Resubmit your payment request</strong> with the updated information</li>
+        <li><strong>Contact support</strong> if you need clarification or have questions</li>
+    </ol>
+    
+    <div class="info-box" style="margin-top: 30px; border-left-color: #667eea;">
+        <strong>💡 Common Reasons for Rejection:</strong>
+        <ul style="margin: 10px 0 0 20px; font-size: 13px;">
+            <li>Blurry or illegible payment proof</li>
+            <li>Payment amount doesn't match the total</li>
+            <li>Missing required information</li>
+            <li>Duplicate payment request</li>
+            <li>Invalid transaction details</li>
+        </ul>
+    </div>
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">Need Help?</h3>
+    
+    <p>If you have any questions about why your payment was rejected or how to resubmit, please contact our support team:</p>
+    
+    <p style="text-align: center; margin: 20px 0;">
+        <strong>📧 Email:</strong> <a href="mailto:{{ support_email }}" style="color: #667eea;">{{ support_email }}</a>
+    </p>
+    
+    <p>We're here to help make sure you can access your courses as soon as possible!</p>
+    
+    <p style="margin-top: 30px; color: #999; font-size: 13px;">Best regards,<br><strong>The Teachify Team</strong></p>
+</div>
+{% endblock %}

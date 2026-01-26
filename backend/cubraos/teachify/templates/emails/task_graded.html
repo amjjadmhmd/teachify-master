@@ -1,0 +1,60 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Your Task Has Been Graded - Teachify{% endblock %}
+
+{% block email_content %}
+<div class="email-header">
+    <h1>📝 Task Graded</h1>
+    <p>{{ task_title }} - {{ course_title }}</p>
+</div>
+
+<div class="email-content">
+    <h2>Hello {{ user_name }}!</h2>
+    
+    <p>Good news! Your task has been reviewed and graded by your instructor.</p>
+    
+    <div class="score-display">
+        <div class="score-label">Your Score</div>
+        <div class="score-number">{{ score }}/100</div>
+    </div>
+    
+    <div class="info-box">
+        <strong>📝 Task:</strong> {{ task_title }}<br>
+        <strong>📚 Course:</strong> {{ course_title }}<br>
+        <strong>✅ Score:</strong> {{ score }}/100<br>
+        <strong>📅 Graded:</strong> {{ graded_at }}<br>
+    </div>
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">Instructor Feedback:</h3>
+    
+    <div style="background-color: #f9f9f9; border-left: 4px solid #667eea; padding: 15px; border-radius: 4px; margin: 20px 0;">
+        <p style="margin: 0; white-space: pre-wrap; color: #333;">{{ feedback }}</p>
+    </div>
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">What's Next?</h3>
+    
+    <ul style="margin-left: 20px; color: #666;">
+        <li>📖 Review the feedback carefully</li>
+        <li>💭 Consider the suggestions for improvement</li>
+        <li>❓ Reach out if you need clarification</li>
+        <li>✅ Continue with the next assignments</li>
+    </ul>
+    
+    <a href="{{ dashboard_url }}" class="cta-button">View Full Feedback</a>
+    
+    <div class="info-box" style="margin-top: 30px; border-left-color: #667eea;">
+        <strong>💡 Tip:</strong> Review your instructor's feedback carefully. It will help you improve your skills and do better on future tasks!
+    </div>
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">Have Questions?</h3>
+    <p>If you'd like to discuss your grades or need clarification on the feedback, feel free to reach out to your instructor directly through the platform.</p>
+    
+    <p style="margin-top: 30px; color: #999; font-size: 13px;">Best regards,<br><strong>The Teachify Team</strong></p>
+</div>
+{% endblock %}

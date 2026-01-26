@@ -1,0 +1,76 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Your Exam Results - Teachify{% endblock %}
+
+{% block email_content %}
+<div class="email-header">
+    <h1>📊 Your Exam Results</h1>
+    <p>{{ exam_title }} - {{ course_title }}</p>
+</div>
+
+<div class="email-content">
+    <h2>Hello {{ user_name }}!</h2>
+    
+    <p>Congratulations! You have completed the exam. Here are your results:</p>
+    
+    <div class="score-display">
+        <div class="score-label">Your Score</div>
+        <div class="score-number">{{ score }}/{{ total_marks }}</div>
+        <div class="score-label">{{ percentage }}%</div>
+    </div>
+    
+    <div class="info-box">
+        <strong>📝 Exam:</strong> {{ exam_title }}<br>
+        <strong>📚 Course:</strong> {{ course_course_title }}<br>
+        <strong>🎯 Passing Score:</strong> 60%<br>
+        <strong>📅 Completed:</strong> {{ finished_at }}<br>
+        <strong>✅ Status:</strong> <span class="status-badge {% if passed %}status-passed{% else %}status-pending{% endif %}">{{ status }}</span>
+    </div>
+    
+    <div class="info-box" style="border-left-color: {% if passed %}#28a745{% else %}#ffc107{% endif %};">
+        <strong>{% if passed %}🎉 Excellent Work!{% else %}📚 Keep Learning!{% endif %}</strong><br>
+        {% if passed %}
+            You've successfully passed the exam! You're progressing well in this course.
+        {% else %}
+            You didn't quite reach the passing score this time. Don't worry - you can retake the exam or review the course materials.
+        {% endif %}
+    </div>
+    
+    {% if exam_description %}
+        <hr class="divider">
+        <h3 style="color: #667eea; font-size: 18px;">About This Exam:</h3>
+        <p>{{ exam_description }}</p>
+    {% endif %}
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">What's Next?</h3>
+    
+    {% if passed %}
+        <ul style="margin-left: 20px; color: #666;">
+            <li>📜 You're eligible to earn a certificate!</li>
+            <li>➡️ Continue with the next course modules</li>
+            <li>👥 Connect with fellow learners</li>
+            <li>⭐ Share your achievement with others</li>
+        </ul>
+        
+        <a href="{{ dashboard_url }}" class="cta-button">View Certificate</a>
+    {% else %}
+        <ul style="margin-left: 20px; color: #666;">
+            <li>📖 Review the course materials again</li>
+            <li>❓ Check if retakes are available</li>
+            <li>💬 Ask your instructor for tips</li>
+            <li>🔄 Retake the exam when ready</li>
+        </ul>
+        
+        <a href="{{ dashboard_url }}" class="cta-button">Back to Course</a>
+    {% endif %}
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">Need Help?</h3>
+    <p>If you have questions about your results or the exam, please reach out to your instructor or contact our support team.</p>
+    
+    <p style="margin-top: 30px; color: #999; font-size: 13px;">Best regards,<br><strong>The Teachify Team</strong></p>
+</div>
+{% endblock %}

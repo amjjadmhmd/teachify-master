@@ -1,0 +1,71 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Payment Approved - Teachify{% endblock %}
+
+{% block email_content %}
+<div class="email-header">
+    <h1>✅ Payment Approved!</h1>
+    <p>Your Courses Are Ready to Start</p>
+</div>
+
+<div class="email-content">
+    <h2>Hello {{ user_name }}!</h2>
+    
+    <p>Great news! 🎉 Your payment has been approved and you're now officially enrolled in your courses!</p>
+    
+    <div class="info-box">
+        <strong>💰 Amount Received:</strong> ${{ total_amount }}<br>
+        <strong>✔️ Status:</strong> <span class="status-badge" style="background-color: #d4edda; color: #155724;">APPROVED</span><br>
+        <strong>📅 Processed:</strong> {{ processed_at }}<br>
+        <strong>🎓 Courses:</strong> {{ course_count }} Course{{ course_count|pluralize }}
+    </div>
+    
+    <h3 style="color: #667eea; font-size: 18px; margin-top: 30px;">Your Enrolled Courses:</h3>
+    
+    <div class="course-list">
+        <ul>
+            {% for course in courses %}
+                <li>📚 <strong>{{ course.title }}</strong></li>
+            {% endfor %}
+        </ul>
+    </div>
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">Start Learning Now!</h3>
+    
+    <p>You have full access to all your enrolled courses. Here's what you can do:</p>
+    
+    <ul style="margin-left: 20px; color: #666;">
+        <li>📖 Watch all course videos and lessons</li>
+        <li>📝 Download course materials and resources</li>
+        <li>✅ Take exams and quizzes</li>
+        <li>📊 Track your learning progress</li>
+        <li>📜 Earn certificates upon completion</li>
+    </ul>
+    
+    <a href="{{ dashboard_url }}" class="cta-button" style="display: block;">Go to My Dashboard</a>
+    
+    <hr class="divider">
+    
+    <h3 style="color: #667eea; font-size: 18px;">Tips to Get Started:</h3>
+    
+    <ol style="margin-left: 20px; color: #666;">
+        <li>Visit your dashboard to view all courses</li>
+        <li>Start with the first lesson of each course</li>
+        <li>Set a study schedule and stick to it</li>
+        <li>Download resources for offline reference</li>
+        <li>Reach out to instructors if you have questions</li>
+    </ol>
+    
+    <div class="info-box" style="margin-top: 30px;">
+        <strong>💡 Pro Tip:</strong> Consistent learning is key to success. Try to dedicate time each day to your courses and watch your progress grow!
+    </div>
+    
+    <hr class="divider">
+    
+    <p>Happy learning! If you need any assistance or have questions, our support team is ready to help.</p>
+    
+    <p style="margin-top: 30px; color: #999; font-size: 13px;">Best regards,<br><strong>The Teachify Team</strong></p>
+</div>
+{% endblock %}
