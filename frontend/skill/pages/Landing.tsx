@@ -55,7 +55,7 @@ const Landing: React.FC<LandingProps> = ({
           onClick={handleLogoClick}
         >
           <img src={ASSETS.LOGO} alt="Geo Top Logo" className="h-12 w-12 object-contain rounded-full group-hover:rotate-6 transition-transform" style={{ mixBlendMode: 'multiply', filter: 'brightness(1.05)' }} />
-          <span className="font-bold text-2xl text-slate-800 tracking-tighter">Geo Top</span>
+          <span className="font-bold text-2xl text-slate-800 tracking-tighter">Abdallah</span>
         </div>
 
         <div className="flex items-center gap-6">
