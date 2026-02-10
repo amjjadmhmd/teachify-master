@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  LayoutDashboard, BookOpen, ShoppingBag, Heart, Users, ShoppingCart, 
+import {
+  LayoutDashboard, BookOpen, ShoppingBag, Heart, Users, ShoppingCart,
   LogOut, X, Medal, ClipboardList, GraduationCap, Sparkles, Award, Trophy, FileText, CreditCard
 } from 'lucide-react';
 import { User, Lang, ViewMode } from '../types';
@@ -17,8 +17,8 @@ interface SidebarProps {
   onLogout: () => void;
 }
 
-const Sidebar: React.FC<SidebarProps> = ({ 
-  isOpen, onClose, setView, currentView, lang, user, onLogout 
+const Sidebar: React.FC<SidebarProps> = ({
+  isOpen, onClose, setView, currentView, lang, user, onLogout
 }) => {
   const isInstructor = user?.role === 'instructor';
   const isEn = lang === 'en';
@@ -50,56 +50,55 @@ const Sidebar: React.FC<SidebarProps> = ({
 
   const SidebarContent = (
     <div className="flex flex-col h-full py-8 px-6">
-       {/* Branding */}
-       <div 
-         className="flex items-center gap-4 mb-12 px-2 cursor-pointer hover:opacity-80 active:scale-95 transition-all group" 
-         onClick={handleBrandClick}
-       >
-          <img src={ASSETS.LOGO} alt="Logo" className="h-10 w-10 object-contain group-hover:rotate-12 transition-transform" />
-          <span className="font-bold text-xl text-white tracking-tighter">Teachify</span>
-       </div>
+      {/* Branding */}
+      <div
+        className="flex items-center gap-4 mb-12 px-2 cursor-pointer hover:opacity-80 active:scale-95 transition-all group"
+        onClick={handleBrandClick}
+      >
+        <img src={ASSETS.LOGO} alt="Logo" className="h-10 w-10 object-contain rounded-full group-hover:rotate-12 transition-transform" style={{ mixBlendMode: 'multiply', filter: 'brightness(1.05)' }} />
+        <span className="font-bold text-xl text-slate-800 tracking-tighter">Geo Top</span>
+      </div>
 
-       {/* Navigation */}
-       <div className="flex-1 space-y-2">
-         <p className="text-[9px] font-black text-slate-600 uppercase tracking-[0.3em] mb-4 px-2">
-           {isEn ? "Main Console" : "لوحة التحكم"}
-         </p>
-         {menuItems.map(item => (
-           <motion.button 
+      {/* Navigation */}
+      <div className="flex-1 space-y-2">
+        <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] mb-4 px-2">
+          {isEn ? "Main Console" : "لوحة التحكم"}
+        </p>
+        {menuItems.map(item => (
+          <motion.button
             whileHover={{ x: 5 }}
             whileTap={{ scale: 0.98 }}
             key={item.id}
             onClick={() => { setView(item.id); onClose(); }}
-            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all relative group ${
-              currentView === item.id 
-              ? 'text-eden-accent bg-eden-accent/10 border border-eden-accent/20' 
-              : 'text-slate-500 hover:text-slate-200 hover:bg-white/5 border border-transparent'
-            }`}
-           >
-             <item.icon size={18} className={currentView === item.id ? "text-eden-accent" : "text-slate-500 group-hover:text-slate-300"} /> 
-             {item.label}
-             
-             {currentView === item.id && (
-               <motion.div 
-                 layoutId="sidebar-active"
-                 className="absolute right-3 w-1.5 h-1.5 rounded-full bg-eden-accent shadow-[0_0_10px_#22d3ee]"
-               />
-             )}
-           </motion.button>
-         ))}
-       </div>
-
-       {/* Secondary Actions / Profile Preview Area */}
-       <div className="mt-auto pt-6 border-t border-white/5">
-          <motion.button 
-            whileHover={{ x: 5 }}
-            whileTap={{ scale: 0.98 }}
-            onClick={onLogout} 
-            className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-widest text-red-500/70 hover:text-red-500 hover:bg-red-500/5 transition-all"
+            className={`w-full flex items-center gap-3 px-4 py-3.5 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all relative group ${currentView === item.id
+              ? 'text-eden-accent bg-eden-accent/10 border border-eden-accent/20'
+              : 'text-slate-500 hover:text-slate-800 hover:bg-black/5 border border-transparent'
+              }`}
           >
-             <LogOut size={18} /> {isEn ? 'De-Authorize' : 'خروج آمن'}
+            <item.icon size={18} className={currentView === item.id ? "text-eden-accent" : "text-slate-400 group-hover:text-slate-600"} />
+            {item.label}
+
+            {currentView === item.id && (
+              <motion.div
+                layoutId="sidebar-active"
+                className="absolute right-3 w-1.5 h-1.5 rounded-full bg-eden-accent shadow-[0_0_10px_#007BFF]"
+              />
+            )}
           </motion.button>
-       </div>
+        ))}
+      </div>
+
+      {/* Secondary Actions / Profile Preview Area */}
+      <div className="mt-auto pt-6 border-t border-slate-200">
+        <motion.button
+          whileHover={{ x: 5 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={onLogout}
+          className="w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-widest text-red-500/70 hover:text-red-500 hover:bg-red-500/5 transition-all"
+        >
+          <LogOut size={18} /> {isEn ? 'De-Authorize' : 'خروج آمن'}
+        </motion.button>
+      </div>
     </div>
   );
 
@@ -109,19 +108,19 @@ const Sidebar: React.FC<SidebarProps> = ({
       <AnimatePresence>
         {isOpen && (
           <>
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 backdrop-blur-md z-[55] lg:hidden" 
+              className="fixed inset-0 bg-black/20 backdrop-blur-md z-[55] lg:hidden"
               onClick={onClose}
             />
-            <motion.div 
+            <motion.div
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className="fixed top-0 left-0 h-full w-72 bg-eden-bg border-r border-white/10 z-[60] lg:hidden"
+              className="fixed top-0 left-0 h-full w-72 bg-white border-r border-slate-200 z-[60] lg:hidden"
             >
               {SidebarContent}
             </motion.div>
@@ -130,7 +129,7 @@ const Sidebar: React.FC<SidebarProps> = ({
       </AnimatePresence>
 
       {/* Desktop Persistent Sidebar */}
-      <div className="hidden lg:block fixed top-0 left-0 h-full w-72 bg-eden-bg/40 backdrop-blur-xl border-r border-white/5 z-40">
+      <div className="hidden lg:block fixed top-0 left-0 h-full w-72 bg-white/80 backdrop-blur-xl border-r border-slate-200 z-40">
         {SidebarContent}
       </div>
     </>

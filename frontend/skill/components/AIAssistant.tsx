@@ -11,11 +11,11 @@ interface AIAssistantProps {
 
 const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
     const [isOpen, setIsOpen] = useState(false);
-    const [messages, setMessages] = useState<{role: 'user' | 'bot', text: string}[]>([]);
+    const [messages, setMessages] = useState<{ role: 'user' | 'bot', text: string }[]>([]);
     const [input, setInput] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
-    
+
     const isEn = lang === 'en';
 
     useEffect(() => {
@@ -26,7 +26,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
 
     const handleSend = async () => {
         if (!input.trim() || isLoading) return;
-        
+
         const userMsg = input;
         setInput('');
         setMessages(prev => [...prev, { role: 'user', text: userMsg }]);
@@ -36,7 +36,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
             const botResponse = await geminiService.chat(userMsg, currentContext);
             setMessages(prev => [...prev, { role: 'bot', text: botResponse || "Unable to process request." }]);
         } catch (err) {
-            setMessages(prev => [...prev, { role: 'bot', text: "Connectivity error with Teachify Neural Net." }]);
+            setMessages(prev => [...prev, { role: 'bot', text: "Connectivity error with Geo Top Neural Net." }]);
         } finally {
             setIsLoading(false);
         }
@@ -53,7 +53,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                                 <GraduationCap size={24} />
                             </div>
                             <div>
-                                <h4 className="font-bold text-sm">Teachify Assistant</h4>
+                                <h4 className="font-bold text-sm">Geo Top Assistant</h4>
                                 <span className="text-[10px] opacity-70 uppercase font-bold">Secure Academic Link</span>
                             </div>
                         </div>
@@ -74,22 +74,21 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                         )}
                         {messages.map((m, i) => (
                             <div key={i} className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
-                                <div className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed ${
-                                    m.role === 'user' 
-                                    ? 'bg-primary text-white rounded-tr-none shadow-md' 
-                                    : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-tl-none shadow-sm'
-                                }`}>
+                                <div className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed ${m.role === 'user'
+                                        ? 'bg-primary text-white rounded-tr-none shadow-md'
+                                        : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-tl-none shadow-sm'
+                                    }`}>
                                     {m.text}
                                 </div>
                             </div>
                         ))}
-                        {isLoading && <div className="text-xs text-primary font-bold animate-pulse px-2">{isEn ? "Consulting Teachify Data..." : "جاري استشارة البيانات..."}</div>}
+                        {isLoading && <div className="text-xs text-primary font-bold animate-pulse px-2">{isEn ? "Consulting Geo Top Data..." : "جاري استشارة البيانات..."}</div>}
                     </div>
 
                     {/* Input */}
                     <div className="p-4 border-t border-slate-200 dark:border-white/10 bg-white dark:bg-slate-800">
                         <div className="flex gap-2">
-                            <input 
+                            <input
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
@@ -104,11 +103,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                 </Card>
             )}
 
-            <button 
+            <button
                 onClick={() => setIsOpen(!isOpen)}
-                className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-300 ${
-                    isOpen ? 'bg-slate-800 text-white' : 'bg-primary text-white hover:scale-110'
-                }`}
+                className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-2xl transition-all duration-300 ${isOpen ? 'bg-slate-800 text-white' : 'bg-primary text-white hover:scale-110'
+                    }`}
             >
                 {isOpen ? <X size={24} /> : <GraduationCap size={28} />}
             </button>

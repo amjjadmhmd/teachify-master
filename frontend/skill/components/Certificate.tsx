@@ -56,7 +56,7 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
       >
         {/* Main container with padding */}
         <div style={{ padding: '3rem', position: 'relative', minHeight: '600px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          
+
           {/* Decorative Border */}
           <div
             style={{
@@ -125,13 +125,13 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
 
           {/* Content - z-10 to appear above decorations */}
           <div style={{ position: 'relative', zIndex: 10, textAlign: 'center', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '1.5rem' }}>
-            
+
             {/* Logo */}
             {finalDesign.showLogo && (
               <div style={{ marginBottom: '0.5rem' }}>
-                <img 
-                  src={ASSETS.LOGO} 
-                  alt="Teachify Logo" 
+                <img
+                  src={ASSETS.LOGO}
+                  alt="Geo Top Logo"
                   style={{ width: '80px', height: '80px', objectFit: 'contain' }}
                 />
               </div>
@@ -139,7 +139,7 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
 
             {/* Platform Name */}
             <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#374151', letterSpacing: '0.1em', margin: 0 }}>
-              TEACHIFY EDUCATIONAL PLATFORM
+              GEO TOP EDUCATIONAL PLATFORM
             </h3>
 
             {/* Certificate Title */}
@@ -191,7 +191,7 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
 
             {/* Signatures */}
             <div style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', gap: '2rem', width: '100%', maxWidth: '700px', marginTop: '2rem', paddingTop: '2rem' }}>
-              
+
               {/* Instructor Signature */}
               <div style={{ textAlign: 'center', flex: 1 }}>
                 <div style={{ borderTop: '2px solid #9CA3AF', paddingTop: '0.75rem' }}>
@@ -206,9 +206,9 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
 
               {/* Center Logo */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 1rem' }}>
-                <img 
-                  src={ASSETS.LOGO} 
-                  alt="Teachify Seal" 
+                <img
+                  src={ASSETS.LOGO}
+                  alt="Geo Top Seal"
                   style={{ width: '60px', height: '60px', objectFit: 'contain', margin: '0 0 0.5rem 0' }}
                 />
               </div>
@@ -217,7 +217,7 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
               <div style={{ textAlign: 'center', flex: 1 }}>
                 <div style={{ borderTop: '2px solid #9CA3AF', paddingTop: '0.75rem' }}>
                   <p style={{ fontSize: `${sizes.body}px`, fontWeight: 'bold', color: '#1F2937', margin: '0.5rem 0 0 0', whiteSpace: 'nowrap' }}>
-                    Teachify Platform
+                    Geo Top Platform
                   </p>
                   <p style={{ fontSize: '12px', color: '#4B5563', margin: '0.25rem 0 0 0' }}>
                     Official Certification
@@ -247,9 +247,9 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
             opacity: 0.05,
             pointerEvents: 'none',
           }}>
-            <img 
-              src={ASSETS.LOGO} 
-              alt="Watermark" 
+            <img
+              src={ASSETS.LOGO}
+              alt="Watermark"
               style={{ width: '288px', height: '288px', objectFit: 'contain' }}
             />
           </div>

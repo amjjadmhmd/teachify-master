@@ -57,21 +57,21 @@ const Layout: React.FC<LayoutProps> = ({
     <div className={`min-h-screen font-sans selection:bg-eden-accent selection:text-eden-bg ${!isEn && lang === 'ar' ? 'rtl' : ''}`}>
       {/* 1. Base Dark Layer */}
       <div className="fixed inset-0 -z-30 bg-eden-bg" />
-      
+
       {/* 2. Organic Grain/Paper Layer */}
       <div className="fixed inset-0 -z-20 paper-grain" />
-      
+
       {/* 3. Subtle Lighting Layer */}
       <div className="fixed inset-0 -z-15 bg-obsidian-glow" />
 
       {/* 4. Dot Grid Layer (Legacy) */}
       <div className="fixed inset-0 -z-10 bg-eden-dots opacity-40" />
 
-      <StarField theme="dark" />
+      <StarField theme={theme === 'dark' ? 'dark' : 'light'} />
 
       {showNav && (
         <>
-          <Sidebar 
+          <Sidebar
             isOpen={isSidebarOpen}
             onClose={() => setIsSidebarOpen(false)}
             setView={setView}
@@ -80,7 +80,7 @@ const Layout: React.FC<LayoutProps> = ({
             user={user}
             onLogout={onLogout}
           />
-          <Navbar 
+          <Navbar
             toggleSidebar={() => setIsSidebarOpen(true)}
             theme={theme}
             toggleTheme={toggleTheme}
@@ -96,10 +96,10 @@ const Layout: React.FC<LayoutProps> = ({
             onNavigateToStudent={onNavigateToStudent}
             openSettings={() => setIsSettingsOpen(true)}
           />
-          <SettingsModal 
-            isOpen={isSettingsOpen} 
-            onClose={() => setIsSettingsOpen(false)} 
-            user={user} 
+          <SettingsModal
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            user={user}
             onUpdateUser={onUpdateUser}
             lang={lang}
             toggleLang={toggleLang}
@@ -113,7 +113,7 @@ const Layout: React.FC<LayoutProps> = ({
 
       <main className={`relative z-0 transition-all duration-300 ${showNav ? 'lg:pl-72' : ''}`}>
         <AnimatePresence mode="wait">
-          <motion.div 
+          <motion.div
             key={view}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
