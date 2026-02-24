@@ -38,7 +38,8 @@ class RegisterSerializer(serializers.ModelSerializer):
         Validate instructor verification code for instructor registrations
         """
         role = data.get('role', 'student')
-        instructor_code = data.get('instructor_code', '')
+        instructor_code = (data.get('instructor_code', '') or '').strip()
+        data['instructor_code'] = instructor_code
         
         if role == 'instructor' and instructor_code != settings.INSTRUCTOR_VERIFICATION_CODE:
             raise serializers.ValidationError(

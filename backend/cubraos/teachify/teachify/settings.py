@@ -52,10 +52,19 @@ ROOT_URLCONF = 'teachify.urls'
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
 ]
 # CORS_ALLOWED_ORIGINS = config('CORS_ALLOWED_ORIGINS', default='http://localhost:3000', cast=lambda v: [s.strip() for s in v.split(',')])
 
 CORS_ALLOW_CREDENTIALS = True
+
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "http://localhost:3001",
+    "http://127.0.0.1:3001",
+]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -166,19 +175,19 @@ VERIFICATION_EMAIL_RATE_LIMIT = config('VERIFICATION_EMAIL_RATE_LIMIT', default=
 FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
 
 JAZZMIN_SETTINGS = {
-    "site_title": "Teachify Admin",
-    "site_header": "Teachify Educational Platform",
-    "site_brand": "Teachify",
+    "site_title": "Geo Top Admin",
+    "site_header": "Geo Top Educational Platform",
+    "site_brand": "Geo Top",
     "site_logo": "images/logo.png",
     "site_logo_classes": "img-circle",
-    "welcome_sign": "Welcome Back To Teachify Educational Platform",
-    "copyright": "Teachify Educational Platform © 2024",
+    "welcome_sign": "Welcome Back To Geo Top Educational Platform",
+    "copyright": "Geo Top Educational Platform (c) 2026",
     "search_model": ["auth.User", "courses.Course", "exams.Exam"],
     "user_avatar": None,
     "topmenu_links": [
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
         {"name": "View Site", "url": "/", "new_window": True},
-        {"name": "Support", "url": "https://github.com/yourusername/teachify/issues", "new_window": True},
+        {"name": "Support", "url": "/", "new_window": True},
         {"model": "auth.User"},
         {"model": "courses.Course"},
         {"app": "courses"},
@@ -269,3 +278,4 @@ JAZZMIN_UI_TWEAKS = {
     "theme": "default",
     "actions_sticky_top": True,
 }
+

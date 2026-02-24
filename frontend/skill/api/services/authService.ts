@@ -42,7 +42,8 @@ class AuthService {
     try {
       const response = await apiClient.post<User>(
         '/api/accounts/register/',
-        data
+        data,
+        { timeout: 60000 }
       );
       
       return response.data;
@@ -149,7 +150,8 @@ class AuthService {
     try {
       const response = await apiClient.post<{ message: string }>(
         '/api/accounts/resend-verification/',
-        { email }
+        { email },
+        { timeout: 60000 }
       );
       return response.data;
     } catch (error) {
@@ -165,7 +167,8 @@ class AuthService {
     try {
       const response = await apiClient.post<{ message: string }>(
         '/api/accounts/forgot-password/',
-        { email }
+        { email },
+        { timeout: 60000 }
       );
       return response.data;
     } catch (error) {
@@ -181,7 +184,8 @@ class AuthService {
     try {
       const response = await apiClient.post<{ message: string }>(
         '/api/accounts/reset-password/',
-        { otp, new_password: newPassword, confirm_password: confirmPassword }
+        { otp, new_password: newPassword, confirm_password: confirmPassword },
+        { timeout: 60000 }
       );
       return response.data;
     } catch (error) {

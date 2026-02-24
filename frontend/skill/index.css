@@ -1,0 +1,78 @@
+:root {
+  --neon-card-border: #00e5ff;
+  --neon-card-border-soft: rgba(0, 229, 255, 0.82);
+  --portal-card-bg-light: #eaf4ff;
+  --portal-card-bg-light-soft: rgba(234, 244, 255, 0.82);
+  --neon-card-glow:
+    0 0 0 1px rgba(0, 229, 255, 0.3),
+    0 0 34px -18px rgba(0, 229, 255, 0.95);
+}
+
+/* Match controls borders with cards in student/instructor portals */
+.portal-role-student :is(button, a, input, select, textarea)[class*="border"],
+.portal-role-instructor :is(button, a, input, select, textarea)[class*="border"] {
+  border-color: var(--neon-card-border-soft) !important;
+}
+
+.portal-role-student :is(button, a, [role="button"]):not([class*="border"]),
+.portal-role-instructor :is(button, a, [role="button"]):not([class*="border"]) {
+  border: 1px solid var(--neon-card-border-soft) !important;
+}
+
+.portal-role-student :is(button, a, input, select, textarea, [role="button"]):focus-visible,
+.portal-role-student :is(button, a, input, select, textarea, [role="button"]):hover,
+.portal-role-instructor :is(button, a, input, select, textarea, [role="button"]):focus-visible,
+.portal-role-instructor :is(button, a, input, select, textarea, [role="button"]):hover {
+  border-color: var(--neon-card-border) !important;
+}
+
+.portal-role-student .ui-card,
+.portal-role-instructor .ui-card {
+  border-color: var(--neon-card-border) !important;
+  box-shadow: var(--neon-card-glow) !important;
+}
+
+.portal-role-student :is(div, section, article, aside, li)[class*="rounded-xl"][class*="border"],
+.portal-role-student :is(div, section, article, aside, li)[class*="rounded-2xl"][class*="border"],
+.portal-role-student :is(div, section, article, aside, li)[class*="rounded-3xl"][class*="border"],
+.portal-role-instructor :is(div, section, article, aside, li)[class*="rounded-xl"][class*="border"],
+.portal-role-instructor :is(div, section, article, aside, li)[class*="rounded-2xl"][class*="border"],
+.portal-role-instructor :is(div, section, article, aside, li)[class*="rounded-3xl"][class*="border"] {
+  border-color: var(--neon-card-border-soft) !important;
+}
+
+.portal-role-student .ui-card:hover,
+.portal-role-instructor .ui-card:hover {
+  border-color: var(--neon-card-border) !important;
+  box-shadow:
+    0 0 0 1px rgba(0, 229, 255, 0.4),
+    0 0 44px -16px rgba(0, 229, 255, 0.95) !important;
+}
+
+/* Light mode only: make student/instructor cards clearly visible with soft blue backgrounds */
+html:not(.dark) .portal-role-student main .ui-card,
+html:not(.dark) .portal-role-instructor main .ui-card {
+  background-color: var(--portal-card-bg-light) !important;
+}
+
+html:not(.dark) .portal-role-student main :is(div, section, article, aside, li)[class*="rounded-xl"][class*="border"],
+html:not(.dark) .portal-role-student main :is(div, section, article, aside, li)[class*="rounded-2xl"][class*="border"],
+html:not(.dark) .portal-role-student main :is(div, section, article, aside, li)[class*="rounded-3xl"][class*="border"],
+html:not(.dark) .portal-role-instructor main :is(div, section, article, aside, li)[class*="rounded-xl"][class*="border"],
+html:not(.dark) .portal-role-instructor main :is(div, section, article, aside, li)[class*="rounded-2xl"][class*="border"],
+html:not(.dark) .portal-role-instructor main :is(div, section, article, aside, li)[class*="rounded-3xl"][class*="border"] {
+  background-color: var(--portal-card-bg-light-soft) !important;
+}
+
+/* Sidebar: keep wheel scrolling, hide the white scrollbar rail/thumb */
+.sidebar-scroll {
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}

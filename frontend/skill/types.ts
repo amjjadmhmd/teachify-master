@@ -106,6 +106,14 @@ export interface Course {
   revenue?: number;
 }
 
+export interface StudentLearningCourse {
+  id: number;
+  title: string;
+  progress: number;
+  completed_lessons: number;
+  total_lessons: number;
+}
+
 export interface Lesson {
   id: number;
   title: string;

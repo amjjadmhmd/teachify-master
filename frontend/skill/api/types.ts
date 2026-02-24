@@ -83,9 +83,63 @@ export interface Course {
 export interface CreateCourseRequest {
   title: string;
   description: string;
-  category: number;
+  category?: number | null;
   price: string;
   thumbnail?: string;
+}
+
+export interface LandingCourseEpisode {
+  id?: number;
+  title: string;
+  description?: string;
+  duration_minutes: number;
+  video_url?: string;
+  sort_order?: number;
+  is_preview?: boolean;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface LandingCourse {
+  id: number;
+  title: string;
+  slug: string;
+  short_description: string;
+  description: string;
+  image_url: string;
+  price: string;
+  is_free: boolean;
+  instructor_name: string;
+  level_label: string;
+  course_language: string;
+  rating_value: number | string;
+  enrolled_students: number;
+  requirements: string[];
+  outcomes: string[];
+  sort_order: number;
+  is_published: boolean;
+  episodes: LandingCourseEpisode[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SaveLandingCourseRequest {
+  title: string;
+  short_description?: string;
+  description?: string;
+  image_url?: string;
+  price?: string | number;
+  is_free?: boolean;
+  instructor_name?: string;
+  level_label?: string;
+  course_language?: string;
+  rating_value?: string | number;
+  enrolled_students?: number;
+  requirements?: string[];
+  outcomes?: string[];
+  sort_order?: number;
+  is_published?: boolean;
+  episodes?: LandingCourseEpisode[];
 }
 
 // ==========================================

@@ -1,5 +1,19 @@
 from rest_framework import serializers
-from .models import Course, Lesson, Category, Enrollment, LessonProgress, WishlistItem, Resource, Task, TaskSubmission , CartItem, PaymentRequest
+from .models import (
+    Course,
+    Lesson,
+    Category,
+    Enrollment,
+    LessonProgress,
+    WishlistItem,
+    Resource,
+    Task,
+    TaskSubmission,
+    CartItem,
+    PaymentRequest,
+    LandingCourse,
+    LandingCourseEpisode,
+)
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
@@ -142,6 +156,133 @@ class CourseSerializer(serializers.ModelSerializer):
         if not request or not request.user.is_authenticated:
             return False
         return obj.enrollments.filter(student=request.user).exists()
+
+
+class LandingCourseEpisodeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = LandingCourseEpisode
+        fields = [
+            "id",
+            "title",
+            "description",
+            "duration_minutes",
+            "video_url",
+            "sort_order",
+            "is_preview",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["id", "created_at", "updated_at"]
+
+    def validate_duration_minutes(self, value):
+        if value < 0:
+            raise serializers.ValidationError("Duration cannot be negative.")
+        return value
+
+
+class LandingCourseSerializer(serializers.ModelSerializer):
+    episodes = LandingCourseEpisodeSerializer(many=True, required=False)
+    created_by_email = serializers.ReadOnlyField(source="created_by.email")
+    updated_by_email = serializers.ReadOnlyField(source="updated_by.email")
+
+    class Meta:
+        model = LandingCourse
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "short_description",
+            "description",
+            "image_url",
+            "price",
+            "is_free",
+            "instructor_name",
+            "level_label",
+            "course_language",
+            "rating_value",
+            "enrolled_students",
+            "requirements",
+            "outcomes",
+            "sort_order",
+            "is_published",
+            "episodes",
+            "created_by",
+            "created_by_email",
+            "updated_by",
+            "updated_by_email",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "slug",
+            "created_by",
+            "created_by_email",
+            "updated_by",
+            "updated_by_email",
+            "created_at",
+            "updated_at",
+        ]
+
+    def _validate_string_list(self, value, field_name):
+        if not isinstance(value, list):
+            raise serializers.ValidationError(f"{field_name} must be a list.")
+        cleaned = []
+        for item in value:
+            if not isinstance(item, str):
+                raise serializers.ValidationError(
+                    f"Each item in {field_name} must be a string."
+                )
+            normalized = item.strip()
+            if normalized:
+                cleaned.append(normalized)
+        return cleaned
+
+    def validate_requirements(self, value):
+        return self._validate_string_list(value, "requirements")
+
+    def validate_outcomes(self, value):
+        return self._validate_string_list(value, "outcomes")
+
+    def create(self, validated_data):
+        episodes_data = validated_data.pop("episodes", [])
+        request = self.context.get("request")
+        user = request.user if request and request.user.is_authenticated else None
+        if user:
+            validated_data["created_by"] = user
+            validated_data["updated_by"] = user
+
+        course = LandingCourse.objects.create(**validated_data)
+        for index, episode_data in enumerate(episodes_data):
+            episode_payload = dict(episode_data)
+            episode_payload.setdefault("sort_order", index)
+            LandingCourseEpisode.objects.create(
+                course=course,
+                **episode_payload,
+            )
+        return course
+
+    def update(self, instance, validated_data):
+        episodes_data = validated_data.pop("episodes", None)
+        request = self.context.get("request")
+        user = request.user if request and request.user.is_authenticated else None
+
+        for attr, value in validated_data.items():
+            setattr(instance, attr, value)
+        if user:
+            instance.updated_by = user
+        instance.save()
+
+        if episodes_data is not None:
+            instance.episodes.all().delete()
+            for index, episode_data in enumerate(episodes_data):
+                episode_payload = dict(episode_data)
+                episode_payload.setdefault("sort_order", index)
+                LandingCourseEpisode.objects.create(
+                    course=instance,
+                    **episode_payload,
+                )
+        return instance
 
 
 # ==========================================

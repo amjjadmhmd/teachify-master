@@ -11,9 +11,9 @@ from apps.courses.public_views import platform_stats, public_instructors
 
 from django.contrib import admin
 
-admin.site.site_header = "Teachify Educational Platform"
-admin.site.site_title = "Teachify Admin"
-admin.site.index_title = "Welcome to Teachify Administration"
+admin.site.site_header = "Geo Top Educational Platform"
+admin.site.site_title = "Geo Top Admin"
+admin.site.index_title = "Welcome to Geo Top Administration"
 from teachify.views import admin_dashboard
 from django.conf.urls.i18n import i18n_patterns
 

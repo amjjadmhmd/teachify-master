@@ -22,13 +22,13 @@ export const ASSETS = {
   COURSES: {
     REACT: "https://images.unsplash.com/photo-1633356122544-f134324a6cee?w=800&q=80",
     PYTHON: "https://images.unsplash.com/photo-1555949963-aa79dcee981c?w=800&q=80",
-    UIUX: "https://images.unsplash.com/photo-1586717791821-3f44a5638d48?w=800&q=80",
+    UIUX: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80",
     NEXTJS: "https://images.unsplash.com/photo-1627398242454-45a1465c2479?w=800&q=80",
-    CYBER: "https://images.unsplash.com/photo-1563206767-5b1d972b9fb9?w=800&q=80",
+    CYBER: "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&q=80",
     CLOUD: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&q=80",
     MOBILE: "https://images.unsplash.com/photo-1512941937669-90a1b58e7e9c?w=800&q=80",
     AI: "https://images.unsplash.com/photo-1485827404703-89b55fcc595e?w=800&q=80",
-    DEVOPS: "https://images.unsplash.com/photo-1667372393119-c85c02088947?w=800&q=80",
+    DEVOPS: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?w=800&q=80",
   },
 
   CERTIFICATES: {

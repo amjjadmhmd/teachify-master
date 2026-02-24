@@ -48,6 +48,7 @@ from .views import (
     CourseViewSet,
     LessonViewSet,
     CategoryViewSet,
+    LandingCourseViewSet,
     EnrollmentViewSet,
     LessonProgressViewSet,
     WishlistViewSet,
@@ -68,6 +69,7 @@ router = DefaultRouter()
 router.register("courses", CourseViewSet, basename="courses")
 router.register("lessons", LessonViewSet, basename="lessons")
 router.register("categories", CategoryViewSet, basename="categories")
+router.register("landing-courses", LandingCourseViewSet, basename="landing-courses")
 router.register("enrollments", EnrollmentViewSet, basename="enrollments")
 router.register("progress", LessonProgressViewSet, basename="progress")
 router.register("wishlist", WishlistViewSet, basename="wishlist")

@@ -426,8 +426,8 @@ const InstructorExams: React.FC<{ lang: Lang; theme: Theme }> = ({
 
       {/* منشئ الامتحانات الكامل */}
       {isBuilderOpen && (
-        <div className="fixed inset-0 z-[100] bg-white dark:bg-[#0B2D2C] overflow-y-auto animate-in fade-in duration-300">
-          <header className="sticky top-0 z-30 bg-white/80 dark:bg-[#0F383D]/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center">
+        <div className="fixed inset-0 z-[100] bg-white dark:bg-black overflow-y-auto animate-in fade-in duration-300">
+          <header className="sticky top-0 z-30 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-b border-slate-200 dark:border-white/10 px-6 py-4 flex justify-between items-center">
             <div className="flex items-center gap-4">
               <button
                 onClick={closeBuilder}
@@ -657,7 +657,7 @@ const InstructorExams: React.FC<{ lang: Lang; theme: Theme }> = ({
                 </section>
 
                 {/* Publish Button */}
-                <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-[#0F383D]/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 p-6 flex justify-end gap-4">
+                <div className="fixed bottom-0 left-0 right-0 bg-white/80 dark:bg-black/80 backdrop-blur-xl border-t border-slate-200 dark:border-white/10 p-6 flex justify-end gap-4">
                   <button
                     type="button"
                     onClick={closeBuilder}

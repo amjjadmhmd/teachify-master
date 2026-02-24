@@ -1,44 +1,130 @@
 
 import { GoogleGenAI } from "@google/genai";
 
-// Initialize AI client. For text tasks, we use 'gemini-3-flash-preview'.
-// We instantiate it inside the method to ensure it picks up the latest environment variables.
+const MODEL_CANDIDATES = [
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+  "gemini-3-flash-preview",
+];
+
+type AssistantLang = "en" | "ar";
+
+const getGeminiApiKey = (): string => {
+  const viteKey = (import.meta as any)?.env?.VITE_GEMINI_API_KEY;
+  const legacyKey =
+    (typeof process !== "undefined" && (process as any)?.env?.API_KEY) ||
+    (typeof process !== "undefined" && (process as any)?.env?.GEMINI_API_KEY);
+
+  return String(viteKey || legacyKey || "").trim();
+};
+
+const extractResponseText = async (response: any): Promise<string> => {
+  if (typeof response?.text === "string" && response.text.trim()) {
+    return response.text.trim();
+  }
+
+  if (typeof response?.text === "function") {
+    const maybeText = await response.text();
+    if (typeof maybeText === "string" && maybeText.trim()) {
+      return maybeText.trim();
+    }
+  }
+
+  const parts = response?.candidates?.[0]?.content?.parts;
+  if (Array.isArray(parts)) {
+    const merged = parts
+      .map((part: any) => (typeof part?.text === "string" ? part.text : ""))
+      .filter(Boolean)
+      .join("\n")
+      .trim();
+
+    if (merged) return merged;
+  }
+
+  return "";
+};
+
+const detectLanguage = (text: string): AssistantLang =>
+  /[\u0600-\u06FF]/.test(text) ? "ar" : "en";
+
+const buildSystemInstruction = (context: string, lang: AssistantLang): string => {
+  const languageRule =
+    lang === "ar"
+      ? "Respond in Arabic only, using clear and natural wording."
+      : "Respond in English only, using clear and natural wording.";
+
+  return `You are "Geo Top Assistant", the official AI helper for Geo Top LMS.
+Current page context: ${context}
+
+Brand rules:
+- Always use the brand name "Geo Top".
+- Never mention Teachify, WhiteLab, or any other platform name.
+- Keep terminology aligned with Geo Top sections:
+  Dashboard/لوحة التحكم, Courses/الكورسات, Exams/الاختبارات, Certifications/الشهادات.
+
+Response rules:
+1. ${languageRule}
+2. Give concise, practical answers for navigation, learning, and platform usage.
+3. If steps are needed, use numbered steps (1. 2. 3.).
+4. Avoid noisy symbols or mixed formatting such as repeated *, ?, or broken punctuation.
+5. Keep the answer short and easy to scan.`;
+};
+
+const normalizeAssistantText = (text: string): string =>
+  text
+    .replace(/\bTeachify\b/gi, "Geo Top")
+    .replace(/\bWhiteLab\b/gi, "Geo Top")
+    .replace(/\s+\n/g, "\n")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
 
 export const geminiService = {
   /**
-   * General AI Assistant for Teachify
+   * General AI Assistant for Geo Top
    */
-  chat: async (userMessage: string, context: string = "Dashboard") => {
+  chat: async (
+    userMessage: string,
+    context: string = "Dashboard",
+    lang?: AssistantLang
+  ) => {
     try {
-      // Must use named parameter: { apiKey: string }
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = getGeminiApiKey();
+      if (!apiKey || apiKey.includes("CHANGE_ME") || apiKey.includes("REPLACE_WITH")) {
+        return "AI is not configured yet. Set VITE_GEMINI_API_KEY in frontend/skill/.env and restart the app.";
+      }
 
-      const model = 'gemini-3-flash-preview';
-      const systemInstruction = `You are 'Teachify Assistant', the professional AI companion for the Teachify LMS platform.
-Tone: Academic, professional, clear, and direct.
-Brand Goal: Clarity > Trust > Simplicity.
-Current Context: ${context}.
+      const ai = new GoogleGenAI({ apiKey });
+      const resolvedLang = lang || detectLanguage(userMessage);
+      const systemInstruction = buildSystemInstruction(context, resolvedLang);
 
-Guidelines:
-1. Provide structured, accurate, and supportive answers.
-2. Help the user navigate the platform features (Courses, Exams, Certifications).
-3. Use professional terminology and maintain a supportive educator's voice.
-4. Be concise.`;
+      let lastError: unknown = null;
 
-      // Use systemInstruction within the config object as per coding guidelines
-      const response = await ai.models.generateContent({
-        model: model,
-        contents: userMessage,
-        config: {
-          systemInstruction: systemInstruction,
+      for (const model of MODEL_CANDIDATES) {
+        try {
+          const response = await ai.models.generateContent({
+            model,
+            contents: userMessage,
+            config: {
+              systemInstruction,
+            },
+          });
+
+          const text = await extractResponseText(response);
+          if (text) return normalizeAssistantText(text);
+        } catch (error) {
+          lastError = error;
         }
-      });
+      }
 
-      // Directly access .text property, do not call as a function
-      return response.text;
+      if (lastError) {
+        throw lastError;
+      }
+
+      return "The AI response was empty. Please try again.";
     } catch (error) {
       console.error("Gemini AI Error:", error);
-      return "I encountered a synchronization error. Please try again shortly.";
+      return "I encountered a synchronization error. Please verify AI key/config and try again.";
     }
   },
 

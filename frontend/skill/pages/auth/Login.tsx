@@ -156,29 +156,40 @@ const LoginPage: React.FC<LoginProps> = ({
         </button>
       </div>
 
-      <Card className="w-full max-w-md !p-0 overflow-hidden border-slate-200 bg-white/80 backdrop-blur-3xl shadow-2xl">
-        <div className="p-8 sm:p-14 flex flex-col items-center">
+      <div className="relative w-full max-w-xl md:max-w-2xl">
+        <button
+          type="button"
+          onClick={onBack}
+          disabled={loading}
+          aria-label={isEn ? "Go back" : "الرجوع"}
+          className="absolute -top-12 left-0 z-20 inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-300 bg-white/90 text-slate-600 shadow-sm transition-all hover:border-eden-accent hover:text-eden-accent disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ArrowLeft size={16} className={!isEn ? "rotate-180" : ""} />
+        </button>
+
+        <Card className="w-full !p-0 overflow-hidden border-slate-200 bg-white/80 backdrop-blur-3xl shadow-2xl">
+          <div className="p-6 sm:p-8 md:p-9 flex flex-col items-center">
           {/* Logo */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="mb-10 relative cursor-pointer group"
+            className="mb-5 relative cursor-pointer group"
             onClick={onBack}
           >
             <div className="absolute inset-0 bg-eden-accent/20 blur-2xl rounded-full group-hover:bg-eden-accent/40 transition-all" />
             <img
               src={ASSETS.LOGO}
               alt="Logo"
-              className="w-24 h-24 object-contain relative z-10 group-hover:rotate-12 transition-transform duration-500"
+              className="w-16 h-16 object-contain relative z-10 group-hover:rotate-12 transition-transform duration-500"
             />
           </motion.div>
 
           {/* Title */}
-          <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tighter uppercase">
+          <h1 className="text-2xl md:text-3xl font-black text-slate-900 mb-2 tracking-tighter uppercase">
             Geo Top
           </h1>
-          <p className="text-[10px] text-slate-500 mb-12 font-black uppercase tracking-[0.3em] flex items-center gap-2">
+          <p className="text-[10px] text-slate-500 mb-7 font-black uppercase tracking-[0.3em] flex items-center gap-2">
             <ShieldCheck size={14} className="text-eden-accent" />
             {isEn ? "Authentication Required" : "مطلوب مصادقة الدخول"}
           </p>
@@ -188,7 +199,7 @@ const LoginPage: React.FC<LoginProps> = ({
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full p-4 mb-8 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] font-black uppercase text-center tracking-widest flex items-center gap-2 justify-center"
+              className="w-full p-3 mb-5 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] font-black uppercase text-center tracking-widest flex items-center gap-2 justify-center"
             >
               <AlertCircle size={14} />
               {error}
@@ -196,7 +207,7 @@ const LoginPage: React.FC<LoginProps> = ({
           )}
 
           {/* Login form */}
-          <form onSubmit={handleLogin} className="w-full space-y-4">
+          <form onSubmit={handleLogin} className="w-full space-y-3">
             <Input
               label={isEn ? "Email Identity" : "الهوية البريدية"}
               placeholder="info@geo-top-group.com"
@@ -237,7 +248,7 @@ const LoginPage: React.FC<LoginProps> = ({
 
             <Button
               type="submit"
-              className="w-full mt-8 shadow-glow !h-16"
+              className="w-full mt-5 shadow-glow !h-12"
               isLoading={loading}
               disabled={loading}
             >
@@ -249,7 +260,7 @@ const LoginPage: React.FC<LoginProps> = ({
           </form>
 
           {/* Footer */}
-          <div className="mt-12 flex flex-col items-center gap-6">
+          <div className="mt-7 flex flex-col items-center gap-4">
             <button
               onClick={onBack}
               className="text-[10px] font-black text-slate-500 hover:text-eden-accent transition-colors flex items-center gap-2 uppercase tracking-[0.3em] group"
@@ -266,8 +277,9 @@ const LoginPage: React.FC<LoginProps> = ({
               &copy; 2024 Geo Top Systems
             </p>
           </div>
-        </div>
-      </Card>
+          </div>
+        </Card>
+      </div>
     </div>
   );
 };

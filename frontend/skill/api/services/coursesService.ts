@@ -14,6 +14,8 @@ import {
   StudentDashboard,
   InstructorDashboard,
   CreateCourseRequest,
+  LandingCourse,
+  SaveLandingCourseRequest,
   CreateLessonProgressRequest,
   AddToWishlistRequest,
   PaginatedResponse,
@@ -75,7 +77,9 @@ class CoursesService {
         formData.append("title", data.title);
         formData.append("description", data.description);
         formData.append("price", data.price.toString());
-        formData.append("category", data.category.toString());
+        if (data.category !== undefined && data.category !== null) {
+          formData.append("category", data.category.toString());
+        }
         formData.append("thumbnail", data.thumbnail);
 
         const response = await apiClient.post<Course>(
@@ -150,6 +154,90 @@ class CoursesService {
   async deleteCourse(id: number): Promise<void> {
     try {
       await apiClient.delete(`/api/courses/courses/${id}/`);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  // ==========================================
+  // Landing Course Operations
+  // ==========================================
+
+  /**
+   * Get landing-page courses
+   * GET /api/courses/landing-courses/
+   */
+  async listLandingCourses(params?: { published?: boolean }): Promise<LandingCourse[]> {
+    try {
+      const response = await apiClient.get<PaginatedResponse<LandingCourse> | LandingCourse[]>(
+        "/api/courses/landing-courses/",
+        { params }
+      );
+      const payload = response.data as PaginatedResponse<LandingCourse> | LandingCourse[];
+      if (Array.isArray(payload)) return payload;
+      return Array.isArray(payload?.results) ? payload.results : [];
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Get landing-course details
+   * GET /api/courses/landing-courses/{id}/
+   */
+  async getLandingCourseDetail(id: number): Promise<LandingCourse> {
+    try {
+      const response = await apiClient.get<LandingCourse>(
+        `/api/courses/landing-courses/${id}/`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Create landing course (Admin only)
+   * POST /api/courses/landing-courses/
+   */
+  async createLandingCourse(data: SaveLandingCourseRequest): Promise<LandingCourse> {
+    try {
+      const response = await apiClient.post<LandingCourse>(
+        "/api/courses/landing-courses/",
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Update landing course (Admin only)
+   * PATCH /api/courses/landing-courses/{id}/
+   */
+  async updateLandingCourse(
+    id: number,
+    data: Partial<SaveLandingCourseRequest>
+  ): Promise<LandingCourse> {
+    try {
+      const response = await apiClient.patch<LandingCourse>(
+        `/api/courses/landing-courses/${id}/`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Delete landing course (Admin only)
+   * DELETE /api/courses/landing-courses/{id}/
+   */
+  async deleteLandingCourse(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/api/courses/landing-courses/${id}/`);
     } catch (error) {
       throw new Error(handleApiError(error));
     }

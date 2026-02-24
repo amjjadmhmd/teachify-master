@@ -23,6 +23,7 @@ interface PaymentSubmissionProps {
   lang: Lang;
   setView: (v: ViewMode) => void;
   refreshCart: () => void;
+  onBack?: () => void;
 }
 
 const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
@@ -30,7 +31,8 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
   totalAmount,
   lang,
   setView,
-  refreshCart
+  refreshCart,
+  onBack
 }) => {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -167,7 +169,13 @@ const PaymentSubmission: React.FC<PaymentSubmissionProps> = ({
       <Reveal width="100%">
         <div className="flex items-center gap-4 mb-8">
           <button
-            onClick={() => setView(ViewMode.MARKETPLACE)}
+            onClick={() => {
+              if (onBack) {
+                onBack();
+                return;
+              }
+              setView(ViewMode.MARKETPLACE);
+            }}
             className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-slate-500"
           >
             <ArrowLeft size={24} />

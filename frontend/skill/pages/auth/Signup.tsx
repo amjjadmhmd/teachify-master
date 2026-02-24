@@ -16,6 +16,7 @@ import { ASSETS } from '../../constants/assets';
 interface SignupProps {
   onBack: () => void;
   onSuccess: (email: string) => void;
+  onSignIn?: () => void;
   lang: Lang;
   toggleLang: () => void;
   theme: Theme;
@@ -45,6 +46,7 @@ interface FormErrors {
 const SignupPage: React.FC<SignupProps> = ({
   onBack,
   onSuccess,
+  onSignIn,
   lang,
   toggleLang,
   theme,
@@ -212,48 +214,48 @@ const SignupPage: React.FC<SignupProps> = ({
         </button>
       </div>
 
-      <Card className="w-full max-w-2xl !p-0 overflow-hidden border-slate-200 bg-white/80 backdrop-blur-3xl shadow-2xl">
-        <div className="p-8 sm:p-12 flex flex-col items-center">
+      <Card className="w-full max-w-4xl !p-0 overflow-hidden border-2 border-eden-accent/70 bg-white/80 backdrop-blur-3xl shadow-[0_0_0_1px_rgba(34,211,238,0.45),0_0_26px_rgba(34,211,238,0.34),0_0_70px_-24px_rgba(34,211,238,0.9)]">
+        <div className="p-4 sm:p-5 md:p-6 flex flex-col items-center">
           {/* Logo */}
           <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 relative cursor-pointer group"
+            className="mb-3 relative cursor-pointer group"
             onClick={onBack}
           >
             <div className="absolute inset-0 bg-eden-accent/20 blur-2xl rounded-full group-hover:bg-eden-accent/40 transition-all" />
             <img
               src={ASSETS.LOGO}
               alt="Logo"
-              className="w-20 h-20 object-contain relative z-10 group-hover:rotate-12 transition-transform duration-500"
+              className="w-14 h-14 object-contain relative z-10 group-hover:rotate-12 transition-transform duration-500"
             />
           </motion.div>
 
           {/* Title */}
-          <h1 className="text-3xl font-black text-slate-900 mb-2 tracking-tighter uppercase">
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 mb-1 tracking-tighter uppercase">
             {isEn ? 'Create Account' : 'إنشاء حساب'}
           </h1>
-          <p className="text-[10px] text-slate-500 mb-8 font-black uppercase tracking-[0.3em] flex items-center gap-2">
+          <p className="text-[10px] text-slate-500 mb-3 font-black uppercase tracking-[0.3em] flex items-center gap-2">
             <ShieldCheck size={14} className="text-eden-accent" />
             {isEn ? "Join Geo Top Platform" : "انضم لمنصة جيو توب"}
           </p>
 
           {/* Role Selection */}
-          <div className="w-full mb-8">
-            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-3">
+          <div className="w-full mb-3">
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-2">
               {isEn ? 'Select Your Role' : 'اختر دورك'}
             </p>
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => handleRoleChange('student')}
-                className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${formData.role === 'student'
+                className={`p-3 sm:p-3.5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${formData.role === 'student'
                   ? 'border-eden-accent bg-eden-accent/10 text-eden-accent'
                   : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300'
                   }`}
               >
-                <GraduationCap size={32} />
+                <GraduationCap size={26} />
                 <span className="font-bold text-sm uppercase tracking-wider">
                   {isEn ? 'Student' : 'طالب'}
                 </span>
@@ -262,12 +264,12 @@ const SignupPage: React.FC<SignupProps> = ({
               <button
                 type="button"
                 onClick={() => handleRoleChange('instructor')}
-                className={`p-6 rounded-2xl border-2 transition-all flex flex-col items-center gap-3 ${formData.role === 'instructor'
+                className={`p-3 sm:p-3.5 rounded-2xl border-2 transition-all flex flex-col items-center gap-2 ${formData.role === 'instructor'
                   ? 'border-eden-accent bg-eden-accent/10 text-eden-accent'
                   : 'border-slate-200 bg-slate-50 text-slate-400 hover:border-slate-300'
                   }`}
               >
-                <BookOpen size={32} />
+                <BookOpen size={26} />
                 <span className="font-bold text-sm uppercase tracking-wider">
                   {isEn ? 'Instructor' : 'مدرب'}
                 </span>
@@ -280,7 +282,7 @@ const SignupPage: React.FC<SignupProps> = ({
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="w-full p-4 mb-6 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] font-black uppercase text-center tracking-widest flex items-center gap-2 justify-center"
+              className="w-full p-2.5 mb-3 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-500 text-[10px] font-black uppercase text-center tracking-widest flex items-center gap-2 justify-center"
             >
               <AlertCircle size={14} />
               {errors.general}
@@ -288,10 +290,10 @@ const SignupPage: React.FC<SignupProps> = ({
           )}
 
           {/* Registration form */}
-          <form onSubmit={handleSubmit} className="w-full space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <form onSubmit={handleSubmit} className="w-full space-y-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {/* Email */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <Input
                   label={isEn ? "Email Address" : "البريد الإلكتروني"}
                   placeholder="user@geo-top-group.com"
@@ -307,7 +309,7 @@ const SignupPage: React.FC<SignupProps> = ({
               </div>
 
               {/* Username */}
-              <div className="md:col-span-2">
+              <div className="md:col-span-1">
                 <Input
                   label={isEn ? "Username (Optional)" : "اسم المستخدم (اختياري)"}
                   placeholder={isEn ? "username" : "اسم_المستخدم"}
@@ -407,7 +409,7 @@ const SignupPage: React.FC<SignupProps> = ({
 
             <Button
               type="submit"
-              className="w-full mt-8 shadow-glow !h-16"
+              className="w-full mt-3 shadow-glow !h-11"
               isLoading={loading}
               disabled={loading}
             >
@@ -416,12 +418,12 @@ const SignupPage: React.FC<SignupProps> = ({
           </form>
 
           {/* Footer */}
-          <div className="mt-8 flex flex-col items-center gap-4">
+          <div className="mt-3 flex flex-col items-center gap-2">
             <p className="text-sm text-slate-400">
               {isEn ? 'Already have an account?' : 'لديك حساب بالفعل؟'}
               {' '}
               <button
-                onClick={onSuccess}
+                onClick={onSignIn || onBack}
                 className="text-eden-accent font-bold hover:underline"
                 disabled={loading}
               >

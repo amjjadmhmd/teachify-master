@@ -33,10 +33,15 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
         setIsLoading(true);
 
         try {
-            const botResponse = await geminiService.chat(userMsg, currentContext);
+            const botResponse = await geminiService.chat(userMsg, currentContext, lang);
             setMessages(prev => [...prev, { role: 'bot', text: botResponse || "Unable to process request." }]);
         } catch (err) {
-            setMessages(prev => [...prev, { role: 'bot', text: "Connectivity error with Geo Top Neural Net." }]);
+            setMessages(prev => [...prev, {
+                role: 'bot',
+                text: isEn
+                    ? "Connectivity error with Geo Top AI service."
+                    : "حدث خطأ في الاتصال بمساعد Geo Top الذكي."
+            }]);
         } finally {
             setIsLoading(false);
         }
@@ -77,7 +82,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                                 <div className={`max-w-[85%] p-3 rounded-xl text-sm leading-relaxed ${m.role === 'user'
                                         ? 'bg-primary text-white rounded-tr-none shadow-md'
                                         : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-white/10 text-slate-800 dark:text-slate-200 rounded-tl-none shadow-sm'
-                                    }`}>
+                                    } whitespace-pre-line break-words`}>
                                     {m.text}
                                 </div>
                             </div>

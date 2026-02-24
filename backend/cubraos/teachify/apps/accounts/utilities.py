@@ -158,8 +158,12 @@ class LoginValidationService:
         # Allow admin/staff to login without email verification
         if user.is_staff or user.is_superuser:
             return True, "OK"
+
+        # Instructors who passed the instructor verification code can login directly
+        if user.role == 'instructor' and user.instructor_verified:
+            return True, "OK"
         
-        # Require email verification for students and instructors
+        # Require email verification for remaining users
         if not LoginValidationService.is_email_verified(user):
             return False, "Email not verified"
         

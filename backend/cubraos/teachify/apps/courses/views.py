@@ -12,11 +12,12 @@ from apps.common.models import Notification
 
 from .models import (
     Course, Lesson, Category,
-    Enrollment, LessonProgress, WishlistItem
+    Enrollment, LessonProgress, WishlistItem, LandingCourse
 )
 from .serializers import (
     CourseSerializer, LessonSerializer, CategorySerializer,
-    EnrollmentSerializer, LessonProgressSerializer, WishlistSerializer
+    EnrollmentSerializer, LessonProgressSerializer, WishlistSerializer,
+    LandingCourseSerializer
 )
 from .utils import generate_placeholder_thumbnail
 
@@ -32,6 +33,23 @@ class IsInstructor(permissions.BasePermission):
 class IsStudent(permissions.BasePermission):
     def has_permission(self, request, view):
         return request.user.is_authenticated and request.user.role == "student"
+
+
+class IsLandingCourseAdmin(permissions.BasePermission):
+    """
+    Permission for landing-course management endpoints.
+    Allows explicit role=admin and Django staff/superuser users.
+    """
+
+    def has_permission(self, request, view):
+        user = request.user
+        return bool(
+            user.is_authenticated and (
+                getattr(user, "role", "") == "admin"
+                or user.is_staff
+                or user.is_superuser
+            )
+        )
 
 # ============================
 # 📚 02. الكورسات والدروس
@@ -113,6 +131,56 @@ class CategoryViewSet(viewsets.ModelViewSet):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
     permission_classes = [permissions.AllowAny]
+    
+
+class LandingCourseViewSet(viewsets.ModelViewSet):
+    """
+    Public read + admin write ViewSet for landing-page courses.
+    """
+
+    queryset = LandingCourse.objects.prefetch_related("episodes").all()
+    serializer_class = LandingCourseSerializer
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), IsLandingCourseAdmin()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by("sort_order", "id")
+
+        user = self.request.user
+        is_admin_user = bool(
+            user.is_authenticated and (
+                getattr(user, "role", "") == "admin"
+                or user.is_staff
+                or user.is_superuser
+            )
+        )
+
+        # Public users see published items only.
+        if not is_admin_user:
+            queryset = queryset.filter(is_published=True)
+
+        # Optional filter for admin dashboards.
+        published = self.request.query_params.get("published")
+        if published is not None:
+            normalized = published.strip().lower()
+            if normalized in {"true", "1", "yes"}:
+                queryset = queryset.filter(is_published=True)
+            elif normalized in {"false", "0", "no"} and is_admin_user:
+                queryset = queryset.filter(is_published=False)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
     
 
 

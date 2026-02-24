@@ -14,6 +14,7 @@ interface CartPaymentProps {
   lang: Lang;
   refreshDashboard: () => void;
   setView: (v: ViewMode) => void;
+  onBack?: () => void;
 }
 
 const CartPayment: React.FC<CartPaymentProps> = ({ 
@@ -22,7 +23,8 @@ const CartPayment: React.FC<CartPaymentProps> = ({
   clearCart, 
   lang, 
   refreshDashboard, 
-  setView 
+  setView,
+  onBack
 }) => {
   const [paymentMethod, setPaymentMethod] = useState<'card' | 'manual'>('card');
   const [loading, setLoading] = useState(false);
@@ -135,7 +137,13 @@ const CartPayment: React.FC<CartPaymentProps> = ({
       <Reveal width="100%">
         <div className="flex items-center gap-4 mb-8">
           <button 
-            onClick={() => setView(ViewMode.MARKETPLACE)} 
+            onClick={() => {
+              if (onBack) {
+                onBack();
+                return;
+              }
+              setView(ViewMode.MARKETPLACE);
+            }}
             className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors text-slate-500"
           >
             <ArrowLeft size={24} />

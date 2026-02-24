@@ -349,3 +349,82 @@ class PaymentRequest(models.Model):
 
     def __str__(self):
         return f"{self.student.email} - Payment Request #{self.id} ({self.status})"
+
+
+class LandingCourse(models.Model):
+    """
+    Dedicated model for landing-page course content managed by admins.
+    Kept separate from Course to avoid impacting existing marketplace/integration flows.
+    """
+
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=300, unique=True, blank=True)
+    short_description = models.CharField(max_length=300, blank=True)
+    description = models.TextField(blank=True)
+    image_url = models.URLField(max_length=1000, blank=True)
+    price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    is_free = models.BooleanField(default=True)
+    instructor_name = models.CharField(max_length=255, blank=True)
+    level_label = models.CharField(max_length=255, blank=True)
+    course_language = models.CharField(max_length=120, blank=True)
+    rating_value = models.DecimalField(max_digits=3, decimal_places=2, default=5.00)
+    enrolled_students = models.PositiveIntegerField(default=0)
+    requirements = models.JSONField(default=list, blank=True)
+    outcomes = models.JSONField(default=list, blank=True)
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_published = models.BooleanField(default=True, db_index=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="landing_courses_created",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="landing_courses_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or "landing-course"
+            unique_slug = base_slug
+            counter = 2
+            while LandingCourse.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+
+class LandingCourseEpisode(models.Model):
+    course = models.ForeignKey(
+        LandingCourse,
+        on_delete=models.CASCADE,
+        related_name="episodes",
+    )
+    title = models.CharField(max_length=255)
+    description = models.TextField(blank=True)
+    duration_minutes = models.PositiveIntegerField(default=0)
+    video_url = models.URLField(max_length=1000, blank=True)
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_preview = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def __str__(self):
+        return f"{self.course.title} - {self.title}"

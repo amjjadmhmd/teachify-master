@@ -56,7 +56,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                     </button>
 
                     <div className="relative mb-4">
-                        <div className="w-24 h-24 rounded-full border-4 border-primary p-1 bg-white dark:bg-[#0B2D2C] shadow-xl overflow-hidden">
+                        <div className="w-24 h-24 rounded-full border-4 border-primary p-1 bg-white dark:bg-black shadow-xl overflow-hidden">
                             {user.avatar ? (
                                 <img src={user.avatar} className="w-full h-full object-cover rounded-full" alt="avatar" />
                             ) : (
@@ -67,7 +67,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                         </div>
                         <button 
                             onClick={() => fileInputRef.current?.click()}
-                            className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform border-2 border-white dark:border-[#0F383D]"
+                            className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform border-2 border-white dark:border-slate-800"
                         >
                             <Camera size={16} />
                         </button>
@@ -86,7 +86,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
                 </div>
 
                 {/* Content Sections */}
-                <div className="p-6 space-y-6 bg-white dark:bg-[#0F383D]">
+                <div className="p-6 space-y-6 bg-white dark:bg-black">
                     
                     {/* Preferences Group */}
                     <div>

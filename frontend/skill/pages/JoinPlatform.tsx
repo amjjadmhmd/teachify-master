@@ -47,7 +47,7 @@ const JoinPlatform: React.FC<JoinPlatformProps> = ({ onBack, lang, theme }) => {
           </div>
 
           {/* Right Side: Action */}
-          <div className="p-8 bg-white dark:bg-[#0F383D] flex flex-col justify-center items-center text-center md:w-1/2">
+          <div className="p-8 bg-white dark:bg-black flex flex-col justify-center items-center text-center md:w-1/2">
              <div className="w-16 h-16 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center text-green-600 dark:text-green-400 mb-4 animate-pulse">
                 <MessageCircle size={32} />
              </div>

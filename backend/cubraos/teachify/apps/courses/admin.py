@@ -9,7 +9,9 @@ from .models import (
     Task,
     TaskSubmission,
     CartItem,
-    PaymentRequest
+    PaymentRequest,
+    LandingCourse,
+    LandingCourseEpisode,
 )
 
 # ============================
@@ -37,6 +39,34 @@ class PaymentRequestAdmin(admin.ModelAdmin):
         return self.readonly_fields
 
 
+class LandingCourseEpisodeInline(admin.TabularInline):
+    model = LandingCourseEpisode
+    extra = 1
+    fields = (
+        "title",
+        "duration_minutes",
+        "sort_order",
+        "is_preview",
+        "video_url",
+    )
+    ordering = ("sort_order", "id")
+
+
+class LandingCourseAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "is_published",
+        "sort_order",
+        "is_free",
+        "updated_at",
+    )
+    list_filter = ("is_published", "is_free", "course_language")
+    search_fields = ("title", "slug", "instructor_name")
+    ordering = ("sort_order", "id")
+    readonly_fields = ("slug", "created_at", "updated_at", "created_by", "updated_by")
+    inlines = [LandingCourseEpisodeInline]
+
+
 # Register with custom admins
 admin.site.register(Course)
 admin.site.register(Lesson)
@@ -48,4 +78,5 @@ admin.site.register(Task)
 admin.site.register(TaskSubmission)
 admin.site.register(CartItem, CartItemAdmin)
 admin.site.register(PaymentRequest, PaymentRequestAdmin)
+admin.site.register(LandingCourse, LandingCourseAdmin)
 

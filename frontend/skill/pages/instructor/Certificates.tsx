@@ -60,6 +60,7 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
   const [instructorName, setInstructorName] = useState("");
   const [notification, setNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [showDesignPanel, setShowDesignPanel] = useState(false);
+  const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [design, setDesign] = useState<CertificateDesign>({
     colorScheme: 'blue',
     fontSize: 'medium',
@@ -137,6 +138,7 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
   const handleSaveAsImage = async () => {
     if (!certificateRef.current) return;
 
+    setShowDownloadMenu(false);
     setIsExporting(true);
     try {
       // Dynamically import html2canvas
@@ -148,7 +150,8 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
       });
 
       const link = document.createElement("a");
-      link.download = `Teachify-Certificate-${formData.recipientName.replace(/\s+/g, "-")}.png`;
+      const fileSafeRecipient = (formData.recipientName || "student").replace(/\s+/g, "-");
+      link.download = `Teachify-Certificate-${fileSafeRecipient}.png`;
       link.href = canvas.toDataURL("image/png");
       link.click();
 
@@ -169,6 +172,7 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
   const handleSaveAsPDF = async () => {
     if (!certificateRef.current) return;
 
+    setShowDownloadMenu(false);
     setIsExporting(true);
     try {
       // Dynamically import required libraries
@@ -189,7 +193,8 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
       });
 
       pdf.addImage(imgData, "PNG", 0, 0, canvas.width, canvas.height);
-      pdf.save(`Teachify-Certificate-${formData.recipientName.replace(/\s+/g, "-")}.pdf`);
+      const fileSafeRecipient = (formData.recipientName || "student").replace(/\s+/g, "-");
+      pdf.save(`Teachify-Certificate-${fileSafeRecipient}.pdf`);
 
       showNotification('success', isEn ? "Certificate saved as PDF!" : "تم حفظ الشهادة كـ PDF!");
       setShowSuccessModal(true);
@@ -214,6 +219,7 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
   };
 
   const closeGenerator = () => {
+    setShowDownloadMenu(false);
     setShowCertificateGenerator(false);
     setSelectedStudent(null);
     setFormData({
@@ -312,7 +318,7 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
 
         {/* Certificate Generator/Preview */}
         <div className="lg:col-span-2">
-          {showCertificateGenerator && formData.recipientName ? (
+          {showCertificateGenerator ? (
             <Reveal width="100%">
               <Card className="!p-6">
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
@@ -342,12 +348,15 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
                       <Button 
                         size="sm" 
                         className="gap-2" 
+                        type="button"
+                        onClick={() => setShowDownloadMenu((prev) => !prev)}
                         disabled={isExporting}
                       >
                         <Download className="w-4 h-4" />
                         {isExporting ? (isEn ? "Exporting..." : "جاري التصدير...") : (isEn ? "Download" : "تحميل")}
                         <ChevronDown className="w-3 h-3" />
                       </Button>
+                      {showDownloadMenu && (
                       <div className="absolute right-0 top-full mt-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-lg shadow-lg z-50 min-w-[180px]">
                         <button
                           onClick={handleSaveAsImage}
@@ -366,6 +375,7 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
                           {isEn ? "Save as PDF" : "حفظ كـ PDF"}
                         </button>
                       </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -374,8 +384,13 @@ const InstructorCertificates: React.FC<Props> = ({ lang, theme }) => {
                 <div className="flex justify-center mb-6">
                   <Certificate
                     ref={certificateRef}
-                    recipientName={formData.recipientName}
-                    courseName={formData.courseName}
+                    recipientName={
+                      formData.recipientName ||
+                      (isEn ? "Student Name" : "اسم الطالب")
+                    }
+                    courseName={
+                      formData.courseName || (isEn ? "Course Name" : "اسم الكورس")
+                    }
                     completionDate={formData.completionDate}
                     certificateId={certificateId}
                     instructorName={formData.instructorName}

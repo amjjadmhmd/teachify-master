@@ -1,17 +1,20 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ViewMode, Theme, Lang, User } from '../types';
+import { ViewMode, Theme, Lang, User, StudentLearningCourse } from '../types';
 import Navbar from './Navbar';
 import Sidebar from './Sidebar';
 import SettingsModal from './SettingsModal';
 import AIAssistant from './AIAssistant';
-import StarField from './StarField';
 import { useIsMobile } from '../hooks/useIsMobile';
+
+type LandingSectionId = 'home' | 'courses' | 'services' | 'about' | 'contact';
 
 interface LayoutProps {
   children: React.ReactNode;
   view: ViewMode;
   setView: (v: ViewMode) => void;
+  onGoBack: () => void;
+  canGoBack: boolean;
   user: User | null;
   theme: Theme;
   toggleTheme: () => void;
@@ -25,12 +28,17 @@ interface LayoutProps {
   onLogout: () => void;
   onNavigateToStudent: (id: number) => void;
   onUpdateUser: (u: User) => void;
+  onNavigateLandingSection?: (sectionId: LandingSectionId) => void;
+  studentCourses?: StudentLearningCourse[];
+  onOpenStudentCourse?: (courseId: number) => void;
 }
 
 const Layout: React.FC<LayoutProps> = ({
   children,
   view,
   setView,
+  onGoBack,
+  canGoBack,
   user,
   theme,
   toggleTheme,
@@ -44,30 +52,44 @@ const Layout: React.FC<LayoutProps> = ({
   onLogout,
   onNavigateToStudent,
   onUpdateUser,
+  onNavigateLandingSection,
+  studentCourses = [],
+  onOpenStudentCourse,
 }) => {
   const isMobile = useIsMobile();
   const isExamView = view === ViewMode.EXAM_RUNNER;
   const isWorkspace = view === ViewMode.WORKSPACE;
   const isLanding = view === ViewMode.LANDING || view === ViewMode.AUTH || view === ViewMode.JOIN_PLATFORM;
+  const showAmbientLayers = !isLanding;
+  const roleScopeClass =
+    !isLanding && user?.role === 'student'
+      ? 'portal-role-student'
+      : !isLanding && user?.role === 'instructor'
+      ? 'portal-role-instructor'
+      : '';
 
   const showNav = user && !isExamView && !isLanding;
   const isEn = lang === 'en';
+  const isAiAssistantEnabled = (import.meta as any)?.env?.VITE_ENABLE_AI_ASSISTANT !== 'false';
 
   return (
-    <div className={`min-h-screen font-sans selection:bg-eden-accent selection:text-eden-bg ${!isEn && lang === 'ar' ? 'rtl' : ''}`}>
+    <div
+      className={`min-h-screen font-sans selection:bg-eden-accent selection:text-eden-bg ${roleScopeClass} ${
+        !isEn && lang === 'ar' ? 'rtl' : ''
+      }`}
+    >
       {/* 1. Base Dark Layer */}
       <div className="fixed inset-0 -z-30 bg-eden-bg" />
 
-      {/* 2. Organic Grain/Paper Layer */}
-      <div className="fixed inset-0 -z-20 paper-grain" />
+      {showAmbientLayers && (
+        <>
+          {/* 2. Organic Grain/Paper Layer */}
+          <div className="fixed inset-0 -z-20 paper-grain" />
 
-      {/* 3. Subtle Lighting Layer */}
-      <div className="fixed inset-0 -z-15 bg-obsidian-glow" />
-
-      {/* 4. Dot Grid Layer (Legacy) */}
-      <div className="fixed inset-0 -z-10 bg-eden-dots opacity-40" />
-
-      <StarField theme={theme === 'dark' ? 'dark' : 'light'} />
+          {/* 3. Subtle Lighting Layer */}
+          <div className="fixed inset-0 -z-15 bg-obsidian-glow" />
+        </>
+      )}
 
       {showNav && (
         <>
@@ -77,11 +99,14 @@ const Layout: React.FC<LayoutProps> = ({
             setView={setView}
             currentView={view}
             lang={lang}
+            theme={theme}
             user={user}
             onLogout={onLogout}
+            studentCourses={studentCourses}
+            onOpenStudentCourse={onOpenStudentCourse}
           />
           <Navbar
-            toggleSidebar={() => setIsSidebarOpen(true)}
+            toggleSidebar={() => setIsSidebarOpen((prev) => !prev)}
             theme={theme}
             toggleTheme={toggleTheme}
             lang={lang}
@@ -92,9 +117,13 @@ const Layout: React.FC<LayoutProps> = ({
             openCart={() => setView(ViewMode.CART)}
             userRole={user.role}
             isMobile={isMobile}
+            isSidebarOpen={isSidebarOpen}
             user={user}
             onNavigateToStudent={onNavigateToStudent}
             openSettings={() => setIsSettingsOpen(true)}
+            onGoBack={onGoBack}
+            canGoBack={canGoBack}
+            onNavigateLandingSection={onNavigateLandingSection}
           />
           <SettingsModal
             isOpen={isSettingsOpen}
@@ -107,17 +136,19 @@ const Layout: React.FC<LayoutProps> = ({
             toggleTheme={toggleTheme}
             onLogout={onLogout}
           />
-          {user.role === 'student' && !isWorkspace && <AIAssistant currentContext={view} lang={lang} />}
+          {isAiAssistantEnabled && user.role === 'student' && !isWorkspace && (
+            <AIAssistant currentContext={view} lang={lang} />
+          )}
         </>
       )}
 
-      <main className={`relative z-0 transition-all duration-300 ${showNav ? 'lg:pl-72' : ''}`}>
+      <main className={`relative transition-all duration-300 ${showNav && isSidebarOpen ? 'lg:pl-72' : ''}`}>
         <AnimatePresence mode="wait">
           <motion.div
             key={view}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
             transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
           >
             {children}

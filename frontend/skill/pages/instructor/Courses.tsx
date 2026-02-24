@@ -10,6 +10,7 @@ import { api } from "../../api/client";
 import apiClient from "../../api/config";
 import { Button, Card, Input } from "../../components/UI";
 import { Reveal } from "../../components/Reveal";
+import type { SaveLandingCourseRequest } from "../../api/types";
 import {
   Plus,
   Search,
@@ -34,6 +35,8 @@ import {
   Clock,
 } from "lucide-react";
 import { resolveImageUrl, handleImageError } from "../../utils/imageUtils";
+import { nextStaticCourseId, upsertStaticCourse } from "../../utils/staticCourses";
+import { ASSETS } from "../../constants/assets";
 
 // Toast notification system
 const showToast = (
@@ -54,6 +57,13 @@ const showToast = (
     toast.classList.add("animate-out", "slide-out-to-bottom-4");
     setTimeout(() => toast.remove(), 300);
   }, 3000);
+};
+
+const getErrorMessage = (error: unknown, fallback: string): string => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
 };
 
 const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
@@ -129,6 +139,22 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
     file: null,
     duration_minutes: "",
   });
+
+  const [showStaticBuilderModal, setShowStaticBuilderModal] = useState(false);
+  const [staticCourseForm, setStaticCourseForm] = useState({
+    title: "",
+    description: "",
+    price: "0.00",
+    thumbnailUrl: "",
+    instructorName: "",
+    level: "",
+    language: "",
+    requirements: "",
+    outcomes: "",
+  });
+  const [staticEpisodes, setStaticEpisodes] = useState([
+    { title: "", description: "", duration_minutes: 20 },
+  ]);
 
   const fetchCourses = async () => {
     try {
@@ -366,14 +392,24 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
   const handleCreateCourse = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!newCourse.title.trim()) {
+    const title = newCourse.title.trim();
+    const description = newCourse.description.trim();
+
+    if (!title) {
       showToast(
         isEn ? "Please enter course title" : "الرجاء إدخال عنوان الكورس",
         "error"
       );
       return;
     }
-    if (!newCourse.category) {
+    if (!description) {
+      showToast(
+        isEn ? "Please enter course description" : "الرجاء إدخال وصف الكورس",
+        "error"
+      );
+      return;
+    }
+    if (categories.length > 0 && !newCourse.category) {
       showToast(
         isEn ? "Please select a category" : "الرجاء اختيار فئة",
         "error"
@@ -390,13 +426,18 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
 
     setIsSubmitting(true);
     try {
-      await api.instructor.createCourse({
-        title: newCourse.title,
-        description: newCourse.description,
+      const createPayload: any = {
+        title,
+        description,
         price: parseFloat(newCourse.price) || 0,
-        category: newCourse.category,
         thumbnail: newCourse.thumbnail,
-      });
+      };
+
+      if (newCourse.category) {
+        createPayload.category = newCourse.category;
+      }
+
+      await api.instructor.createCourse(createPayload);
       showToast(
         isEn ? "Course created successfully" : "تم إنشاء الكورس بنجاح",
         "success"
@@ -415,7 +456,202 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       }, 1000);
     } catch (e) {
       console.error("Failed to create course:", e);
-      showToast(isEn ? "Failed to create course" : "فشل إنشاء الكورس", "error");
+      showToast(
+        getErrorMessage(
+          e,
+          isEn ? "Failed to create course" : "فشل إنشاء الكورس"
+        ),
+        "error"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const addStaticEpisode = () => {
+    setStaticEpisodes((prev) => [
+      ...prev,
+      { title: "", description: "", duration_minutes: 20 },
+    ]);
+  };
+
+  const updateStaticEpisode = (
+    index: number,
+    field: "title" | "description" | "duration_minutes",
+    value: string
+  ) => {
+    setStaticEpisodes((prev) =>
+      prev.map((episode, episodeIndex) =>
+        episodeIndex === index
+          ? {
+              ...episode,
+              [field]:
+                field === "duration_minutes"
+                  ? Math.max(1, Number(value || 0))
+                  : value,
+            }
+          : episode
+      )
+    );
+  };
+
+  const removeStaticEpisode = (index: number) => {
+    setStaticEpisodes((prev) =>
+      prev.length <= 1 ? prev : prev.filter((_, episodeIndex) => episodeIndex !== index)
+    );
+  };
+
+  const resetStaticBuilder = () => {
+    setStaticCourseForm({
+      title: "",
+      description: "",
+      price: "0.00",
+      thumbnailUrl: "",
+      instructorName: "",
+      level: "",
+      language: "",
+      requirements: "",
+      outcomes: "",
+    });
+    setStaticEpisodes([{ title: "", description: "", duration_minutes: 20 }]);
+  };
+
+  const handleCreateStaticCourse = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!staticCourseForm.title.trim()) {
+      showToast(
+        isEn ? "Please add static course title" : "يرجى إدخال عنوان الكورس",
+        "error"
+      );
+      return;
+    }
+
+    const hasInvalidEpisode = staticEpisodes.some(
+      (episode) => !episode.title.trim()
+    );
+    if (hasInvalidEpisode) {
+      showToast(
+        isEn ? "Each episode needs a title" : "كل حلقة لازم يكون لها عنوان",
+        "error"
+      );
+      return;
+    }
+
+    const requirements = staticCourseForm.requirements
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const outcomes = staticCourseForm.outcomes
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean);
+    const title = staticCourseForm.title.trim();
+    const description =
+      staticCourseForm.description.trim() ||
+      (isEn
+        ? "Static course created from instructor builder."
+        : "كورس ستاتيك تم إنشاؤه من واجهة المدرب.");
+    const thumbnail = staticCourseForm.thumbnailUrl.trim() || ASSETS.COURSES.CLOUD;
+
+    const landingPayload: SaveLandingCourseRequest = {
+      title,
+      short_description: description.slice(0, 280),
+      description,
+      image_url: thumbnail,
+      price: staticCourseForm.price || "0.00",
+      is_free: Number(staticCourseForm.price || 0) <= 0,
+      instructor_name:
+        staticCourseForm.instructorName.trim() ||
+        (isEn ? "GeoTop Instructor" : "مدرب GeoTop"),
+      level_label:
+        staticCourseForm.level.trim() ||
+        (isEn ? "Professional Track" : "مسار احترافي"),
+      course_language:
+        staticCourseForm.language.trim() ||
+        (isEn ? "Arabic / English" : "العربية / الإنجليزية"),
+      rating_value: 5,
+      enrolled_students: 0,
+      requirements,
+      outcomes,
+      sort_order: 0,
+      is_published: true,
+      episodes: staticEpisodes.map((episode, index) => ({
+        title: episode.title.trim(),
+        description: episode.description.trim(),
+        duration_minutes: Math.max(1, Number(episode.duration_minutes || 0)),
+        video_url: "",
+        sort_order: index,
+      })),
+    };
+
+    setIsSubmitting(true);
+    try {
+      await api.courses.createLanding(landingPayload);
+      showToast(
+        isEn
+          ? "Course saved to landing page successfully."
+          : "تم حفظ الكورس في اللاندينج بنجاح.",
+        "success"
+      );
+      setShowStaticBuilderModal(false);
+      resetStaticBuilder();
+      return;
+    } catch (error) {
+      console.error("Failed to save landing course to backend, using local fallback:", error);
+      const createdAt = new Date().toISOString();
+      const courseId = nextStaticCourseId();
+      const categoryId = newCourse.category || categories[0]?.id || 1;
+
+      const staticCourse = {
+        id: courseId,
+        title,
+        description,
+        instructor_id: 0,
+        category: categoryId,
+        price: staticCourseForm.price || "0.00",
+        thumbnail,
+        thumbnail_url: thumbnail,
+        created_at: createdAt,
+        is_enrolled: true,
+        lessons: staticEpisodes.map((episode, index) => ({
+          id: courseId * 100 + index + 1,
+          title: episode.title.trim(),
+          description: episode.description.trim(),
+          video_url: "",
+          order: index + 1,
+          duration_minutes: Math.max(1, Number(episode.duration_minutes || 0)),
+          is_completed: false,
+        })),
+        resources: [],
+        progress: 0,
+        status: "published",
+        static_source: "instructor",
+        instructor_name:
+          staticCourseForm.instructorName.trim() ||
+          (isEn ? "GeoTop Instructor" : "مدرب GeoTop"),
+        level_label:
+          staticCourseForm.level.trim() ||
+          (isEn ? "Professional Track" : "مسار احترافي"),
+        course_language:
+          staticCourseForm.language.trim() ||
+          (isEn ? "Arabic / English" : "العربية / الإنجليزية"),
+        rating_value: 5,
+        enrolled_students: 0,
+        requirements,
+        outcomes,
+        last_updated: createdAt,
+      } as any;
+
+      upsertStaticCourse(staticCourse);
+      showToast(
+        isEn
+          ? "Saved locally as static preview (backend unavailable or unauthorized)."
+          : "تم الحفظ محليًا كمعاينة ستاتيك (السيرفر غير متاح أو لا توجد صلاحية).",
+        "info"
+      );
+      setShowStaticBuilderModal(false);
+      resetStaticBuilder();
     } finally {
       setIsSubmitting(false);
     }
@@ -458,11 +694,29 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
     e.preventDefault();
     if (!selectedCourse) return;
 
+    const title = newCourse.title.trim();
+    const description = newCourse.description.trim();
+
+    if (!title) {
+      showToast(
+        isEn ? "Please enter course title" : "الرجاء إدخال عنوان الكورس",
+        "error"
+      );
+      return;
+    }
+    if (!description) {
+      showToast(
+        isEn ? "Please enter course description" : "الرجاء إدخال وصف الكورس",
+        "error"
+      );
+      return;
+    }
+
     setIsSubmitting(true);
     try {
       const updateData: any = {
-        title: newCourse.title,
-        description: newCourse.description,
+        title,
+        description,
         price: parseFloat(newCourse.price) || 0,
         category: newCourse.category,
       };
@@ -481,7 +735,13 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
       }, 1000);
     } catch (error) {
       console.error("Failed to update course:", error);
-      showToast(isEn ? "Failed to update course" : "فشل تحديث الكورس", "error");
+      showToast(
+        getErrorMessage(
+          error,
+          isEn ? "Failed to update course" : "فشل تحديث الكورس"
+        ),
+        "error"
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -883,6 +1143,13 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
             >
               <Filter size={18} /> {isEn ? "Categories" : "الفئات"}
             </Button>
+            <Button
+              variant="secondary"
+              onClick={() => setShowStaticBuilderModal(true)}
+              className="!bg-emerald-600 !text-white hover:!bg-emerald-700"
+            >
+              <Video size={18} /> {isEn ? "Static Builder" : "منشئ كورس ستاتيك"}
+            </Button>
             <Button onClick={() => setShowAddModal(true)}>
               <Plus size={18} /> {isEn ? "New Course" : "كورس جديد"}
             </Button>
@@ -1095,6 +1362,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   onChange={(e) =>
                     setNewCourse({ ...newCourse, description: e.target.value })
                   }
+                  required
                   className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
                   rows={3}
                 />
@@ -1130,7 +1398,15 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                     }
                     className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
-                    <option value="">{isEn ? "Select" : "اختر"}</option>
+                    <option value="">
+                      {categories.length
+                        ? isEn
+                          ? "Select"
+                          : "اختر"
+                        : isEn
+                        ? "No categories yet (optional)"
+                        : "لا توجد فئات حاليا (اختياري)"}
+                    </option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}
@@ -1171,6 +1447,256 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
 
               <Button type="submit" className="w-full" isLoading={isSubmitting}>
                 <Plus size={18} /> {isEn ? "Create Course" : "إنشاء الكورس"}
+              </Button>
+            </form>
+          </Card>
+        </div>
+      )}
+
+      {/* Static Course Builder Modal */}
+      {showStaticBuilderModal && (
+        <div className="fixed inset-0 z-[75] flex items-center justify-center px-4">
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => {
+              setShowStaticBuilderModal(false);
+              resetStaticBuilder();
+            }}
+          ></div>
+          <Card className="w-full max-w-3xl relative z-10 !p-0 shadow-2xl animate-in zoom-in duration-200 max-h-[92vh] overflow-y-auto">
+            <div className="p-6 border-b border-slate-200 dark:border-white/10 flex justify-between items-center sticky top-0 bg-gradient-to-r from-emerald-500/10 to-emerald-500/5 z-10">
+              <div>
+                <h3 className="font-bold text-lg text-slate-900 dark:text-white">
+                  {isEn ? "Static Course Builder" : "منشئ الكورس الستاتيك"}
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  {isEn
+                    ? "Frontend-only course + multi-episode setup."
+                    : "واجهة فرونت فقط لإنشاء كورس بحلقات متعددة."}
+                </p>
+              </div>
+              <button
+                onClick={() => {
+                  setShowStaticBuilderModal(false);
+                  resetStaticBuilder();
+                }}
+                className="text-slate-400 hover:text-red-500 transition-colors"
+              >
+                <X size={24} />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateStaticCourse} className="p-6 space-y-5">
+              <div className="grid md:grid-cols-2 gap-4">
+                <Input
+                  label={isEn ? "Course Title" : "عنوان الكورس"}
+                  value={staticCourseForm.title}
+                  onChange={(e) =>
+                    setStaticCourseForm((prev) => ({
+                      ...prev,
+                      title: e.target.value,
+                    }))
+                  }
+                  required
+                />
+                <Input
+                  label={isEn ? "Price" : "السعر"}
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={staticCourseForm.price}
+                  onChange={(e) =>
+                    setStaticCourseForm((prev) => ({
+                      ...prev,
+                      price: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
+                  {isEn ? "Course Description" : "وصف الكورس"}
+                </label>
+                <textarea
+                  value={staticCourseForm.description}
+                  onChange={(e) =>
+                    setStaticCourseForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  rows={3}
+                  className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                />
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-4">
+                <Input
+                  label={isEn ? "Instructor Name" : "اسم المدرب"}
+                  value={staticCourseForm.instructorName}
+                  onChange={(e) =>
+                    setStaticCourseForm((prev) => ({
+                      ...prev,
+                      instructorName: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  label={isEn ? "Level Label" : "مستوى الكورس"}
+                  value={staticCourseForm.level}
+                  onChange={(e) =>
+                    setStaticCourseForm((prev) => ({
+                      ...prev,
+                      level: e.target.value,
+                    }))
+                  }
+                />
+                <Input
+                  label={isEn ? "Course Language" : "لغة الكورس"}
+                  value={staticCourseForm.language}
+                  onChange={(e) =>
+                    setStaticCourseForm((prev) => ({
+                      ...prev,
+                      language: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              <Input
+                label={isEn ? "Thumbnail URL" : "رابط صورة الكورس"}
+                value={staticCourseForm.thumbnailUrl}
+                onChange={(e) =>
+                  setStaticCourseForm((prev) => ({
+                    ...prev,
+                    thumbnailUrl: e.target.value,
+                  }))
+                }
+                placeholder={isEn ? "https://..." : "https://..."}
+              />
+
+              <div className="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
+                    {isEn ? "Requirements (1 per line)" : "المتطلبات (كل سطر نقطة)"}
+                  </label>
+                  <textarea
+                    value={staticCourseForm.requirements}
+                    onChange={(e) =>
+                      setStaticCourseForm((prev) => ({
+                        ...prev,
+                        requirements: e.target.value,
+                      }))
+                    }
+                    rows={4}
+                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-900 dark:text-white mb-2">
+                    {isEn ? "Outcomes (1 per line)" : "مخرجات التعلم (كل سطر نقطة)"}
+                  </label>
+                  <textarea
+                    value={staticCourseForm.outcomes}
+                    onChange={(e) =>
+                      setStaticCourseForm((prev) => ({
+                        ...prev,
+                        outcomes: e.target.value,
+                      }))
+                    }
+                    rows={4}
+                    className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="border border-slate-200 dark:border-white/10 rounded-xl p-4">
+                <div className="flex items-center justify-between mb-4">
+                  <h4 className="font-bold text-slate-900 dark:text-white">
+                    {isEn ? "Episodes" : "الحلقات"} ({staticEpisodes.length})
+                  </h4>
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={addStaticEpisode}
+                    className="!h-9 !px-3 text-xs"
+                  >
+                    <Plus size={14} /> {isEn ? "Add Episode" : "إضافة حلقة"}
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  {staticEpisodes.map((episode, index) => (
+                    <div
+                      key={`static-episode-${index}`}
+                      className="p-3 rounded-lg bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                          {isEn ? `Episode ${index + 1}` : `الحلقة ${index + 1}`}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => removeStaticEpisode(index)}
+                          className="p-1.5 rounded-md text-red-500 hover:bg-red-500/10"
+                          disabled={staticEpisodes.length === 1}
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+
+                      <div className="grid md:grid-cols-3 gap-3">
+                        <Input
+                          label={isEn ? "Episode Title" : "عنوان الحلقة"}
+                          value={episode.title}
+                          onChange={(e) =>
+                            updateStaticEpisode(index, "title", e.target.value)
+                          }
+                          required
+                        />
+                        <Input
+                          label={isEn ? "Duration (min)" : "المدة (دقيقة)"}
+                          type="number"
+                          min="1"
+                          value={episode.duration_minutes.toString()}
+                          onChange={(e) =>
+                            updateStaticEpisode(
+                              index,
+                              "duration_minutes",
+                              e.target.value
+                            )
+                          }
+                          required
+                        />
+                        <div className="md:col-span-1"></div>
+                      </div>
+
+                      <div className="mt-3">
+                        <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">
+                          {isEn ? "Episode Description" : "وصف الحلقة"}
+                        </label>
+                        <textarea
+                          value={episode.description}
+                          onChange={(e) =>
+                            updateStaticEpisode(
+                              index,
+                              "description",
+                              e.target.value
+                            )
+                          }
+                          rows={2}
+                          className="w-full px-3 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <Button type="submit" className="w-full" isLoading={isSubmitting}>
+                <Check size={18} />{" "}
+                {isEn ? "Save Static Course" : "حفظ الكورس الستاتيك"}
               </Button>
             </form>
           </Card>
@@ -1227,6 +1753,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                   onChange={(e) =>
                     setNewCourse({ ...newCourse, description: e.target.value })
                   }
+                  required
                   className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20"
                   rows={3}
                 />
@@ -1262,6 +1789,7 @@ const InstructorCourses: React.FC<{ lang: Lang; theme: Theme }> = ({
                     }
                     className="w-full px-4 py-2 bg-white dark:bg-slate-900 border border-slate-300 dark:border-white/10 rounded-lg text-slate-900 dark:text-white focus:border-primary focus:ring-2 focus:ring-primary/20"
                   >
+                    <option value="">{isEn ? "No category" : "بدون فئة"}</option>
                     {categories.map((cat) => (
                       <option key={cat.id} value={cat.id}>
                         {cat.name}

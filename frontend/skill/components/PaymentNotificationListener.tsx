@@ -33,7 +33,11 @@ export const PaymentNotificationListener: React.FC<PaymentNotificationListenerPr
    * Watch for payment-related notifications and refresh
    */
   useEffect(() => {
-    const paymentNotifications = notifications.filter(
+    const safeNotifications = Array.isArray(notifications)
+      ? notifications.filter(Boolean)
+      : [];
+
+    const paymentNotifications = safeNotifications.filter(
       n =>
         (n.title && n.title.includes('Payment')) ||
         (n.message && n.message.includes('payment'))

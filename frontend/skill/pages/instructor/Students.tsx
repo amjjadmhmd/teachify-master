@@ -137,7 +137,7 @@ const InstructorStudents: React.FC<Props> = ({ lang, theme, targetStudentId }) =
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder={isEn ? "Search by Name or ID..." : "بحث بالاسم أو المعرف..."}
-                  className="w-full sm:w-72 bg-white dark:bg-[#0F383D]/60 border border-slate-200 dark:border-white/10 rounded-xl py-2 pl-10 pr-4 outline-none focus:border-primary text-slate-900 dark:text-white transition-all shadow-sm focus:shadow-md"
+                  className="w-full sm:w-72 bg-white dark:bg-black/60 border border-slate-200 dark:border-white/10 rounded-xl py-2 pl-10 pr-4 outline-none focus:border-primary text-slate-900 dark:text-white transition-all shadow-sm focus:shadow-md"
                 />
             </div>
         </div>
@@ -232,13 +232,13 @@ const InstructorStudents: React.FC<Props> = ({ lang, theme, targetStudentId }) =
           <div className="fixed inset-0 z-[60] flex items-center justify-center px-4">
               <div className="absolute inset-0 bg-black/70 backdrop-blur-md transition-opacity" onClick={closeAllModals}></div>
               
-              <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-[#0F383D] rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200 border border-slate-200 dark:border-white/10 flex flex-col max-h-[90vh]">
+              <div className="relative z-10 w-full max-w-2xl bg-white dark:bg-black rounded-2xl shadow-2xl overflow-hidden animate-in zoom-in duration-200 border border-slate-200 dark:border-white/10 flex flex-col max-h-[90vh]">
                   
                   {/* Header */}
                   <div className="relative h-24 bg-gradient-to-r from-primary to-emerald-800">
                      <button onClick={closeAllModals} className="absolute top-4 right-4 text-white/80 hover:text-white bg-black/20 rounded-full p-1"><X size={20}/></button>
                      <div className="absolute -bottom-10 left-6 flex items-end">
-                         <div className="w-20 h-20 rounded-full bg-white dark:bg-[#0F383D] p-1 shadow-lg">
+                         <div className="w-20 h-20 rounded-full bg-white dark:bg-black p-1 shadow-lg">
                              <div className="w-full h-full rounded-full bg-gradient-to-tr from-primary to-emerald-400 flex items-center justify-center text-white font-bold text-3xl">
                                  {selectedStudent.name.charAt(0)}
                              </div>
