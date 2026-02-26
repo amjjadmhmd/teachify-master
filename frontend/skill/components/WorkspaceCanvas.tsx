@@ -385,7 +385,7 @@ const WorkspaceCanvas: React.FC<{ lang: Lang; setView?: (v: ViewMode) => void }>
             className="flex items-center gap-4 px-5 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => setView && setView(ViewMode.DASHBOARD)}
           >
-            <img src={ASSETS.LOGO} alt="logo" className="w-8 h-8 object-contain" />
+            <img src={ASSETS.LOGO} alt="logo" className="w-10 h-10 object-contain" />
             <div className="h-4 w-px bg-white/10"></div>
             <h2 className="text-white font-black text-xs uppercase tracking-[0.2em]">Research Canvas</h2>
           </div>

@@ -2,6 +2,7 @@ from django.db import models
 from django.conf import settings
 from django.db import models
 from django.utils.text import slugify
+from django.core.validators import FileExtensionValidator
 
 
 
@@ -23,10 +24,10 @@ class Category(models.Model):
 
 
 class Course(models.Model):
-    CHOICES={
-        "draft":"DRAFT",
-        "publish":"PUBLISH"
-    }
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        PUBLISHED = "published", "Published"
+
     instructor = models.ForeignKey(
         User, on_delete=models.CASCADE, related_name="courses"
     )
@@ -37,7 +38,12 @@ class Course(models.Model):
     thumbnail = models.ImageField(upload_to="thumbnails/", null=True, blank=True)
     total_duration_minutes = models.IntegerField(default=0, help_text="Auto-calculated from lessons")
     created_at = models.DateTimeField(auto_now_add=True)
-    # status = models.CharField(max_length=20,choices=CHOICES,default="DRAFT")  IMPORTANT
+    status = models.CharField(
+        max_length=20,
+        choices=Status.choices,
+        default=Status.DRAFT,
+        db_index=True,
+    )
     
     def update_total_duration(self):
         """Auto-calculate total duration from all lessons"""
@@ -353,7 +359,7 @@ class PaymentRequest(models.Model):
 
 class LandingCourse(models.Model):
     """
-    Dedicated model for landing-page course content managed by admins.
+    Dedicated model for landing-page course content managed by instructors/admins.
     Kept separate from Course to avoid impacting existing marketplace/integration flows.
     """
 
@@ -363,10 +369,15 @@ class LandingCourse(models.Model):
     description = models.TextField(blank=True)
     image_url = models.URLField(max_length=1000, blank=True)
     price = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    price_live = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    price_offline = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    price_recorded = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     is_free = models.BooleanField(default=True)
     instructor_name = models.CharField(max_length=255, blank=True)
+    instructor_image_url = models.URLField(max_length=1000, blank=True)
     level_label = models.CharField(max_length=255, blank=True)
     course_language = models.CharField(max_length=120, blank=True)
+    duration_label = models.CharField(max_length=120, blank=True)
     rating_value = models.DecimalField(max_digits=3, decimal_places=2, default=5.00)
     enrolled_students = models.PositiveIntegerField(default=0)
     requirements = models.JSONField(default=list, blank=True)
@@ -428,3 +439,107 @@ class LandingCourseEpisode(models.Model):
 
     def __str__(self):
         return f"{self.course.title} - {self.title}"
+
+
+class LandingBlog(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=300, unique=True, blank=True)
+    short_description = models.CharField(max_length=300, blank=True)
+    content = models.TextField(blank=True)
+    image_url = models.URLField(max_length=1000, blank=True)
+    author_name = models.CharField(max_length=255, blank=True)
+    resource_links = models.JSONField(default=list, blank=True)
+    resource_file = models.FileField(
+        upload_to="landing/blog_resources/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(["pdf", "doc", "docx", "ppt", "pptx", "zip"])],
+    )
+    read_time_minutes = models.PositiveIntegerField(default=0)
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_published = models.BooleanField(default=True, db_index=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="landing_blogs_created",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="landing_blogs_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or "landing-blog"
+            unique_slug = base_slug
+            counter = 2
+            while LandingBlog.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title
+
+
+class LandingProject(models.Model):
+    title = models.CharField(max_length=255)
+    slug = models.SlugField(max_length=300, unique=True, blank=True)
+    short_description = models.CharField(max_length=300, blank=True)
+    description = models.TextField(blank=True)
+    image_url = models.URLField(max_length=1000, blank=True)
+    project_type = models.CharField(max_length=255, blank=True)
+    client_name = models.CharField(max_length=255, blank=True)
+    project_pdf = models.FileField(
+        upload_to="landing/project_pdfs/",
+        null=True,
+        blank=True,
+        validators=[FileExtensionValidator(["pdf"])],
+    )
+    external_url = models.URLField(max_length=1000, blank=True)
+    sort_order = models.PositiveIntegerField(default=0, db_index=True)
+    is_published = models.BooleanField(default=True, db_index=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="landing_projects_created",
+    )
+    updated_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="landing_projects_updated",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["sort_order", "id"]
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.title) or "landing-project"
+            unique_slug = base_slug
+            counter = 2
+            while LandingProject.objects.filter(slug=unique_slug).exclude(pk=self.pk).exists():
+                unique_slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = unique_slug
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.title

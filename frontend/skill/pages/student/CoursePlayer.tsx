@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+﻿import React, { useState, useEffect, useRef } from "react";
 import {
   Course,
   Lang,
@@ -12,7 +12,11 @@ import { api } from "../../api/client";
 import { geminiService } from "../../services/geminiService";
 import { Card, Button, Input } from "../../components/UI";
 import { Reveal } from "../../components/Reveal";
-import { resolveImageUrl, handleImageError } from "../../utils/imageUtils";
+import {
+  resolveImageUrl,
+  handleImageError,
+  getApiBaseUrl,
+} from "../../utils/imageUtils";
 import { isStaticCourse } from "../../utils/staticCourses";
 import {
   Play,
@@ -80,7 +84,7 @@ const CoursePlayer: React.FC<{
   const getFullVideoUrl = (videoUrl: string) => {
     if (!videoUrl) return "";
     if (videoUrl.startsWith("http")) return videoUrl;
-    const baseUrl = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+    const baseUrl = getApiBaseUrl();
     return `${baseUrl}${videoUrl}`;
   };
 
@@ -104,7 +108,7 @@ const CoursePlayer: React.FC<{
       document.body.removeChild(a);
     } catch (error) {
       console.error("Download failed:", error);
-      alert(isEn ? "Failed to download video" : "فشل تحميل الفيديو");
+      alert(isEn ? "Failed to download video" : "ÙØ´Ù„ ØªØ­Ù…ÙŠÙ„ Ø§Ù„ÙÙŠØ¯ÙŠÙˆ");
     }
   };
 
@@ -117,7 +121,7 @@ const CoursePlayer: React.FC<{
               lesson.title ||
               (isEn
                 ? `Lesson ${index + 1}`
-                : `الحلقة ${index + 1}`),
+                : `Ø§Ù„Ø­Ù„Ù‚Ø© ${index + 1}`),
             description: lesson.description || "",
             video_url: lesson.video_url || "",
             order: lesson.order || index + 1,
@@ -127,12 +131,12 @@ const CoursePlayer: React.FC<{
         : [
             {
               id: course.id * 100 + 1,
-              title: isEn ? "Course Overview" : "نظرة عامة على الكورس",
+              title: isEn ? "Course Overview" : "Ù†Ø¸Ø±Ø© Ø¹Ø§Ù…Ø© Ø¹Ù„Ù‰ Ø§Ù„ÙƒÙˆØ±Ø³",
               description:
                 course.description ||
                 (isEn
                   ? "Static preview content for this course."
-                  : "محتوى معاينة ستاتيك لهذا الكورس."),
+                  : "Ù…Ø­ØªÙˆÙ‰ Ù…Ø¹Ø§ÙŠÙ†Ø© Ø³ØªØ§ØªÙŠÙƒ Ù„Ù‡Ø°Ø§ Ø§Ù„ÙƒÙˆØ±Ø³."),
               video_url: "",
               order: 1,
               duration_minutes: 15,
@@ -146,7 +150,7 @@ const CoursePlayer: React.FC<{
         course.description ||
         (isEn
           ? "Professional geospatial training course."
-          : "كورس احترافي في المجال الجيومكاني."),
+          : "ÙƒÙˆØ±Ø³ Ø§Ø­ØªØ±Ø§ÙÙŠ ÙÙŠ Ø§Ù„Ù…Ø¬Ø§Ù„ Ø§Ù„Ø¬ÙŠÙˆÙ…ÙƒØ§Ù†ÙŠ."),
       progress: Number(course.progress || 0),
       lessons: safeLessons,
       resources: Array.isArray(course.resources) ? course.resources : [],
@@ -324,14 +328,14 @@ const CoursePlayer: React.FC<{
 
       // Show success message
       const successMsg = isEn
-        ? "Lesson marked as complete! 🎉"
-        : "تم تعليم الدرس كمكتمل! 🎉";
+        ? "Lesson marked as complete! ðŸŽ‰"
+        : "ØªÙ… ØªØ¹Ù„ÙŠÙ… Ø§Ù„Ø¯Ø±Ø³ ÙƒÙ…ÙƒØªÙ…Ù„! ðŸŽ‰";
       alert(successMsg);
     } catch (error) {
       console.error("Failed to mark lesson complete:", error);
       const errorMsg = isEn
         ? "Failed to mark lesson complete"
-        : "فشل تعليم الدرس كمكتمل";
+        : "ÙØ´Ù„ ØªØ¹Ù„ÙŠÙ… Ø§Ù„Ø¯Ø±Ø³ ÙƒÙ…ÙƒØªÙ…Ù„";
       alert(errorMsg);
     } finally {
       setIsMarkingComplete(false);
@@ -355,13 +359,13 @@ const CoursePlayer: React.FC<{
       alert(
         isEn
           ? "Task submission is disabled in static preview mode."
-          : "تقديم المهام غير متاح في وضع المعاينة الستاتيك."
+          : "ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ù…Ù‡Ø§Ù… ØºÙŠØ± Ù…ØªØ§Ø­ ÙÙŠ ÙˆØ¶Ø¹ Ø§Ù„Ù…Ø¹Ø§ÙŠÙ†Ø© Ø§Ù„Ø³ØªØ§ØªÙŠÙƒ."
       );
       return;
     }
 
     if (!selectedTask || !submissionFile) {
-      alert(isEn ? "Please select a task and file" : "يرجى تحديد مهمة وملف");
+      alert(isEn ? "Please select a task and file" : "ÙŠØ±Ø¬Ù‰ ØªØ­Ø¯ÙŠØ¯ Ù…Ù‡Ù…Ø© ÙˆÙ…Ù„Ù");
       return;
     }
 
@@ -371,7 +375,7 @@ const CoursePlayer: React.FC<{
         task: selectedTask.id,
         submission_file: submissionFile,
       });
-      alert(isEn ? "Task submitted successfully!" : "تم تقديم المهمة بنجاح!");
+      alert(isEn ? "Task submitted successfully!" : "ØªÙ… ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ù…Ù‡Ù…Ø© Ø¨Ù†Ø¬Ø§Ø­!");
       setSelectedTask(null);
       setSubmissionFile(null);
       // Reload tasks
@@ -380,7 +384,7 @@ const CoursePlayer: React.FC<{
       }
     } catch (error) {
       console.error("Failed to submit task:", error);
-      alert(isEn ? "Failed to submit task" : "فشل تقديم المهمة");
+      alert(isEn ? "Failed to submit task" : "ÙØ´Ù„ ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ù…Ù‡Ù…Ø©");
     } finally {
       setSubmittingTask(false);
     }
@@ -389,7 +393,7 @@ const CoursePlayer: React.FC<{
   if (isInitialLoading) {
     return (
       <div className="pt-40 text-center">
-        {isEn ? "Loading Classroom..." : "جاري تحميل القاعة التعليمية..."}
+        {isEn ? "Loading Classroom..." : "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù‚Ø§Ø¹Ø© Ø§Ù„ØªØ¹Ù„ÙŠÙ…ÙŠØ©..."}
       </div>
     );
   }
@@ -399,15 +403,15 @@ const CoursePlayer: React.FC<{
       <div className="pt-28 sm:pt-36 px-4 max-w-3xl mx-auto text-center">
         <Card className="!p-8 border border-slate-200 dark:border-white/10">
           <h2 className="text-2xl font-black text-slate-900 dark:text-white mb-3">
-            {isEn ? "No courses available yet" : "لا يوجد كورسات متاحة حاليا"}
+            {isEn ? "No courses available yet" : "Ù„Ø§ ÙŠÙˆØ¬Ø¯ ÙƒÙˆØ±Ø³Ø§Øª Ù…ØªØ§Ø­Ø© Ø­Ø§Ù„ÙŠØ§"}
           </h2>
           <p className="text-slate-600 dark:text-slate-400 mb-6">
             {isEn
               ? "After the instructor approves your payment, purchased courses will appear here."
-              : "بعد ما المدرس يؤكد الدفع، الكورسات اللي اشتريتها هتظهر هنا تلقائيا."}
+              : "Ø¨Ø¹Ø¯ Ù…Ø§ Ø§Ù„Ù…Ø¯Ø±Ø³ ÙŠØ¤ÙƒØ¯ Ø§Ù„Ø¯ÙØ¹ØŒ Ø§Ù„ÙƒÙˆØ±Ø³Ø§Øª Ø§Ù„Ù„ÙŠ Ø§Ø´ØªØ±ÙŠØªÙ‡Ø§ Ù‡ØªØ¸Ù‡Ø± Ù‡Ù†Ø§ ØªÙ„Ù‚Ø§Ø¦ÙŠØ§."}
           </p>
           <Button onClick={handleBack}>
-            {isEn ? "Back" : "رجوع"}
+            {isEn ? "Back" : "Ø±Ø¬ÙˆØ¹"}
           </Button>
         </Card>
       </div>
@@ -423,26 +427,46 @@ const CoursePlayer: React.FC<{
   );
   const totalHours = Math.floor(totalDurationMinutes / 60);
   const totalMinutes = totalDurationMinutes % 60;
-  const courseRating = Number((activeCourse as any)?.rating_value || 4.9);
+  const courseRatingRaw = Number(
+    (activeCourse as any)?.rating_value ??
+      (activeCourse as any)?.rating ??
+      activeCourse?.rating ??
+      0
+  );
+  const courseRating =
+    Number.isFinite(courseRatingRaw) && courseRatingRaw > 0
+      ? Math.min(5, courseRatingRaw)
+      : 0;
+  const courseRatingLabel = courseRating > 0 ? `${courseRating.toFixed(1)} / 5` : "N/A";
   const courseInstructor =
     (activeCourse as any)?.instructor_name ||
-    (isEn ? "GeoTop Academy" : "أكاديمية GeoTop");
+    (isEn ? "Geo Top Company" : "Ø´Ø±ÙƒØ© Geo Top");
   const courseLevel =
     (activeCourse as any)?.level_label ||
-    (isEn ? "Professional Track" : "مسار احترافي");
+    (isEn ? "Professional Track" : "Ù…Ø³Ø§Ø± Ø§Ø­ØªØ±Ø§ÙÙŠ");
   const courseLanguage =
     (activeCourse as any)?.course_language ||
-    (isEn ? "Arabic / English" : "العربية / الإنجليزية");
-  const enrolledStudents = Number(
-    (activeCourse as any)?.enrolled_students || activeCourse?.students_count || 130
+    (isEn ? "Arabic / English" : "Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© / Ø§Ù„Ø¥Ù†Ø¬Ù„ÙŠØ²ÙŠØ©");
+  const enrolledStudents = Math.max(
+    0,
+    Number((activeCourse as any)?.enrolled_students ?? activeCourse?.students_count ?? 0)
   );
+  const normalizeListItem = (value: unknown): string =>
+    String(value ?? "")
+      .replace(/^(?:\u00E2\u20AC\u00A2|•|&bull;|&#8226;)\s*/i, "")
+      .replace(/^[-*]\s*/, "")
+      .trim();
   const requirements = Array.isArray((activeCourse as any)?.requirements)
     ? (activeCourse as any).requirements
+        .map(normalizeListItem)
+        .filter((item: string) => item.length > 0)
     : isEn
     ? ["Basic computer usage", "Willingness to practice", "Internet access"]
-    : ["اساسيات الكمبيوتر", "التطبيق العملي", "اتصال إنترنت"];
+    : ["Ø§Ø³Ø§Ø³ÙŠØ§Øª Ø§Ù„ÙƒÙ…Ø¨ÙŠÙˆØªØ±", "Ø§Ù„ØªØ·Ø¨ÙŠÙ‚ Ø§Ù„Ø¹Ù…Ù„ÙŠ", "Ø§ØªØµØ§Ù„ Ø¥Ù†ØªØ±Ù†Øª"];
   const outcomes = Array.isArray((activeCourse as any)?.outcomes)
     ? (activeCourse as any).outcomes
+        .map(normalizeListItem)
+        .filter((item: string) => item.length > 0)
     : isEn
     ? [
         "Understand full workflow for this specialization",
@@ -450,18 +474,24 @@ const CoursePlayer: React.FC<{
         "Deliver professional geospatial outputs",
       ]
     : [
-        "فهم مسار العمل الكامل للتخصص",
-        "تنفيذ تطبيقات ومشروعات عملية",
-        "تسليم مخرجات جيومكانية باحترافية",
+        "ÙÙ‡Ù… Ù…Ø³Ø§Ø± Ø§Ù„Ø¹Ù…Ù„ Ø§Ù„ÙƒØ§Ù…Ù„ Ù„Ù„ØªØ®ØµØµ",
+        "ØªÙ†ÙÙŠØ° ØªØ·Ø¨ÙŠÙ‚Ø§Øª ÙˆÙ…Ø´Ø±ÙˆØ¹Ø§Øª Ø¹Ù…Ù„ÙŠØ©",
+        "ØªØ³Ù„ÙŠÙ… Ù…Ø®Ø±Ø¬Ø§Øª Ø¬ÙŠÙˆÙ…ÙƒØ§Ù†ÙŠØ© Ø¨Ø§Ø­ØªØ±Ø§ÙÙŠØ©",
       ];
 
-  const rawPrice = Number((activeCourse as any)?.price || 0);
-  const coursePriceLabel =
-    rawPrice > 0
-      ? `${rawPrice.toFixed(2)} ${isEn ? "EGP" : "ج.م"}`
-      : isEn
-      ? "Available after registration"
-      : "متاح بعد التسجيل";
+  const formatCoursePriceLabel = (value: unknown) => {
+    const amount = Number(value || 0);
+    if (amount > 0) {
+      return `${amount.toFixed(2)} ${isEn ? "EGP" : "Ø¬.Ù…"}`;
+    }
+    return isEn ? "Not Set" : "غير محدد";
+  };
+
+  const livePriceLabel = formatCoursePriceLabel((activeCourse as any)?.price_live);
+  const offlinePriceLabel = formatCoursePriceLabel((activeCourse as any)?.price_offline);
+  const recordedPriceLabel = formatCoursePriceLabel(
+    (activeCourse as any)?.price_recorded ?? (activeCourse as any)?.price
+  );
 
   if (previewOnly) {
     return (
@@ -478,7 +508,7 @@ const CoursePlayer: React.FC<{
           }`}
         >
           <ArrowLeft size={14} className={!isEn ? "rotate-180" : ""} />
-          <span>{isEn ? "Back" : "رجوع"}</span>
+          <span>{isEn ? "Back" : "Ø±Ø¬ÙˆØ¹"}</span>
         </button>
 
         <Card className="!p-0 overflow-hidden mb-6 border border-slate-200 dark:border-white/10">
@@ -494,10 +524,7 @@ const CoursePlayer: React.FC<{
             <div className="md:col-span-2 p-6">
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className="text-[10px] px-2 py-1 rounded-full bg-eden-accent/15 text-eden-accent font-bold uppercase tracking-wider">
-                  {isEn ? "Course Info" : "معلومات الكورس"}
-                </span>
-                <span className="text-[10px] px-2 py-1 rounded-full bg-amber-100 text-amber-700 font-bold uppercase tracking-wider">
-                  {coursePriceLabel}
+                  {isEn ? "Course Info" : "Ù…Ø¹Ù„ÙˆÙ…Ø§Øª Ø§Ù„ÙƒÙˆØ±Ø³"}
                 </span>
               </div>
 
@@ -511,13 +538,13 @@ const CoursePlayer: React.FC<{
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Lessons" : "الدروس"}
+                    {isEn ? "Lessons" : "Ø§Ù„Ø¯Ø±ÙˆØ³"}
                   </p>
                   <p className="text-lg font-black text-slate-900 dark:text-white">{totalLessons}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Duration" : "المدة"}
+                    {isEn ? "Duration" : "Ø§Ù„Ù…Ø¯Ø©"}
                   </p>
                   <p className="text-lg font-black text-slate-900 dark:text-white">
                     {totalHours}h {totalMinutes}m
@@ -525,17 +552,38 @@ const CoursePlayer: React.FC<{
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Rating" : "التقييم"}
+                    {isEn ? "Rating" : "Ø§Ù„ØªÙ‚ÙŠÙŠÙ…"}
                   </p>
                   <p className="text-lg font-black text-slate-900 dark:text-white">
-                    {courseRating.toFixed(1)} / 5
+                    {courseRatingLabel}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Students" : "الطلاب"}
+                    {isEn ? "Students" : "Ø§Ù„Ø·Ù„Ø§Ø¨"}
                   </p>
                   <p className="text-lg font-black text-slate-900 dark:text-white">{enrolledStudents}</p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <p className="text-[10px] uppercase tracking-widest text-amber-700 font-bold">
+                    {isEn ? "Live Price" : "سعر اللايف"}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-amber-900">{livePriceLabel}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
+                  <p className="text-[10px] uppercase tracking-widest text-blue-700 font-bold">
+                    {isEn ? "Offline Price" : "سعر الأوفلاين"}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-blue-900">{offlinePriceLabel}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <p className="text-[10px] uppercase tracking-widest text-emerald-700 font-bold">
+                    {isEn ? "Recorded Price" : "سعر المسجلة"}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-emerald-900">{recordedPriceLabel}</p>
                 </div>
               </div>
             </div>
@@ -546,40 +594,52 @@ const CoursePlayer: React.FC<{
           <div className="grid md:grid-cols-2 gap-6">
             <div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mb-3">
-                {isEn ? "What You Will Learn" : "ماذا ستتعلم"}
+                {isEn ? "What You Will Learn" : "Ù…Ø§Ø°Ø§ Ø³ØªØªØ¹Ù„Ù…"}
               </h3>
-              <div className="space-y-2">
-                {outcomes.map((item: string, index: number) => (
-                  <p key={`${item}-${index}`} className="text-sm text-slate-700 dark:text-slate-300">
-                    • {item}
-                  </p>
-                ))}
+                <div className="space-y-2">
+                  {outcomes.map((item: string, index: number) => (
+                    <p
+                      key={`${item}-${index}`}
+                      className={`text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2 ${
+                        !isEn ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <span className="text-eden-accent leading-none mt-[2px]">•</span>
+                      <span>{item}</span>
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
             <div>
               <h3 className="text-lg font-black text-slate-900 dark:text-white mb-3">
-                {isEn ? "Requirements" : "المتطلبات"}
+                {isEn ? "Requirements" : "Ø§Ù„Ù…ØªØ·Ù„Ø¨Ø§Øª"}
               </h3>
-              <div className="space-y-2">
-                {requirements.map((item: string, index: number) => (
-                  <p key={`${item}-${index}`} className="text-sm text-slate-700 dark:text-slate-300">
-                    • {item}
-                  </p>
-                ))}
+                <div className="space-y-2">
+                  {requirements.map((item: string, index: number) => (
+                    <p
+                      key={`${item}-${index}`}
+                      className={`text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2 ${
+                        !isEn ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <span className="text-eden-accent leading-none mt-[2px]">•</span>
+                      <span>{item}</span>
+                    </p>
+                  ))}
+                </div>
               </div>
-            </div>
           </div>
         </Card>
 
         <Card className="!p-6 border border-slate-200 dark:border-white/10">
           <div className={`flex flex-col gap-4 ${!isEn ? "text-right" : "text-left"}`}>
             <h3 className="text-xl font-black text-slate-900 dark:text-white">
-              {isEn ? "Ready to buy this course?" : "جاهز تشتري الكورس؟"}
+              {isEn ? "Ready to buy this course?" : "Ø¬Ø§Ù‡Ø² ØªØ´ØªØ±ÙŠ Ø§Ù„ÙƒÙˆØ±Ø³ØŸ"}
             </h3>
             <p className="text-sm text-slate-600 dark:text-slate-400">
               {isEn
                 ? "Register in the platform first, then complete your purchase from inside your account."
-                : "سجّل في المنصة أولًا، وبعدها هتقدر تشتري الكورس من داخل حسابك."}
+                : "Ø³Ø¬Ù‘Ù„ ÙÙŠ Ø§Ù„Ù…Ù†ØµØ© Ø£ÙˆÙ„Ù‹Ø§ØŒ ÙˆØ¨Ø¹Ø¯Ù‡Ø§ Ù‡ØªÙ‚Ø¯Ø± ØªØ´ØªØ±ÙŠ Ø§Ù„ÙƒÙˆØ±Ø³ Ù…Ù† Ø¯Ø§Ø®Ù„ Ø­Ø³Ø§Ø¨Ùƒ."}
             </p>
             <div className={`flex ${!isEn ? "justify-end" : "justify-start"}`}>
               <Button
@@ -588,7 +648,7 @@ const CoursePlayer: React.FC<{
                 }}
                 className="!h-12 !px-8"
               >
-                {isEn ? "Register In Platform" : "التسجيل في المنصة"}
+                {isEn ? "Register In Platform" : "Ø§Ù„ØªØ³Ø¬ÙŠÙ„ ÙÙŠ Ø§Ù„Ù…Ù†ØµØ©"}
                 <ArrowRight size={18} className={`${!isEn ? "rotate-180 mr-2" : "ml-2"}`} />
               </Button>
             </div>
@@ -613,7 +673,7 @@ const CoursePlayer: React.FC<{
           }`}
         >
           <ArrowLeft size={14} className={!isEn ? "rotate-180" : ""} />
-          <span>{isEn ? "Back" : "رجوع"}</span>
+          <span>{isEn ? "Back" : "Ø±Ø¬ÙˆØ¹"}</span>
         </button>
 
         <Card className="!p-0 overflow-hidden mb-6 border border-slate-200 dark:border-white/10">
@@ -629,10 +689,10 @@ const CoursePlayer: React.FC<{
             <div className="md:col-span-2 p-6">
               <div className="flex flex-wrap items-center gap-2 mb-3">
                 <span className="text-[10px] px-2 py-1 rounded-full bg-eden-accent/15 text-eden-accent font-bold uppercase tracking-wider">
-                  {isEn ? "Course" : "كورس"}
+                  {isEn ? "Course" : "ÙƒÙˆØ±Ø³"}
                 </span>
                 <span className="text-[10px] px-2 py-1 rounded-full bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-slate-300 font-bold uppercase tracking-wider">
-                  {activeCourse.progress || 0}% {isEn ? "Progress" : "تقدم"}
+                  {activeCourse.progress || 0}% {isEn ? "Progress" : "ØªÙ‚Ø¯Ù…"}
                 </span>
               </div>
 
@@ -646,23 +706,44 @@ const CoursePlayer: React.FC<{
               <div className="grid grid-cols-3 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Lessons" : "الدروس"}
+                    {isEn ? "Lessons" : "Ø§Ù„Ø¯Ø±ÙˆØ³"}
                   </p>
                   <p className="text-lg font-black text-slate-900 dark:text-white">{totalLessons}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Completed" : "المكتمل"}
+                    {isEn ? "Completed" : "Ø§Ù„Ù…ÙƒØªÙ…Ù„"}
                   </p>
                   <p className="text-lg font-black text-slate-900 dark:text-white">{completedLessons}</p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Duration" : "المدة"}
+                    {isEn ? "Duration" : "Ø§Ù„Ù…Ø¯Ø©"}
                   </p>
                   <p className="text-lg font-black text-slate-900 dark:text-white">
                     {totalHours}h {totalMinutes}m
                   </p>
+                </div>
+              </div>
+
+              <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
+                  <p className="text-[10px] uppercase tracking-widest text-amber-700 font-bold">
+                    {isEn ? "Live Price" : "سعر اللايف"}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-amber-900">{livePriceLabel}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-blue-50 border border-blue-200">
+                  <p className="text-[10px] uppercase tracking-widest text-blue-700 font-bold">
+                    {isEn ? "Offline Price" : "سعر الأوفلاين"}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-blue-900">{offlinePriceLabel}</p>
+                </div>
+                <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                  <p className="text-[10px] uppercase tracking-widest text-emerald-700 font-bold">
+                    {isEn ? "Recorded Price" : "سعر المسجلة"}
+                  </p>
+                  <p className="mt-1 text-sm font-black text-emerald-900">{recordedPriceLabel}</p>
                 </div>
               </div>
             </div>
@@ -673,7 +754,7 @@ const CoursePlayer: React.FC<{
           <div className="grid lg:grid-cols-12 gap-6">
             <div className="lg:col-span-8">
               <h2 className="text-xl font-black text-slate-900 dark:text-white mb-3">
-                {isEn ? "Course Overview" : "نظرة عامة على الكورس"}
+                {isEn ? "Course Overview" : "Ù†Ø¸Ø±Ø© Ø¹Ø§Ù…Ø© Ø¹Ù„Ù‰ Ø§Ù„ÙƒÙˆØ±Ø³"}
               </h2>
               <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed mb-4">
                 {activeCourse.description}
@@ -682,15 +763,15 @@ const CoursePlayer: React.FC<{
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Rating" : "التقييم"}
+                    {isEn ? "Rating" : "Ø§Ù„ØªÙ‚ÙŠÙŠÙ…"}
                   </p>
                   <p className="text-base font-black text-slate-900 dark:text-white">
-                    {courseRating.toFixed(1)} / 5
+                    {courseRatingLabel}
                   </p>
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Instructor" : "المحاضر"}
+                    {isEn ? "Instructor" : "Ø§Ù„Ù…Ø­Ø§Ø¶Ø±"}
                   </p>
                   <p className="text-base font-black text-slate-900 dark:text-white truncate">
                     {courseInstructor}
@@ -698,7 +779,7 @@ const CoursePlayer: React.FC<{
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Level" : "المستوى"}
+                    {isEn ? "Level" : "Ø§Ù„Ù…Ø³ØªÙˆÙ‰"}
                   </p>
                   <p className="text-base font-black text-slate-900 dark:text-white truncate">
                     {courseLevel}
@@ -706,7 +787,7 @@ const CoursePlayer: React.FC<{
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Language" : "اللغة"}
+                    {isEn ? "Language" : "Ø§Ù„Ù„ØºØ©"}
                   </p>
                   <p className="text-base font-black text-slate-900 dark:text-white truncate">
                     {courseLanguage}
@@ -714,7 +795,7 @@ const CoursePlayer: React.FC<{
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Students" : "الطلاب"}
+                    {isEn ? "Students" : "Ø§Ù„Ø·Ù„Ø§Ø¨"}
                   </p>
                   <p className="text-base font-black text-slate-900 dark:text-white">
                     {enrolledStudents}
@@ -722,16 +803,16 @@ const CoursePlayer: React.FC<{
                 </div>
                 <div className="p-3 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">
-                    {isEn ? "Mode" : "الوضع"}
+                    {isEn ? "Mode" : "Ø§Ù„ÙˆØ¶Ø¹"}
                   </p>
                   <p className="text-base font-black text-slate-900 dark:text-white">
                     {isStaticPreview
                       ? isEn
                         ? "Static Preview"
-                        : "معاينة ستاتيك"
+                        : "Ù…Ø¹Ø§ÙŠÙ†Ø© Ø³ØªØ§ØªÙŠÙƒ"
                       : isEn
                       ? "Live Course"
-                      : "كورس حي"}
+                      : "ÙƒÙˆØ±Ø³ Ø­ÙŠ"}
                   </p>
                 </div>
               </div>
@@ -740,12 +821,18 @@ const CoursePlayer: React.FC<{
             <div className="lg:col-span-4 space-y-4">
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                 <h3 className="text-xs font-black tracking-widest uppercase text-slate-500 mb-2">
-                  {isEn ? "What You Will Learn" : "ما الذي ستتعلمه"}
+                  {isEn ? "What You Will Learn" : "Ù…Ø§ Ø§Ù„Ø°ÙŠ Ø³ØªØªØ¹Ù„Ù…Ù‡"}
                 </h3>
                 <div className="space-y-2">
                   {outcomes.slice(0, 3).map((item: string, index: number) => (
-                    <p key={`${item}-${index}`} className="text-sm text-slate-700 dark:text-slate-300">
-                      • {item}
+                    <p
+                      key={`${item}-${index}`}
+                      className={`text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2 ${
+                        !isEn ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <span className="text-eden-accent leading-none mt-[2px]">•</span>
+                      <span>{item}</span>
                     </p>
                   ))}
                 </div>
@@ -753,12 +840,18 @@ const CoursePlayer: React.FC<{
 
               <div className="p-4 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10">
                 <h3 className="text-xs font-black tracking-widest uppercase text-slate-500 mb-2">
-                  {isEn ? "Requirements" : "المتطلبات"}
+                  {isEn ? "Requirements" : "Ø§Ù„Ù…ØªØ·Ù„Ø¨Ø§Øª"}
                 </h3>
                 <div className="space-y-2">
                   {requirements.slice(0, 3).map((item: string, index: number) => (
-                    <p key={`${item}-${index}`} className="text-sm text-slate-700 dark:text-slate-300">
-                      • {item}
+                    <p
+                      key={`${item}-${index}`}
+                      className={`text-sm text-slate-700 dark:text-slate-300 flex items-start gap-2 ${
+                        !isEn ? "flex-row-reverse" : ""
+                      }`}
+                    >
+                      <span className="text-eden-accent leading-none mt-[2px]">•</span>
+                      <span>{item}</span>
                     </p>
                   ))}
                 </div>
@@ -797,7 +890,7 @@ const CoursePlayer: React.FC<{
                     <div className="text-xs text-slate-500 mt-1 flex items-center gap-2">
                       <span>
                         {course.completed_lessons}/{course.total_lessons}{" "}
-                        {isEn ? "lessons" : "دروس"}
+                        {isEn ? "lessons" : "Ø¯Ø±ÙˆØ³"}
                       </span>
                       {course.total_duration_minutes && (
                         <>
@@ -824,7 +917,7 @@ const CoursePlayer: React.FC<{
         <div className="w-full mb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
-              {isEn ? "Video Lesson" : "درس الفيديو"}
+              {isEn ? "Video Lesson" : "Ø¯Ø±Ø³ Ø§Ù„ÙÙŠØ¯ÙŠÙˆ"}
             </h3>
             {activeLesson?.video_url && (
               <button
@@ -832,7 +925,7 @@ const CoursePlayer: React.FC<{
                 className="flex items-center gap-2 px-3 py-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 rounded-lg transition-colors text-sm font-medium"
               >
                 <Download size={16} />
-                {isEn ? "Download" : "تحميل"}
+                {isEn ? "Download" : "ØªØ­Ù…ÙŠÙ„"}
               </button>
             )}
           </div>
@@ -848,7 +941,7 @@ const CoursePlayer: React.FC<{
               </video>
             ) : (
               <div className="h-full flex items-center justify-center text-slate-500">
-                {isEn ? "Select a Lesson" : "اختر درسًا"}
+                {isEn ? "Select a Lesson" : "Ø§Ø®ØªØ± Ø¯Ø±Ø³Ù‹Ø§"}
               </div>
             )}
           </div>
@@ -864,7 +957,7 @@ const CoursePlayer: React.FC<{
                 <div className="flex items-center gap-3 mb-3 text-sm text-slate-500 dark:text-slate-400">
                   <Clock size={16} className="text-cyan-500" />
                   <span className="font-semibold">
-                    {activeLesson.duration_minutes} {isEn ? "minutes" : "دقيقة"}
+                    {activeLesson.duration_minutes} {isEn ? "minutes" : "Ø¯Ù‚ÙŠÙ‚Ø©"}
                   </span>
                 </div>
               )}
@@ -884,17 +977,17 @@ const CoursePlayer: React.FC<{
               >
                 {activeLesson.is_completed ? (
                   <span className="flex items-center gap-2">
-                    <CheckCircle size={16} /> {isEn ? "Completed" : "مكتمل"}
+                    <CheckCircle size={16} /> {isEn ? "Completed" : "Ù…ÙƒØªÙ…Ù„"}
                   </span>
                 ) : (
                   <span>
                     {isMarkingComplete
                       ? isEn
                         ? "Saving..."
-                        : "جاري الحفظ..."
+                        : "Ø¬Ø§Ø±ÙŠ Ø§Ù„Ø­ÙØ¸..."
                       : isEn
                       ? "Mark Complete"
-                      : "تعليم كمكتمل"}
+                      : "ØªØ¹Ù„ÙŠÙ… ÙƒÙ…ÙƒØªÙ…Ù„"}
                   </span>
                 )}
               </button>
@@ -918,7 +1011,7 @@ const CoursePlayer: React.FC<{
                   : "text-slate-500"
               }`}
             >
-              <Video size={16} /> {isEn ? "Lessons" : "الدروس"}
+              <Video size={16} /> {isEn ? "Lessons" : "Ø§Ù„Ø¯Ø±ÙˆØ³"}
             </button>
             <button
               onClick={() => setTab("resources")}
@@ -928,7 +1021,7 @@ const CoursePlayer: React.FC<{
                   : "text-slate-500"
               }`}
             >
-              <FileText size={16} /> {isEn ? "Resources" : "الموارد"}
+              <FileText size={16} /> {isEn ? "Resources" : "Ø§Ù„Ù…ÙˆØ§Ø±Ø¯"}
             </button>
             <button
               onClick={() => setTab("ai")}
@@ -938,7 +1031,7 @@ const CoursePlayer: React.FC<{
                   : "text-slate-500"
               }`}
             >
-              <BrainCircuit size={16} /> {isEn ? "AI Tutor" : "المعلم الذكي"}
+              <BrainCircuit size={16} /> {isEn ? "AI Tutor" : "Ø§Ù„Ù…Ø¹Ù„Ù… Ø§Ù„Ø°ÙƒÙŠ"}
             </button>
             <button
               onClick={() => setTab("assignments")}
@@ -948,7 +1041,7 @@ const CoursePlayer: React.FC<{
                   : "text-slate-500"
               }`}
             >
-              <FileText size={16} /> {isEn ? "Tasks" : "المهام"}
+              <FileText size={16} /> {isEn ? "Tasks" : "Ø§Ù„Ù…Ù‡Ø§Ù…"}
             </button>
           </div>
 
@@ -973,7 +1066,7 @@ const CoursePlayer: React.FC<{
                       {l.duration_minutes && (
                         <span className="flex items-center gap-1">
                           <Clock size={10} />
-                          {l.duration_minutes} {isEn ? "min" : "دقيقة"}
+                          {l.duration_minutes} {isEn ? "min" : "Ø¯Ù‚ÙŠÙ‚Ø©"}
                         </span>
                       )}
                       {l.description && (
@@ -1028,7 +1121,7 @@ const CoursePlayer: React.FC<{
                   <div className="py-8 text-center text-slate-500 text-sm">
                     {isEn
                       ? "No resources yet for this course"
-                      : "لا توجد موارد لهذا الكورس بعد"}
+                      : "Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…ÙˆØ§Ø±Ø¯ Ù„Ù‡Ø°Ø§ Ø§Ù„ÙƒÙˆØ±Ø³ Ø¨Ø¹Ø¯"}
                   </div>
                 )}
               </div>
@@ -1040,7 +1133,7 @@ const CoursePlayer: React.FC<{
                   <div className="bg-primary/10 p-3 rounded-2xl text-xs text-primary font-bold">
                     {isEn
                       ? "Hello! Ask me anything about this lesson."
-                      : "أهلاً! اسألني عن أي شيء في هذا الدرس."}
+                      : "Ø£Ù‡Ù„Ø§Ù‹! Ø§Ø³Ø£Ù„Ù†ÙŠ Ø¹Ù† Ø£ÙŠ Ø´ÙŠØ¡ ÙÙŠ Ù‡Ø°Ø§ Ø§Ù„Ø¯Ø±Ø³."}
                   </div>
                   {aiChat.map((m, i) => (
                     <div
@@ -1056,7 +1149,7 @@ const CoursePlayer: React.FC<{
                   ))}
                   {isAiLoading && (
                     <div className="text-[10px] text-primary animate-pulse">
-                      {isEn ? "Thinking..." : "جاري التفكير..."}
+                      {isEn ? "Thinking..." : "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªÙÙƒÙŠØ±..."}
                     </div>
                   )}
                   <div ref={chatEndRef} />
@@ -1067,7 +1160,7 @@ const CoursePlayer: React.FC<{
                     onChange={(e) => setAiQuestion(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && handleAiAsk()}
                     className="flex-1 bg-slate-50 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-xl px-3 py-2 text-xs"
-                    placeholder={isEn ? "Ask AI..." : "اسأل الذكاء..."}
+                    placeholder={isEn ? "Ask AI..." : "Ø§Ø³Ø£Ù„ Ø§Ù„Ø°ÙƒØ§Ø¡..."}
                   />
                   <button
                     onClick={handleAiAsk}
@@ -1084,7 +1177,7 @@ const CoursePlayer: React.FC<{
                 {tasksLoading ? (
                   <div className="text-center py-6">
                     <p className="text-xs text-slate-500">
-                      {isEn ? "Loading tasks..." : "جاري تحميل المهام..."}
+                      {isEn ? "Loading tasks..." : "Ø¬Ø§Ø±ÙŠ ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù…Ù‡Ø§Ù…..."}
                     </p>
                   </div>
                 ) : courseTasks.length === 0 ? (
@@ -1092,7 +1185,7 @@ const CoursePlayer: React.FC<{
                     <p className="text-xs text-slate-500">
                       {isEn
                         ? "No tasks for this course"
-                        : "لا توجد مهام لهذا الكورس"}
+                        : "Ù„Ø§ ØªÙˆØ¬Ø¯ Ù…Ù‡Ø§Ù… Ù„Ù‡Ø°Ø§ Ø§Ù„ÙƒÙˆØ±Ø³"}
                     </p>
                   </div>
                 ) : (
@@ -1129,7 +1222,7 @@ const CoursePlayer: React.FC<{
                       )}
                       {task.due_date && (
                         <p className="text-[9px] text-slate-500">
-                          {isEn ? "Due:" : "تاريخ الاستحقاق:"}{" "}
+                          {isEn ? "Due:" : "ØªØ§Ø±ÙŠØ® Ø§Ù„Ø§Ø³ØªØ­Ù‚Ø§Ù‚:"}{" "}
                           {new Date(task.due_date).toLocaleDateString()}
                         </p>
                       )}
@@ -1144,7 +1237,7 @@ const CoursePlayer: React.FC<{
                        <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
                          <div className="flex items-center justify-between mb-2">
                            <h4 className="font-bold text-sm text-slate-100">
-                             {isEn ? "Task File:" : "ملف المهمة:"}
+                             {isEn ? "Task File:" : "Ù…Ù„Ù Ø§Ù„Ù…Ù‡Ù…Ø©:"}
                            </h4>
                            <a
                              href={selectedTask.file_url}
@@ -1153,13 +1246,13 @@ const CoursePlayer: React.FC<{
                              className="flex items-center gap-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold rounded-lg transition-colors"
                            >
                              <Download size={12} />
-                             {isEn ? "Download/View" : "تحميل/عرض"}
+                             {isEn ? "Download/View" : "ØªØ­Ù…ÙŠÙ„/Ø¹Ø±Ø¶"}
                            </a>
                          </div>
                          <p className="text-[10px] text-slate-400">
                            {isEn
                              ? "Click to download or view the task file"
-                             : "انقر لتحميل أو عرض ملف المهمة"}
+                             : "Ø§Ù†Ù‚Ø± Ù„ØªØ­Ù…ÙŠÙ„ Ø£Ùˆ Ø¹Ø±Ø¶ Ù…Ù„Ù Ø§Ù„Ù…Ù‡Ù…Ø©"}
                          </p>
                        </div>
                      )}
@@ -1167,7 +1260,7 @@ const CoursePlayer: React.FC<{
                      {/* Submission Section */}
                      <div className="p-4 bg-slate-700/50 dark:bg-white/5 rounded-xl border border-slate-600 dark:border-white/10">
                        <h4 className="font-bold text-sm text-slate-100 mb-3">
-                         {isEn ? "Submit Your Work:" : "قدم عملك:"}
+                         {isEn ? "Submit Your Work:" : "Ù‚Ø¯Ù… Ø¹Ù…Ù„Ùƒ:"}
                        </h4>
                        <div className="border-2 border-dashed border-slate-400 dark:border-white/20 rounded-xl p-6 text-center group cursor-pointer hover:bg-white/5 mb-3">
                          <input
@@ -1193,7 +1286,7 @@ const CoursePlayer: React.FC<{
                                ? submissionFile.name
                                : isEn
                                ? "Click to upload file"
-                               : "انقر لتحميل الملف"}
+                               : "Ø§Ù†Ù‚Ø± Ù„ØªØ­Ù…ÙŠÙ„ Ø§Ù„Ù…Ù„Ù"}
                            </span>
                          </label>
                        </div>
@@ -1205,10 +1298,10 @@ const CoursePlayer: React.FC<{
                          {submittingTask
                            ? isEn
                              ? "Submitting..."
-                             : "جاري التقديم..."
+                             : "Ø¬Ø§Ø±ÙŠ Ø§Ù„ØªÙ‚Ø¯ÙŠÙ…..."
                            : isEn
                            ? "Submit Task"
-                           : "تقديم المهمة"}
+                           : "ØªÙ‚Ø¯ÙŠÙ… Ø§Ù„Ù…Ù‡Ù…Ø©"}
                        </Button>
                      </div>
                    </div>
@@ -1223,4 +1316,5 @@ const CoursePlayer: React.FC<{
 };
 
 export default CoursePlayer;
+
 

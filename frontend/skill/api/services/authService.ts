@@ -5,6 +5,7 @@ import {
   LoginRequest,
   LoginResponse,
   RegisterRequest,
+  RegisterResponse,
   TokenRefreshRequest,
   TokenRefreshResponse
 } from '../types';
@@ -38,9 +39,9 @@ class AuthService {
    * Register new user
    * POST /api/accounts/register/
    */
-  async register(data: RegisterRequest): Promise<User> {
+  async register(data: RegisterRequest): Promise<RegisterResponse> {
     try {
-      const response = await apiClient.post<User>(
+      const response = await apiClient.post<RegisterResponse>(
         '/api/accounts/register/',
         data,
         { timeout: 60000 }

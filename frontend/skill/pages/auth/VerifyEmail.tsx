@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { Mail, CheckCircle, AlertCircle, Clock, ArrowLeft } from 'lucide-react';
 import { Button, Card, Input } from '../../components/UI';
 import { authService } from '../../api/services';
+import apiClient from '../../api/config';
 import { toast } from 'sonner';
 
 interface VerifyEmailProps {
@@ -58,30 +59,8 @@ const VerifyEmailPage: React.FC<VerifyEmailProps> = ({
     setErrors({});
 
     try {
-      // Send OTP code to backend
-      const response = await fetch('http://localhost:8000/api/accounts/verify-email/', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ otp: otp })
-      });
-      
-      const text = await response.text();
-      
-      if (!response.ok) {
-        let errorMsg = 'Verification failed';
-        try {
-          const errorData = JSON.parse(text);
-          errorMsg = errorData.error || errorData.otp?.[0] || errorData.detail || 'Invalid OTP code';
-        } catch (e) {
-          errorMsg = text || 'Server error';
-        }
-        throw new Error(errorMsg);
-      }
-      
-      // Parse success response
-      const data = JSON.parse(text);
+      // Use shared API client (proxy/direct handled centrally in api/config.ts).
+      await apiClient.post('/api/accounts/verify-email/', { otp });
       
       setVerified(true);
       toast.success('Email verified successfully!');

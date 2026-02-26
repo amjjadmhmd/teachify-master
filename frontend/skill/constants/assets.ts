@@ -1,4 +1,4 @@
-
+﻿
 // This file centralizes all images. 
 // Using high-quality Unsplash images that look like real production assets.
 
@@ -51,3 +51,4 @@ export const ASSETS = {
     "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e8/Tesla_logo.png/2560px-Tesla_logo.png",
   ]
 };
+

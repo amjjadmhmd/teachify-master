@@ -7,7 +7,14 @@ import SettingsModal from './SettingsModal';
 import AIAssistant from './AIAssistant';
 import { useIsMobile } from '../hooks/useIsMobile';
 
-type LandingSectionId = 'home' | 'courses' | 'services' | 'about' | 'contact';
+type LandingSectionId =
+  | 'home'
+  | 'courses'
+  | 'services'
+  | 'projects'
+  | 'blog'
+  | 'about'
+  | 'contact';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -59,7 +66,16 @@ const Layout: React.FC<LayoutProps> = ({
   const isMobile = useIsMobile();
   const isExamView = view === ViewMode.EXAM_RUNNER;
   const isWorkspace = view === ViewMode.WORKSPACE;
-  const isLanding = view === ViewMode.LANDING || view === ViewMode.AUTH || view === ViewMode.JOIN_PLATFORM;
+  const isLanding =
+    view === ViewMode.LANDING ||
+    view === ViewMode.CONTACT ||
+    view === ViewMode.LANDING_SERVICES ||
+    view === ViewMode.LANDING_COURSES ||
+    view === ViewMode.LANDING_PROJECTS ||
+    view === ViewMode.LANDING_BLOG ||
+    view === ViewMode.LANDING_PROJECT_DETAIL ||
+    view === ViewMode.LANDING_BLOG_DETAIL ||
+    view === ViewMode.AUTH;
   const showAmbientLayers = !isLanding;
   const roleScopeClass =
     !isLanding && user?.role === 'student'
@@ -69,13 +85,13 @@ const Layout: React.FC<LayoutProps> = ({
       : '';
 
   const showNav = user && !isExamView && !isLanding;
-  const isEn = lang === 'en';
+  const isRtl = lang === 'ar';
   const isAiAssistantEnabled = (import.meta as any)?.env?.VITE_ENABLE_AI_ASSISTANT !== 'false';
 
   return (
     <div
       className={`min-h-screen font-sans selection:bg-eden-accent selection:text-eden-bg ${roleScopeClass} ${
-        !isEn && lang === 'ar' ? 'rtl' : ''
+        isRtl ? 'rtl' : ''
       }`}
     >
       {/* 1. Base Dark Layer */}
@@ -142,7 +158,11 @@ const Layout: React.FC<LayoutProps> = ({
         </>
       )}
 
-      <main className={`relative transition-all duration-300 ${showNav && isSidebarOpen ? 'lg:pl-72' : ''}`}>
+      <main
+        className={`relative transition-all duration-300 ${
+          showNav && isSidebarOpen ? (isRtl ? 'lg:pr-72' : 'lg:pl-72') : ''
+        }`}
+      >
         <AnimatePresence mode="wait">
           <motion.div
             key={view}

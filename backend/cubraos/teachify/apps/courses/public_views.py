@@ -22,7 +22,7 @@ def platform_stats(request):
     """
     total_students = User.objects.filter(role='student').count()
     total_instructors = User.objects.filter(role='instructor').count()
-    total_courses = Course.objects.count()
+    total_courses = Course.objects.filter(status=Course.Status.PUBLISHED).count()
     total_enrollments = Enrollment.objects.count()
     
     # Calculate hired graduates (mock: 96% of enrolled students)
@@ -68,7 +68,7 @@ class PublicCourseViewSet(viewsets.ReadOnlyModelViewSet):
     """
     Public read-only access to courses for marketplace browsing
     """
-    queryset = Course.objects.all()
+    queryset = Course.objects.filter(status=Course.Status.PUBLISHED)
     serializer_class = CourseSerializer
     permission_classes = [AllowAny]
     

@@ -35,53 +35,59 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     def validate(self, data):
         """
-        Validate instructor verification code for instructor registrations
+        Validate optional instructor verification code.
         """
         role = data.get('role', 'student')
         instructor_code = (data.get('instructor_code', '') or '').strip()
         data['instructor_code'] = instructor_code
-        
-        if role == 'instructor' and instructor_code != settings.INSTRUCTOR_VERIFICATION_CODE:
-            raise serializers.ValidationError(
-                "Invalid instructor verification code. Only users with the correct code can register as instructors."
-            )
-        
+
+        # Allow instructor creation without a code; validate only when a code exists.
+        if (
+            role == 'instructor'
+            and instructor_code
+            and instructor_code != settings.INSTRUCTOR_VERIFICATION_CODE
+        ):
+            raise serializers.ValidationError("Invalid instructor verification code.")
+
         return data
 
     def create(self, validated_data):
         # Remove instructor_code from validated_data before creating user
-        validated_data.pop('instructor_code', None)
-        
-        # إنشاء المستخدم باستخدام الميثود المخصصة لضمان تشفير الباسورد
+        instructor_code = (validated_data.pop('instructor_code', '') or '').strip()
+
         user = User.objects.create_user(**validated_data)
-        
-        # Generate verification token
-        token = VerificationTokenGenerator.generate_token()
-        otp = VerificationTokenGenerator.generate_otp()
-        
-        # Save token to user
-        user.verification_token = token
-        user.verification_token_expires = VerificationTokenGenerator.get_expiry_time()
-        user.is_verified = False  # Ensure unverified
-        user.save()
-        
-        # Create verification log with OTP
-        EmailVerificationLog.objects.create(
-            user=user,
-            email=user.email,
-            token=token,
-            otp=otp,
-            expires_at=user.verification_token_expires,
-        )
-        
-        # Send verification email
-        EmailVerificationService.send_verification_email(user, token, otp)
-        
-        # Auto-verify instructors for instructor_verified field only
-        if user.role == 'instructor':
-            user.instructor_verified = True
+
+        verification_required = LoginValidationService.is_email_verification_required()
+
+        if verification_required:
+            token = VerificationTokenGenerator.generate_token()
+            otp = VerificationTokenGenerator.generate_otp()
+
+            user.verification_token = token
+            user.verification_token_expires = VerificationTokenGenerator.get_expiry_time()
+            user.is_verified = False
             user.save()
-        
+
+            EmailVerificationLog.objects.create(
+                user=user,
+                email=user.email,
+                token=token,
+                otp=otp,
+                expires_at=user.verification_token_expires,
+            )
+
+            EmailVerificationService.send_verification_email(user, token, otp)
+        else:
+            # Keep local development fast by skipping email verification gate.
+            user.mark_email_verified()
+
+        if user.role == 'instructor':
+            if instructor_code and instructor_code == settings.INSTRUCTOR_VERIFICATION_CODE:
+                user.instructor_verified = True
+            elif not verification_required:
+                user.instructor_verified = True
+            user.save(update_fields=['instructor_verified'])
+
         return user
 
 
@@ -147,3 +153,4 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         # Add user data
         data['user'] = UserSerializer(self.user, context=self.context).data
         return data
+

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
@@ -52,6 +52,7 @@ const Sidebar: React.FC<SidebarProps> = ({
   const isMobile = useIsMobile();
   const isInstructor = user?.role === 'instructor';
   const isEn = lang === 'en';
+  const isRtl = lang === 'ar';
   const isDark = theme === 'dark';
 
   const sidebarBg = isDark ? 'bg-[#061427]' : 'bg-[#e9f3ff]';
@@ -70,74 +71,74 @@ const Sidebar: React.FC<SidebarProps> = ({
     ? [
         {
           id: ViewMode.DASHBOARD,
-          label: isEn ? 'Dashboard' : 'لوحة التحكم',
+          label: isEn ? 'Dashboard' : '\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645',
           icon: LayoutDashboard,
         },
         {
           id: ViewMode.COURSE_EDITOR,
-          label: isEn ? 'Course Library' : 'مكتبة الكورسات',
+          label: isEn ? 'Course Library' : '\u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u0643\u0648\u0631\u0633\u0627\u062a',
           icon: BookOpen,
         },
         {
           id: ViewMode.INSTRUCTOR_PAYMENTS,
-          label: isEn ? 'Payments' : 'الدفعات',
+          label: isEn ? 'Payments' : '\u0627\u0644\u062f\u0641\u0639\u0627\u062a',
           icon: CreditCard,
         },
         {
           id: ViewMode.INSTRUCTOR_TASKS,
-          label: isEn ? 'Tasks' : 'المهام',
+          label: isEn ? 'Tasks' : '\u0627\u0644\u0645\u0647\u0627\u0645',
           icon: FileText,
         },
         {
           id: ViewMode.INSTRUCTOR_EXAMS,
-          label: isEn ? 'Exams' : 'الامتحانات',
+          label: isEn ? 'Exams' : '\u0627\u0644\u0627\u0645\u062a\u062d\u0627\u0646\u0627\u062a',
           icon: ClipboardList,
         },
         {
           id: ViewMode.INSTRUCTOR_CERTIFICATES,
-          label: isEn ? 'Certificates' : 'الشهادات',
+          label: isEn ? 'Certificates' : '\u0627\u0644\u0634\u0647\u0627\u062f\u0627\u062a',
           icon: Award,
         },
         {
           id: ViewMode.STUDENTS_LIST,
-          label: isEn ? 'Student Hub' : 'مركز الطلاب',
+          label: isEn ? 'Student Hub' : '\u0645\u0631\u0643\u0632 \u0627\u0644\u0637\u0644\u0627\u0628',
           icon: Users,
         },
         {
           id: ViewMode.TOP_STUDENTS,
-          label: isEn ? 'Top Students' : 'أفضل الطلاب',
+          label: isEn ? 'Top Students' : '\u0623\u0641\u0636\u0644 \u0627\u0644\u0637\u0644\u0627\u0628',
           icon: Trophy,
         },
       ]
     : [
         {
           id: ViewMode.DASHBOARD,
-          label: isEn ? 'Dashboard' : 'لوحة التحكم',
+          label: isEn ? 'Dashboard' : '\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645',
           icon: LayoutDashboard,
         },
         {
           id: ViewMode.COURSE_PLAYER,
-          label: isEn ? 'My Courses' : 'كورساتي',
+          label: isEn ? 'My Courses' : '\u0643\u0648\u0631\u0633\u0627\u062a\u064a',
           icon: GraduationCap,
         },
         {
           id: ViewMode.EXAM_LIST,
-          label: isEn ? 'Assessments' : 'التقييمات',
+          label: isEn ? 'Assessments' : '\u0627\u0644\u062a\u0642\u064a\u064a\u0645\u0627\u062a',
           icon: ClipboardList,
         },
         {
           id: ViewMode.CERTIFICATES,
-          label: isEn ? 'Certificates' : 'الشهادات',
+          label: isEn ? 'Certificates' : '\u0627\u0644\u0634\u0647\u0627\u062f\u0627\u062a',
           icon: Award,
         },
         {
           id: ViewMode.MARKETPLACE,
-          label: isEn ? 'Catalog' : 'الكتالوج',
+          label: isEn ? 'Catalog' : '\u0627\u0644\u0643\u062a\u0627\u0644\u0648\u062c',
           icon: ShoppingBag,
         },
         {
           id: ViewMode.WISHLIST,
-          label: isEn ? 'Saved' : 'المحفوظات',
+          label: isEn ? 'Saved' : '\u0627\u0644\u0645\u062d\u0641\u0648\u0638\u0627\u062a',
           icon: Heart,
         },
       ];
@@ -169,20 +170,20 @@ const Sidebar: React.FC<SidebarProps> = ({
           <img
             src={ASSETS.LOGO}
             alt="Geo Top Logo"
-            className="h-10 w-10 object-contain rounded-full"
+            className="h-12 w-12 object-contain rounded-full"
           />
-          <span className="font-black text-xl text-eden-accent">GeoTop</span>
+          <span className="font-black text-xl text-eden-accent">Geo Top</span>
         </div>
       </div>
 
-      <div className="flex-1 space-y-6 mt-8 min-h-0 pr-1 sidebar-scroll">
+      <div className={`flex-1 space-y-6 mt-8 min-h-0 sidebar-scroll ${isRtl ? 'pl-1' : 'pr-1'}`}>
         <div className="space-y-2">
           <p className={`text-[9px] font-black uppercase tracking-[0.3em] mb-4 px-2 ${mainConsoleText}`}>
-            {isEn ? 'Main Console' : 'لوحة التحكم'}
+            {isEn ? 'Main Console' : '\u0644\u0648\u062d\u0629 \u0627\u0644\u062a\u062d\u0643\u0645'}
           </p>
           {menuItems.map((item) => (
             <motion.button
-              whileHover={{ x: 5 }}
+              whileHover={{ x: isRtl ? -5 : 5 }}
               whileTap={{ scale: 0.98 }}
               key={item.id}
               onClick={() => {
@@ -204,7 +205,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               {currentView === item.id && (
                 <motion.div
                   layoutId="sidebar-active"
-                  className="absolute right-3 w-1.5 h-1.5 rounded-full bg-eden-accent shadow-[0_0_10px_#007BFF]"
+                  className={`absolute ${isRtl ? 'left-3' : 'right-3'} w-1.5 h-1.5 rounded-full bg-eden-accent shadow-[0_0_10px_#007BFF]`}
                 />
               )}
             </motion.button>
@@ -219,7 +220,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           >
             <div className="mb-3 flex items-center justify-between">
               <p className={`text-[9px] font-black uppercase tracking-[0.24em] ${mainConsoleText}`}>
-                {isEn ? 'Learning Shelf' : 'مكتبة التعلم'}
+                {isEn ? 'Learning Shelf' : '\u0645\u0643\u062a\u0628\u0629 \u0627\u0644\u062a\u0639\u0644\u0645'}
               </p>
               <span className={`text-[10px] font-black ${isDark ? 'text-eden-accent' : 'text-blue-600'}`}>
                 {learningCourses.length}
@@ -230,7 +231,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               <p className={`text-[10px] leading-5 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 {isEn
                   ? 'Approved purchased courses appear here.'
-                  : 'الكورسات المشتراة بعد الموافقة هتظهر هنا.'}
+                  : '\u0627\u0644\u0643\u0648\u0631\u0633\u0627\u062a \u0627\u0644\u0645\u0634\u062a\u0631\u0627\u0629 \u0628\u0639\u062f \u0627\u0644\u0645\u0648\u0627\u0641\u0642\u0629 \u0647\u062a\u0638\u0647\u0631 \u0647\u0646\u0627.'}
               </p>
             ) : (
               <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
@@ -243,7 +244,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                     <button
                       key={course.id}
                       onClick={() => handleOpenCourse(course.id)}
-                      className={`w-full rounded-xl border px-3 py-2 text-left transition-all ${
+                      className={`w-full rounded-xl border px-3 py-2 ${isRtl ? 'text-right' : 'text-left'} transition-all ${
                         isDark
                           ? 'border-white/10 bg-black/20 hover:border-eden-accent/40 hover:bg-eden-accent/10'
                           : 'border-slate-200 bg-white hover:border-blue-300 hover:bg-blue-50'
@@ -265,7 +266,7 @@ const Sidebar: React.FC<SidebarProps> = ({
                       </div>
                       <p className={`mt-1 text-[9px] ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                         {course.completed_lessons}/{course.total_lessons}{' '}
-                        {isEn ? 'lessons completed' : 'دروس مكتملة'}
+                        {isEn ? 'lessons completed' : '\u062f\u0631\u0648\u0633 \u0645\u0643\u062a\u0645\u0644\u0629'}
                       </p>
                     </button>
                   );
@@ -278,7 +279,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       <div className={`shrink-0 pt-4 pb-2 border-t ${logoutSectionBorder}`}>
         <motion.button
-          whileHover={{ x: 5 }}
+          whileHover={{ x: isRtl ? -5 : 5 }}
           whileTap={{ scale: 0.98 }}
           onClick={onLogout}
           className={`w-full flex items-center gap-3 px-4 py-4 rounded-2xl text-[11px] font-bold uppercase tracking-widest transition-all ${
@@ -287,7 +288,7 @@ const Sidebar: React.FC<SidebarProps> = ({
               : 'text-red-600 border border-red-200 bg-red-50/80 hover:text-red-700 hover:bg-red-100'
           }`}
         >
-          <LogOut size={18} /> {isEn ? 'Log Out' : 'خروج امن'}
+          <LogOut size={18} /> {isEn ? 'Log Out' : '\u062e\u0631\u0648\u062c \u0622\u0645\u0646'}
         </motion.button>
       </div>
     </div>
@@ -306,11 +307,11 @@ const Sidebar: React.FC<SidebarProps> = ({
               onClick={onClose}
             />
             <motion.div
-              initial={{ x: '-100%' }}
+              initial={{ x: isRtl ? '100%' : '-100%' }}
               animate={{ x: 0 }}
-              exit={{ x: '-100%' }}
+              exit={{ x: isRtl ? '100%' : '-100%' }}
               transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-              className={`fixed top-0 left-0 h-full w-72 border-r z-[60] lg:hidden ${sidebarBg} ${sidebarBorder}`}
+              className={`fixed top-0 ${isRtl ? 'right-0 border-l' : 'left-0 border-r'} h-full w-72 z-[60] lg:hidden ${sidebarBg} ${sidebarBorder}`}
             >
               {SidebarContent}
             </motion.div>
@@ -320,7 +321,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 
       {isOpen && (
         <div
-          className={`hidden lg:block fixed top-0 left-0 h-full w-72 backdrop-blur-xl border-r z-40 ${sidebarBgSoft} ${sidebarBorder}`}
+          className={`hidden lg:block fixed top-0 ${isRtl ? 'right-0 border-l' : 'left-0 border-r'} h-full w-72 backdrop-blur-xl z-40 ${sidebarBgSoft} ${sidebarBorder}`}
         >
           {SidebarContent}
         </div>
@@ -330,3 +331,4 @@ const Sidebar: React.FC<SidebarProps> = ({
 };
 
 export default Sidebar;
+

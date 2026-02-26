@@ -3,7 +3,7 @@ import { Course, Lang, ViewMode } from "../../types";
 import { api } from "../../api/client";
 import { Button } from "../../components/UI";
 import { Reveal } from "../../components/Reveal";
-import { ShoppingBag, Heart, MessageCircle, ArrowLeft, AlertCircle, Search } from "lucide-react";
+import { ShoppingBag, Heart, MessageCircle, ArrowLeft, AlertCircle, Search, CreditCard } from "lucide-react";
 import { resolveImageUrl, handleImageError } from "../../utils/imageUtils";
 import { usePayment } from "../../context/PaymentContext";
 import { toast } from "sonner";
@@ -40,12 +40,14 @@ const Marketplace: React.FC<MarketplaceProps> = ({
   showJoinButton,
   onJoinClick,
   onBack,
+  setView,
   onEnrolledCourseClick,
 }) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeCategory, setActiveCategory] = useState("all");
   const [addingToCart, setAddingToCart] = useState<{ [key: number]: boolean }>({});
+  const [buyingNow, setBuyingNow] = useState<{ [key: number]: boolean }>({});
   const isEn = lang === "en";
 
   const { isPendingForCourse, getPendingPaymentForCourse, isLoading: paymentLoading } = usePayment();
@@ -115,6 +117,45 @@ const Marketplace: React.FC<MarketplaceProps> = ({
       toast.error(err?.response?.data?.detail || (isEn ? "Failed to add course to cart." : "فشلت إضافة الكورس إلى السلة."));
     } finally {
       setAddingToCart((prev) => ({ ...prev, [course.id]: false }));
+    }
+  };
+
+  const handleBuyNow = async (course: Course) => {
+    if (isPendingForCourse(course.id)) {
+      const pendingPayment = getPendingPaymentForCourse(course.id);
+      toast.warning(
+        isEn
+          ? `This course has a pending payment from ${new Date(pendingPayment?.submitted_at || new Date()).toLocaleDateString()}.`
+          : `Ù‡Ø°Ø§ Ø§Ù„ÙƒÙˆØ±Ø³ Ù„Ù‡ Ø¯ÙØ¹Ø© Ù…Ø¹Ù„Ù‚Ø© Ù…Ù† ${new Date(pendingPayment?.submitted_at || new Date()).toLocaleDateString()}.`,
+      );
+      return;
+    }
+
+    setBuyingNow((prev) => ({ ...prev, [course.id]: true }));
+    try {
+      await api.payment.addToCart(course.id);
+      addToCart(course);
+      toast.success(isEn ? "Redirecting to checkout..." : "Ø¬Ø§Ø±Ù Ø§Ù„Ø§Ù†ØªÙ‚Ø§Ù„ Ø¥Ù„Ù‰ Ø§Ù„Ø¯ÙØ¹...");
+      setView?.(ViewMode.CART);
+    } catch (err: any) {
+      const message =
+        err?.response?.data?.detail ||
+        err?.message ||
+        (isEn ? "Failed to continue to payment." : "ÙØ´Ù„ Ø§Ù„Ø§Ù†ØªÙ‚Ø§Ù„ Ø¥Ù„Ù‰ Ø§Ù„Ø¯ÙØ¹.");
+
+      const maybeAlreadyInCart =
+        typeof message === "string" &&
+        /already|exists|in cart|duplicate/i.test(message);
+
+      if (maybeAlreadyInCart) {
+        setView?.(ViewMode.CART);
+        return;
+      }
+
+      console.error("Failed to buy now:", err);
+      toast.error(message);
+    } finally {
+      setBuyingNow((prev) => ({ ...prev, [course.id]: false }));
     }
   };
 
@@ -251,25 +292,61 @@ const Marketplace: React.FC<MarketplaceProps> = ({
                             <span>{isEn ? "Payment pending approval" : "الدفع معلق بانتظار الموافقة"}</span>
                           </div>
                         )}
-                        <Button
-                          onClick={() => handleAddToCart(course)}
-                          disabled={addingToCart[course.id] || isPending || paymentLoading}
-                          isLoading={addingToCart[course.id]}
-                          className={`w-full !py-2.5 text-xs ${isPending ? "!bg-yellow-600 hover:!bg-yellow-700" : ""}`}
-                        >
-                          {addingToCart[course.id]
-                            ? isEn
-                              ? "Adding..."
-                              : "جارٍ الإضافة..."
-                            : isPending
+                        <div className="grid grid-cols-2 gap-2">
+                          <Button
+                            onClick={() => handleAddToCart(course)}
+                            disabled={
+                              addingToCart[course.id] ||
+                              buyingNow[course.id] ||
+                              isPending ||
+                              paymentLoading
+                            }
+                            isLoading={addingToCart[course.id]}
+                            className={`w-full !py-2.5 text-xs ${isPending ? "!bg-yellow-600 hover:!bg-yellow-700" : ""}`}
+                          >
+                            {addingToCart[course.id]
                               ? isEn
-                                ? "Pending"
-                                : "معلق"
-                              : isEn
-                                ? "Add to Cart"
-                                : "أضف للسلة"}
-                          {!isPending && !addingToCart[course.id] && <ShoppingBag size={14} className="ml-2" />}
-                        </Button>
+                                ? "Adding..."
+                                : "جارٍ الإضافة..."
+                              : isPending
+                                ? isEn
+                                  ? "Pending"
+                                  : "معلق"
+                                : isEn
+                                  ? "Add to Cart"
+                                  : "أضف للسلة"}
+                            {!isPending && !addingToCart[course.id] && (
+                              <ShoppingBag size={14} className="ml-2" />
+                            )}
+                          </Button>
+
+                          <Button
+                            onClick={() => handleBuyNow(course)}
+                            disabled={
+                              buyingNow[course.id] ||
+                              addingToCart[course.id] ||
+                              isPending ||
+                              paymentLoading
+                            }
+                            isLoading={buyingNow[course.id]}
+                            className={`w-full !py-2.5 text-xs !bg-emerald-600 hover:!bg-emerald-700 ${isPending ? "!bg-yellow-600 hover:!bg-yellow-700" : ""}`}
+                          >
+                            {buyingNow[course.id]
+                              ? isEn
+                                ? "Processing..."
+                                : "جارٍ المعالجة..."
+                              : isPending
+                                ? isEn
+                                  ? "Pending"
+                                  : "معلق"
+                                : isEn
+                                  ? "Buy Now"
+                                  : "اشترِ الآن"}
+                            {!isPending && !buyingNow[course.id] && (
+                              <CreditCard size={14} className="ml-2" />
+                            )}
+                          </Button>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -284,3 +361,4 @@ const Marketplace: React.FC<MarketplaceProps> = ({
 };
 
 export default Marketplace;
+

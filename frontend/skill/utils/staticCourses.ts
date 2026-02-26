@@ -5,10 +5,15 @@ export const STATIC_COURSES_STORAGE_KEY = "geotop_static_courses_v1";
 export type StaticCourse = Course & {
   static_source?: "landing" | "instructor";
   instructor_name?: string;
+  instructor_image_url?: string;
   level_label?: string;
   course_language?: string;
+  duration_label?: string;
   rating_value?: number;
   enrolled_students?: number;
+  price_live?: string | number;
+  price_offline?: string | number;
+  price_recorded?: string | number;
   last_updated?: string;
   requirements?: string[];
   outcomes?: string[];

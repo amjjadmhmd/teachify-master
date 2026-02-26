@@ -3,9 +3,19 @@
   --neon-card-border-soft: rgba(0, 229, 255, 0.82);
   --portal-card-bg-light: #eaf4ff;
   --portal-card-bg-light-soft: rgba(234, 244, 255, 0.82);
+  --landing-section-border: rgba(0, 229, 255, 0.82);
+  --landing-section-glow:
+    0 0 0 1px rgba(0, 229, 255, 0.3),
+    0 0 34px -18px rgba(0, 229, 255, 0.95);
   --neon-card-glow:
     0 0 0 1px rgba(0, 229, 255, 0.3),
     0 0 34px -18px rgba(0, 229, 255, 0.95);
+}
+
+/* Landing page: phosphor border on sections only */
+.landing-phosphor-mode main > section {
+  border: 1px solid var(--landing-section-border) !important;
+  box-shadow: var(--landing-section-glow);
 }
 
 /* Match controls borders with cards in student/instructor portals */
@@ -75,4 +85,16 @@ html:not(.dark) .portal-role-instructor main :is(div, section, article, aside, l
 .sidebar-scroll::-webkit-scrollbar {
   width: 0;
   height: 0;
+}
+
+/* Generic helper: allow scrolling but hide scrollbar visuals */
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge legacy */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }

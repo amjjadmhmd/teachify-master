@@ -12,6 +12,8 @@ from .models import (
     PaymentRequest,
     LandingCourse,
     LandingCourseEpisode,
+    LandingBlog,
+    LandingProject,
 )
 
 # ============================
@@ -67,6 +69,35 @@ class LandingCourseAdmin(admin.ModelAdmin):
     inlines = [LandingCourseEpisodeInline]
 
 
+class LandingBlogAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "author_name",
+        "is_published",
+        "sort_order",
+        "updated_at",
+    )
+    list_filter = ("is_published",)
+    search_fields = ("title", "slug", "author_name")
+    ordering = ("sort_order", "id")
+    readonly_fields = ("slug", "created_at", "updated_at", "created_by", "updated_by")
+
+
+class LandingProjectAdmin(admin.ModelAdmin):
+    list_display = (
+        "title",
+        "project_type",
+        "client_name",
+        "is_published",
+        "sort_order",
+        "updated_at",
+    )
+    list_filter = ("is_published", "project_type")
+    search_fields = ("title", "slug", "project_type", "client_name")
+    ordering = ("sort_order", "id")
+    readonly_fields = ("slug", "created_at", "updated_at", "created_by", "updated_by")
+
+
 # Register with custom admins
 admin.site.register(Course)
 admin.site.register(Lesson)
@@ -79,4 +110,6 @@ admin.site.register(TaskSubmission)
 admin.site.register(CartItem, CartItemAdmin)
 admin.site.register(PaymentRequest, PaymentRequestAdmin)
 admin.site.register(LandingCourse, LandingCourseAdmin)
+admin.site.register(LandingBlog, LandingBlogAdmin)
+admin.site.register(LandingProject, LandingProjectAdmin)
 

@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect, useRef } from 'react';
 import { Send, X, Bot, Minimize2, BrainCircuit, GraduationCap } from 'lucide-react';
 import { geminiService } from '../services/geminiService';
@@ -40,7 +40,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                 role: 'bot',
                 text: isEn
                     ? "Connectivity error with Geo Top AI service."
-                    : "حدث خطأ في الاتصال بمساعد Geo Top الذكي."
+                    : "Ø­Ø¯Ø« Ø®Ø·Ø£ ÙÙŠ Ø§Ù„Ø§ØªØµØ§Ù„ Ø¨Ù…Ø³Ø§Ø¹Ø¯ Geo Top Ø§Ù„Ø°ÙƒÙŠ."
             }]);
         } finally {
             setIsLoading(false);
@@ -73,7 +73,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                             <div className="h-full flex flex-col items-center justify-center text-center px-6 opacity-30">
                                 <Bot size={48} className="mb-4 text-primary" />
                                 <p className="text-sm font-semibold">
-                                    {isEn ? "How can I assist your educational journey today?" : "كيف يمكنني مساعدتك في مسيرتك التعليمية اليوم؟"}
+                                    {isEn ? "How can I assist your educational journey today?" : "ÙƒÙŠÙ ÙŠÙ…ÙƒÙ†Ù†ÙŠ Ù…Ø³Ø§Ø¹Ø¯ØªÙƒ ÙÙŠ Ù…Ø³ÙŠØ±ØªÙƒ Ø§Ù„ØªØ¹Ù„ÙŠÙ…ÙŠØ© Ø§Ù„ÙŠÙˆÙ…ØŸ"}
                                 </p>
                             </div>
                         )}
@@ -87,7 +87,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                                 </div>
                             </div>
                         ))}
-                        {isLoading && <div className="text-xs text-primary font-bold animate-pulse px-2">{isEn ? "Consulting Geo Top Data..." : "جاري استشارة البيانات..."}</div>}
+                        {isLoading && <div className="text-xs text-primary font-bold animate-pulse px-2">{isEn ? "Consulting Geo Top Data..." : "Ø¬Ø§Ø±ÙŠ Ø§Ø³ØªØ´Ø§Ø±Ø© Ø§Ù„Ø¨ÙŠØ§Ù†Ø§Øª..."}</div>}
                     </div>
 
                     {/* Input */}
@@ -97,7 +97,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
                                 value={input}
                                 onChange={(e) => setInput(e.target.value)}
                                 onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                                placeholder={isEn ? "Ask a question..." : "اسأل سؤالاً..."}
+                                placeholder={isEn ? "Ask a question..." : "Ø§Ø³Ø£Ù„ Ø³Ø¤Ø§Ù„Ø§Ù‹..."}
                                 className="flex-1 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-primary transition-all"
                             />
                             <button onClick={handleSend} disabled={!input.trim() || isLoading} className="w-10 h-10 bg-primary text-white rounded-xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all disabled:opacity-50">
@@ -120,3 +120,4 @@ const AIAssistant: React.FC<AIAssistantProps> = ({ currentContext, lang }) => {
 };
 
 export default AIAssistant;
+

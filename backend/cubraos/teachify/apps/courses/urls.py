@@ -49,6 +49,8 @@ from .views import (
     LessonViewSet,
     CategoryViewSet,
     LandingCourseViewSet,
+    LandingBlogViewSet,
+    LandingProjectViewSet,
     EnrollmentViewSet,
     LessonProgressViewSet,
     WishlistViewSet,
@@ -70,6 +72,8 @@ router.register("courses", CourseViewSet, basename="courses")
 router.register("lessons", LessonViewSet, basename="lessons")
 router.register("categories", CategoryViewSet, basename="categories")
 router.register("landing-courses", LandingCourseViewSet, basename="landing-courses")
+router.register("landing-blogs", LandingBlogViewSet, basename="landing-blogs")
+router.register("landing-projects", LandingProjectViewSet, basename="landing-projects")
 router.register("enrollments", EnrollmentViewSet, basename="enrollments")
 router.register("progress", LessonProgressViewSet, basename="progress")
 router.register("wishlist", WishlistViewSet, basename="wishlist")

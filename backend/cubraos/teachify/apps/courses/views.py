@@ -12,12 +12,12 @@ from apps.common.models import Notification
 
 from .models import (
     Course, Lesson, Category,
-    Enrollment, LessonProgress, WishlistItem, LandingCourse
+    Enrollment, LessonProgress, WishlistItem, LandingCourse, LandingBlog, LandingProject
 )
 from .serializers import (
     CourseSerializer, LessonSerializer, CategorySerializer,
     EnrollmentSerializer, LessonProgressSerializer, WishlistSerializer,
-    LandingCourseSerializer
+    LandingCourseSerializer, LandingBlogSerializer, LandingProjectSerializer
 )
 from .utils import generate_placeholder_thumbnail
 
@@ -37,30 +37,75 @@ class IsStudent(permissions.BasePermission):
 
 class IsLandingCourseAdmin(permissions.BasePermission):
     """
-    Permission for landing-course management endpoints.
-    Allows explicit role=admin and Django staff/superuser users.
+    Permission for landing-content management endpoints.
+    Allows instructors, admins, and Django staff/superusers.
     """
 
     def has_permission(self, request, view):
         user = request.user
         return bool(
             user.is_authenticated and (
-                getattr(user, "role", "") == "admin"
+                getattr(user, "role", "") == "instructor"
+                or getattr(user, "role", "") == "admin"
                 or user.is_staff
                 or user.is_superuser
             )
         )
 
+
+def _is_landing_manager(user):
+    return bool(
+        user.is_authenticated and (
+            getattr(user, "role", "") == "instructor"
+            or getattr(user, "role", "") == "admin"
+            or user.is_staff
+            or user.is_superuser
+        )
+    )
+
 # ============================
 # 📚 02. الكورسات والدروس
 # ============================
 class CourseViewSet(viewsets.ModelViewSet):
-    queryset = Course.objects.all()
+    queryset = Course.objects.select_related("category", "instructor").prefetch_related("lessons", "resources")
     serializer_class = CourseSerializer
+
     def get_permissions(self):
         if self.action in ["create", "update", "partial_update", "destroy"]:
             return [IsInstructor()]
         return [permissions.AllowAny()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        user = self.request.user
+        requested_status = (self.request.query_params.get("status") or "").strip().lower()
+
+        if self.action in ["update", "partial_update", "destroy"]:
+            if not user.is_authenticated:
+                return queryset.none()
+            return queryset.filter(instructor=user)
+
+        if user.is_authenticated and (
+            getattr(user, "role", "") == "admin" or user.is_staff or user.is_superuser
+        ):
+            if requested_status in {Course.Status.DRAFT, Course.Status.PUBLISHED}:
+                return queryset.filter(status=requested_status)
+            return queryset
+
+        if user.is_authenticated and getattr(user, "role", "") == "instructor":
+            queryset = queryset.filter(Q(status=Course.Status.PUBLISHED) | Q(instructor=user))
+            if requested_status in {Course.Status.DRAFT, Course.Status.PUBLISHED}:
+                if requested_status == Course.Status.DRAFT:
+                    return queryset.filter(instructor=user, status=Course.Status.DRAFT)
+                return queryset.filter(status=Course.Status.PUBLISHED)
+            return queryset.distinct()
+
+        # Public/student users can only see published courses.
+        queryset = queryset.filter(status=Course.Status.PUBLISHED)
+        if requested_status == Course.Status.DRAFT:
+            return queryset.none()
+        return queryset
+
     def perform_create(self, serializer):
         serializer.save(instructor=self.request.user)
 
@@ -150,13 +195,7 @@ class LandingCourseViewSet(viewsets.ModelViewSet):
         queryset = super().get_queryset().order_by("sort_order", "id")
 
         user = self.request.user
-        is_admin_user = bool(
-            user.is_authenticated and (
-                getattr(user, "role", "") == "admin"
-                or user.is_staff
-                or user.is_superuser
-            )
-        )
+        is_admin_user = _is_landing_manager(user)
 
         # Public users see published items only.
         if not is_admin_user:
@@ -181,7 +220,89 @@ class LandingCourseViewSet(viewsets.ModelViewSet):
 
     def perform_update(self, serializer):
         serializer.save(updated_by=self.request.user)
-    
+
+
+class LandingBlogViewSet(viewsets.ModelViewSet):
+    """
+    Public read + instructor/admin write ViewSet for landing blogs.
+    """
+
+    queryset = LandingBlog.objects.all()
+    serializer_class = LandingBlogSerializer
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), IsLandingCourseAdmin()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by("sort_order", "id")
+        user = self.request.user
+        is_manager_user = _is_landing_manager(user)
+
+        if not is_manager_user:
+            queryset = queryset.filter(is_published=True)
+
+        published = self.request.query_params.get("published")
+        if published is not None:
+            normalized = published.strip().lower()
+            if normalized in {"true", "1", "yes"}:
+                queryset = queryset.filter(is_published=True)
+            elif normalized in {"false", "0", "no"} and is_manager_user:
+                queryset = queryset.filter(is_published=False)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
+
+class LandingProjectViewSet(viewsets.ModelViewSet):
+    """
+    Public read + instructor/admin write ViewSet for landing projects.
+    """
+
+    queryset = LandingProject.objects.all()
+    serializer_class = LandingProjectSerializer
+
+    def get_permissions(self):
+        if self.action in ["list", "retrieve"]:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated(), IsLandingCourseAdmin()]
+
+    def get_queryset(self):
+        queryset = super().get_queryset().order_by("sort_order", "id")
+        user = self.request.user
+        is_manager_user = _is_landing_manager(user)
+
+        if not is_manager_user:
+            queryset = queryset.filter(is_published=True)
+
+        published = self.request.query_params.get("published")
+        if published is not None:
+            normalized = published.strip().lower()
+            if normalized in {"true", "1", "yes"}:
+                queryset = queryset.filter(is_published=True)
+            elif normalized in {"false", "0", "no"} and is_manager_user:
+                queryset = queryset.filter(is_published=False)
+
+        return queryset
+
+    def perform_create(self, serializer):
+        serializer.save(
+            created_by=self.request.user,
+            updated_by=self.request.user,
+        )
+
+    def perform_update(self, serializer):
+        serializer.save(updated_by=self.request.user)
+
 
 
 class InstructorDashboardViewSet(viewsets.ViewSet):

@@ -13,6 +13,8 @@ from .models import (
     PaymentRequest,
     LandingCourse,
     LandingCourseEpisode,
+    LandingBlog,
+    LandingProject,
 )
 from django.contrib.auth import get_user_model
 
@@ -111,7 +113,6 @@ class CourseSerializer(serializers.ModelSerializer):
     is_enrolled = serializers.SerializerMethodField()
     thumbnail = serializers.ImageField(required=False, allow_null=True)
     thumbnail_url = serializers.SerializerMethodField()
-    status = serializers.SerializerMethodField()
 
     class Meta:
         model = Course
@@ -145,11 +146,7 @@ class CourseSerializer(serializers.ModelSerializer):
         if request:
             return request.build_absolute_uri(default_thumb)
         return default_thumb
-    
-    def get_status(self, obj):
-        """Return course status - default to 'published'"""
-        return getattr(obj, 'status', 'published')
-    
+
     def get_is_enrolled(self, obj):
         """Check if current user is enrolled"""
         request = self.context.get("request")
@@ -195,10 +192,15 @@ class LandingCourseSerializer(serializers.ModelSerializer):
             "description",
             "image_url",
             "price",
+            "price_live",
+            "price_offline",
+            "price_recorded",
             "is_free",
             "instructor_name",
+            "instructor_image_url",
             "level_label",
             "course_language",
+            "duration_label",
             "rating_value",
             "enrolled_students",
             "requirements",
@@ -283,6 +285,128 @@ class LandingCourseSerializer(serializers.ModelSerializer):
                     **episode_payload,
                 )
         return instance
+
+
+class LandingBlogSerializer(serializers.ModelSerializer):
+    created_by_email = serializers.ReadOnlyField(source="created_by.email")
+    updated_by_email = serializers.ReadOnlyField(source="updated_by.email")
+    resource_file_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LandingBlog
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "short_description",
+            "content",
+            "image_url",
+            "author_name",
+            "resource_links",
+            "resource_file",
+            "resource_file_url",
+            "read_time_minutes",
+            "sort_order",
+            "is_published",
+            "created_by",
+            "created_by_email",
+            "updated_by",
+            "updated_by_email",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "slug",
+            "created_by",
+            "created_by_email",
+            "updated_by",
+            "updated_by_email",
+            "created_at",
+            "updated_at",
+            "resource_file_url",
+        ]
+
+    def get_resource_file_url(self, obj):
+        request = self.context.get("request")
+        if obj.resource_file:
+            try:
+                return (
+                    request.build_absolute_uri(obj.resource_file.url)
+                    if request
+                    else obj.resource_file.url
+                )
+            except Exception:
+                return None
+        return None
+
+    def validate_resource_links(self, value):
+        if not isinstance(value, list):
+            raise serializers.ValidationError("resource_links must be a list.")
+        normalized = []
+        for item in value:
+            if not isinstance(item, str):
+                raise serializers.ValidationError(
+                    "Each item in resource_links must be a string."
+                )
+            candidate = item.strip()
+            if candidate:
+                normalized.append(candidate)
+        return normalized
+
+
+class LandingProjectSerializer(serializers.ModelSerializer):
+    created_by_email = serializers.ReadOnlyField(source="created_by.email")
+    updated_by_email = serializers.ReadOnlyField(source="updated_by.email")
+    project_pdf_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = LandingProject
+        fields = [
+            "id",
+            "title",
+            "slug",
+            "short_description",
+            "description",
+            "image_url",
+            "project_type",
+            "client_name",
+            "project_pdf",
+            "project_pdf_url",
+            "external_url",
+            "sort_order",
+            "is_published",
+            "created_by",
+            "created_by_email",
+            "updated_by",
+            "updated_by_email",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = [
+            "id",
+            "slug",
+            "created_by",
+            "created_by_email",
+            "updated_by",
+            "updated_by_email",
+            "created_at",
+            "updated_at",
+            "project_pdf_url",
+        ]
+
+    def get_project_pdf_url(self, obj):
+        request = self.context.get("request")
+        if obj.project_pdf:
+            try:
+                return (
+                    request.build_absolute_uri(obj.project_pdf.url)
+                    if request
+                    else obj.project_pdf.url
+                )
+            except Exception:
+                return None
+        return None
 
 
 # ==========================================

@@ -1,4 +1,4 @@
-
+﻿
 import { GoogleGenAI } from "@google/genai";
 
 const MODEL_CANDIDATES = [
@@ -61,7 +61,7 @@ Brand rules:
 - Always use the brand name "Geo Top".
 - Never mention Teachify, WhiteLab, or any other platform name.
 - Keep terminology aligned with Geo Top sections:
-  Dashboard/لوحة التحكم, Courses/الكورسات, Exams/الاختبارات, Certifications/الشهادات.
+  Dashboard/Ù„ÙˆØ­Ø© Ø§Ù„ØªØ­ÙƒÙ…, Courses/Ø§Ù„ÙƒÙˆØ±Ø³Ø§Øª, Exams/Ø§Ù„Ø§Ø®ØªØ¨Ø§Ø±Ø§Øª, Certifications/Ø§Ù„Ø´Ù‡Ø§Ø¯Ø§Øª.
 
 Response rules:
 1. ${languageRule}
@@ -135,3 +135,4 @@ export const geminiService = {
      return geminiService.chat(question, `Learning Course Lesson: ${lessonTitle}`);
   }
 };
+

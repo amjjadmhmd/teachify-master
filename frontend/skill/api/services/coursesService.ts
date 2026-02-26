@@ -16,6 +16,10 @@ import {
   CreateCourseRequest,
   LandingCourse,
   SaveLandingCourseRequest,
+  LandingBlog,
+  SaveLandingBlogRequest,
+  LandingProject,
+  SaveLandingProjectRequest,
   CreateLessonProgressRequest,
   AddToWishlistRequest,
   PaginatedResponse,
@@ -26,6 +30,13 @@ import {
 } from "../types";
 
 class CoursesService {
+  private extractResults<T>(payload: PaginatedResponse<T> | T[]): T[] {
+    if (Array.isArray(payload)) {
+      return payload;
+    }
+    return Array.isArray(payload?.results) ? payload.results : [];
+  }
+
   // ==========================================
   // Course Operations
   // ==========================================
@@ -173,9 +184,7 @@ class CoursesService {
         "/api/courses/landing-courses/",
         { params }
       );
-      const payload = response.data as PaginatedResponse<LandingCourse> | LandingCourse[];
-      if (Array.isArray(payload)) return payload;
-      return Array.isArray(payload?.results) ? payload.results : [];
+      return this.extractResults(response.data);
     } catch (error) {
       throw new Error(handleApiError(error));
     }
@@ -238,6 +247,282 @@ class CoursesService {
   async deleteLandingCourse(id: number): Promise<void> {
     try {
       await apiClient.delete(`/api/courses/landing-courses/${id}/`);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  // ==========================================
+  // Landing Blog Operations
+  // ==========================================
+
+  /**
+   * Get landing-page blogs
+   * GET /api/courses/landing-blogs/
+   */
+  async listLandingBlogs(params?: { published?: boolean }): Promise<LandingBlog[]> {
+    try {
+      const response = await apiClient.get<PaginatedResponse<LandingBlog> | LandingBlog[]>(
+        "/api/courses/landing-blogs/",
+        { params }
+      );
+      return this.extractResults(response.data);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Get landing blog details
+   * GET /api/courses/landing-blogs/{id}/
+   */
+  async getLandingBlogDetail(id: number): Promise<LandingBlog> {
+    try {
+      const response = await apiClient.get<LandingBlog>(
+        `/api/courses/landing-blogs/${id}/`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Create landing blog (Instructor/Admin only)
+   * POST /api/courses/landing-blogs/
+   */
+  async createLandingBlog(data: SaveLandingBlogRequest): Promise<LandingBlog> {
+    try {
+      if (data.resource_file instanceof File) {
+        const formData = new FormData();
+        formData.append("title", data.title);
+        formData.append("short_description", data.short_description || "");
+        formData.append("content", data.content || "");
+        formData.append("image_url", data.image_url || "");
+        formData.append("author_name", data.author_name || "");
+        formData.append("resource_links", JSON.stringify(data.resource_links || []));
+        formData.append("read_time_minutes", String(data.read_time_minutes ?? 0));
+        formData.append("sort_order", String(data.sort_order ?? 0));
+        formData.append("is_published", String(data.is_published ?? true));
+        formData.append("resource_file", data.resource_file);
+
+        const response = await apiClient.post<LandingBlog>(
+          "/api/courses/landing-blogs/",
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        return response.data;
+      }
+
+      const response = await apiClient.post<LandingBlog>(
+        "/api/courses/landing-blogs/",
+        {
+          ...data,
+          resource_links: data.resource_links || [],
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Update landing blog (Instructor/Admin only)
+   * PATCH /api/courses/landing-blogs/{id}/
+   */
+  async updateLandingBlog(
+    id: number,
+    data: Partial<SaveLandingBlogRequest>
+  ): Promise<LandingBlog> {
+    try {
+      if (data.resource_file instanceof File) {
+        const formData = new FormData();
+        if (data.title !== undefined) formData.append("title", data.title);
+        if (data.short_description !== undefined) {
+          formData.append("short_description", data.short_description);
+        }
+        if (data.content !== undefined) formData.append("content", data.content);
+        if (data.image_url !== undefined) formData.append("image_url", data.image_url);
+        if (data.author_name !== undefined) formData.append("author_name", data.author_name);
+        if (data.resource_links !== undefined) {
+          formData.append("resource_links", JSON.stringify(data.resource_links));
+        }
+        if (data.read_time_minutes !== undefined) {
+          formData.append("read_time_minutes", String(data.read_time_minutes));
+        }
+        if (data.sort_order !== undefined) {
+          formData.append("sort_order", String(data.sort_order));
+        }
+        if (data.is_published !== undefined) {
+          formData.append("is_published", String(data.is_published));
+        }
+        formData.append("resource_file", data.resource_file);
+
+        const response = await apiClient.patch<LandingBlog>(
+          `/api/courses/landing-blogs/${id}/`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        return response.data;
+      }
+
+      const response = await apiClient.patch<LandingBlog>(
+        `/api/courses/landing-blogs/${id}/`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Delete landing blog (Instructor/Admin only)
+   * DELETE /api/courses/landing-blogs/{id}/
+   */
+  async deleteLandingBlog(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/api/courses/landing-blogs/${id}/`);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  // ==========================================
+  // Landing Project Operations
+  // ==========================================
+
+  /**
+   * Get landing-page projects
+   * GET /api/courses/landing-projects/
+   */
+  async listLandingProjects(params?: { published?: boolean }): Promise<LandingProject[]> {
+    try {
+      const response = await apiClient.get<PaginatedResponse<LandingProject> | LandingProject[]>(
+        "/api/courses/landing-projects/",
+        { params }
+      );
+      return this.extractResults(response.data);
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Get landing project details
+   * GET /api/courses/landing-projects/{id}/
+   */
+  async getLandingProjectDetail(id: number): Promise<LandingProject> {
+    try {
+      const response = await apiClient.get<LandingProject>(
+        `/api/courses/landing-projects/${id}/`
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Create landing project (Instructor/Admin only)
+   * POST /api/courses/landing-projects/
+   */
+  async createLandingProject(data: SaveLandingProjectRequest): Promise<LandingProject> {
+    try {
+      const formData = new FormData();
+      formData.append("title", data.title);
+      formData.append("short_description", data.short_description || "");
+      formData.append("description", data.description || "");
+      formData.append("image_url", data.image_url || "");
+      formData.append("project_type", data.project_type || "");
+      formData.append("client_name", data.client_name || "");
+      formData.append("external_url", data.external_url || "");
+      formData.append("sort_order", String(data.sort_order ?? 0));
+      formData.append("is_published", String(data.is_published ?? true));
+      if (data.project_pdf instanceof File) {
+        formData.append("project_pdf", data.project_pdf);
+      }
+
+      const response = await apiClient.post<LandingProject>(
+        "/api/courses/landing-projects/",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Update landing project (Instructor/Admin only)
+   * PATCH /api/courses/landing-projects/{id}/
+   */
+  async updateLandingProject(
+    id: number,
+    data: Partial<SaveLandingProjectRequest>
+  ): Promise<LandingProject> {
+    try {
+      const useFormData = Object.values(data).some((value) => value instanceof File);
+      if (useFormData) {
+        const formData = new FormData();
+        if (data.title !== undefined) formData.append("title", data.title);
+        if (data.short_description !== undefined) {
+          formData.append("short_description", data.short_description);
+        }
+        if (data.description !== undefined) formData.append("description", data.description);
+        if (data.image_url !== undefined) formData.append("image_url", data.image_url);
+        if (data.project_type !== undefined) formData.append("project_type", data.project_type);
+        if (data.client_name !== undefined) formData.append("client_name", data.client_name);
+        if (data.external_url !== undefined) formData.append("external_url", data.external_url);
+        if (data.sort_order !== undefined) formData.append("sort_order", String(data.sort_order));
+        if (data.is_published !== undefined) {
+          formData.append("is_published", String(data.is_published));
+        }
+        if (data.project_pdf instanceof File) formData.append("project_pdf", data.project_pdf);
+
+        const response = await apiClient.patch<LandingProject>(
+          `/api/courses/landing-projects/${id}/`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        return response.data;
+      }
+
+      const response = await apiClient.patch<LandingProject>(
+        `/api/courses/landing-projects/${id}/`,
+        data
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(handleApiError(error));
+    }
+  }
+
+  /**
+   * Delete landing project (Instructor/Admin only)
+   * DELETE /api/courses/landing-projects/{id}/
+   */
+  async deleteLandingProject(id: number): Promise<void> {
+    try {
+      await apiClient.delete(`/api/courses/landing-projects/${id}/`);
     } catch (error) {
       throw new Error(handleApiError(error));
     }

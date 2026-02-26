@@ -3,6 +3,13 @@ import React from 'react';
 
 export enum ViewMode {
   LANDING = 'LANDING',
+  CONTACT = 'CONTACT',
+  LANDING_SERVICES = 'LANDING_SERVICES',
+  LANDING_COURSES = 'LANDING_COURSES',
+  LANDING_PROJECTS = 'LANDING_PROJECTS',
+  LANDING_BLOG = 'LANDING_BLOG',
+  LANDING_PROJECT_DETAIL = 'LANDING_PROJECT_DETAIL',
+  LANDING_BLOG_DETAIL = 'LANDING_BLOG_DETAIL',
   AUTH = 'AUTH',
   VERIFY_EMAIL = 'VERIFY_EMAIL', // NEW: Email verification page
   FORGOT_PASSWORD = 'FORGOT_PASSWORD', // NEW: Forgot password page
@@ -104,6 +111,19 @@ export interface Course {
   students_count?: number;
   rating?: number;
   revenue?: number;
+  static_source?: 'landing' | 'instructor';
+  instructor_name?: string;
+  instructor_image_url?: string;
+  level_label?: string;
+  course_language?: string;
+  duration_label?: string;
+  rating_value?: number;
+  enrolled_students?: number;
+  price_live?: string | number;
+  price_offline?: string | number;
+  price_recorded?: string | number;
+  requirements?: string[];
+  outcomes?: string[];
 }
 
 export interface StudentLearningCourse {

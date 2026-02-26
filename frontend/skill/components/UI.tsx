@@ -50,17 +50,27 @@ export const Card: React.FC<React.HTMLAttributes<HTMLDivElement> & { variant?: '
   </div>
 );
 
-export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement> & { label?: string }> = ({ label, className, ...props }) => (
-  <div className="flex flex-col gap-2 mb-4">
-    {label && <label className="text-slate-600 text-[10px] font-bold uppercase tracking-[0.2em]">{label}</label>}
+export const Input: React.FC<
+  React.InputHTMLAttributes<HTMLInputElement> & {
+    label?: string;
+    compact?: boolean;
+    wrapperClassName?: string;
+  }
+> = ({ label, className, compact = false, wrapperClassName, ...props }) => (
+  <div className={`flex flex-col ${compact ? 'gap-1.5 mb-2.5' : 'gap-2 mb-4'} ${wrapperClassName || ''}`}>
+    {label && (
+      <label className={`text-slate-600 ${compact ? 'text-[9px] tracking-[0.18em]' : 'text-[10px] tracking-[0.2em]'} font-bold uppercase`}>
+        {label}
+      </label>
+    )}
     <input
       className={`
         bg-slate-50
         border border-slate-200
-        rounded-xl p-3.5 
+        rounded-xl ${compact ? 'p-2.5 text-[15px]' : 'p-3.5'}
         text-slate-900
         placeholder:text-slate-400
-        focus:border-eden-accent/50 focus:outline-none focus:ring-4 focus:ring-eden-accent/5 
+        focus:border-eden-accent/50 focus:outline-none focus:ring-4 focus:ring-eden-accent/5
         transition-all duration-200
         ${className}
       `}

@@ -1,4 +1,4 @@
-import React, { forwardRef } from 'react';
+﻿import React, { forwardRef } from 'react';
 import { ASSETS } from '../constants/assets';
 
 interface CertificateDesign {
@@ -139,7 +139,7 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
 
             {/* Platform Name */}
             <h3 style={{ fontSize: '20px', fontWeight: 'bold', color: '#374151', letterSpacing: '0.1em', margin: 0 }}>
-              GEO TOP EDUCATIONAL PLATFORM
+              Geo Top EDUCATIONAL PLATFORM
             </h3>
 
             {/* Certificate Title */}
@@ -262,3 +262,4 @@ const Certificate = forwardRef<HTMLDivElement, CertificateProps>(
 Certificate.displayName = 'Certificate';
 
 export default Certificate;
+

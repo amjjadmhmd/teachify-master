@@ -143,6 +143,15 @@ class EmailVerificationService:
 
 class LoginValidationService:
     """Validate login conditions"""
+
+    @staticmethod
+    def is_email_verification_required():
+        """
+        Keep verification strict in production while allowing smooth local dev.
+        """
+        required = getattr(settings, 'EMAIL_VERIFICATION_REQUIRED', True)
+        debug_mode = getattr(settings, 'DEBUG', False)
+        return bool(required) and not bool(debug_mode)
     
     @staticmethod
     def is_email_verified(user):
@@ -157,6 +166,10 @@ class LoginValidationService:
         
         # Allow admin/staff to login without email verification
         if user.is_staff or user.is_superuser:
+            return True, "OK"
+
+        # In local development we do not block login behind email verification.
+        if not LoginValidationService.is_email_verification_required():
             return True, "OK"
 
         # Instructors who passed the instructor verification code can login directly

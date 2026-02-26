@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+﻿import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Bell, ShoppingCart, Menu, User as UserIcon, Heart, Check, Sun, Moon
@@ -7,7 +7,14 @@ import { Theme, Lang, ViewMode, Notification, User } from '../types';
 import { api } from '../api/client';
 import { ASSETS } from '../constants/assets';
 
-type LandingSectionId = 'home' | 'courses' | 'services' | 'about' | 'contact';
+type LandingSectionId =
+  | 'home'
+  | 'courses'
+  | 'services'
+  | 'projects'
+  | 'blog'
+  | 'about'
+  | 'contact';
 
 interface NavbarProps {
   toggleSidebar: () => void;
@@ -46,6 +53,7 @@ const Navbar: React.FC<NavbarProps> = ({
   onNavigateLandingSection
 }) => {
   const isEn = lang === 'en';
+  const isRtl = lang === 'ar';
   const isInstructor = userRole === 'instructor';
   const showPortalSections = userRole === 'student' || userRole === 'instructor';
   const menuButtonClass =
@@ -56,17 +64,21 @@ const Navbar: React.FC<NavbarProps> = ({
   const landingNavItems: { id: LandingSectionId; label: string }[] = isEn
     ? [
         { id: 'home', label: 'Home' },
-        { id: 'courses', label: 'Courses' },
         { id: 'services', label: 'Services' },
+        { id: 'courses', label: 'Courses' },
+        { id: 'projects', label: 'Projects' },
+        { id: 'blog', label: 'Blog' },
         { id: 'about', label: 'About Us' },
         { id: 'contact', label: 'Contact Us' },
       ]
     : [
-        { id: 'home', label: 'الرئيسية' },
-        { id: 'courses', label: 'الكورسات' },
-        { id: 'services', label: 'الخدمات' },
-        { id: 'about', label: 'من نحن' },
-        { id: 'contact', label: 'تواصل معنا' },
+        { id: 'home', label: '\u0627\u0644\u0631\u0626\u064a\u0633\u064a\u0629' },
+        { id: 'services', label: '\u0627\u0644\u062e\u062f\u0645\u0627\u062a' },
+        { id: 'courses', label: '\u0627\u0644\u0643\u0648\u0631\u0633\u0627\u062a' },
+        { id: 'projects', label: '\u0627\u0644\u0645\u0634\u0627\u0631\u064a\u0639' },
+        { id: 'blog', label: '\u0627\u0644\u0628\u0644\u0648\u062c' },
+        { id: 'about', label: '\u0645\u0646 \u0646\u062d\u0646' },
+        { id: 'contact', label: '\u062a\u0648\u0627\u0635\u0644 \u0645\u0639\u0646\u0627' },
       ];
 
   const [notifications, setNotifications] = useState<Notification[]>([]);
@@ -77,6 +89,8 @@ const Navbar: React.FC<NavbarProps> = ({
     home: null,
     courses: null,
     services: null,
+    projects: null,
+    blog: null,
     about: null,
     contact: null,
   });
@@ -108,6 +122,8 @@ const Navbar: React.FC<NavbarProps> = ({
   useEffect(() => {
     if (currentView === ViewMode.MARKETPLACE) {
       setSelectedLandingItem('courses');
+    } else if (currentView === ViewMode.CONTACT) {
+      setSelectedLandingItem('contact');
     } else if (currentView === ViewMode.DASHBOARD || currentView === ViewMode.LANDING) {
       setSelectedLandingItem('home');
     }
@@ -128,7 +144,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
     const railRect = rail.getBoundingClientRect();
     const buttonRect = targetButton.getBoundingClientRect();
-    const logoSize = 24; // صغرنا حجم اللوجو قليلاً ليتناسب مع الارتفاع
+    const logoSize = 24; // ØµØºØ±Ù†Ø§ Ø­Ø¬Ù… Ø§Ù„Ù„ÙˆØ¬Ùˆ Ù‚Ù„ÙŠÙ„Ø§Ù‹ Ù„ÙŠØªÙ†Ø§Ø³Ø¨ Ù…Ø¹ Ø§Ù„Ø§Ø±ØªÙØ§Ø¹
     const nextX = buttonRect.left - railRect.left + buttonRect.width / 2 - logoSize / 2;
 
     const previousX = navLogoPrevXRef.current;
@@ -186,7 +202,7 @@ const Navbar: React.FC<NavbarProps> = ({
 
   return (
     <nav className={`fixed top-0 left-0 right-0 h-20 bg-white/80 backdrop-blur-md border-b border-eden-accent/25 z-30 flex items-center justify-between px-6 lg:px-10 ${
-      isSidebarOpen ? 'lg:left-72' : 'lg:left-0'
+      isSidebarOpen ? (isRtl ? 'lg:right-72' : 'lg:left-72') : (isRtl ? 'lg:right-0' : 'lg:left-0')
     }`}>
       
       <div className="flex items-center gap-3 lg:min-w-[6rem]">
@@ -202,7 +218,7 @@ const Navbar: React.FC<NavbarProps> = ({
       {showPortalSections && (
         <div
           ref={navRailRef}
-          // تم تقليل المسافات السفلية pb-8 -> pb-4
+          // ØªÙ… ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ù…Ø³Ø§ÙØ§Øª Ø§Ù„Ø³ÙÙ„ÙŠØ© pb-8 -> pb-4
           className="relative hidden lg:flex items-end gap-6 pb-4"
           onMouseLeave={() => setHoveredLandingItem(null)}
         >
@@ -215,8 +231,8 @@ const Navbar: React.FC<NavbarProps> = ({
                 type="button"
                 onClick={() => handleLandingNavClick(item.id)}
                 onMouseEnter={() => setHoveredLandingItem(item.id)}
-                // تم تصغير الخط من text-sm إلى text-xs
-                className={`relative border-0 pb-1 text-xs font-bold transition-colors after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:rounded-full after:bg-eden-accent after:transition-all ${
+                // ØªÙ… ØªØµØºÙŠØ± Ø§Ù„Ø®Ø· Ù…Ù† text-sm Ø¥Ù„Ù‰ text-xs
+                className={`relative border-0 pb-1 text-xs font-bold leading-none whitespace-nowrap transition-colors after:content-[''] after:absolute after:-bottom-1 after:left-0 after:h-0.5 after:rounded-full after:bg-eden-accent after:transition-all ${
                   isActive
                     ? 'text-eden-accent after:w-full'
                     : 'text-slate-600 hover:text-eden-accent after:w-0 hover:after:w-full'
@@ -229,9 +245,9 @@ const Navbar: React.FC<NavbarProps> = ({
 
           <motion.button
             type="button"
-            aria-label={isEn ? 'Navigation anchor logo' : 'مؤشر التنقل'}
+            aria-label={isEn ? 'Navigation anchor logo' : '\u0645\u0624\u0634\u0631 \u0627\u0644\u062a\u0646\u0642\u0644'}
             onMouseEnter={() => setHoveredLandingItem(null)}
-            // تعديل الحجم h-7 -> h-6 والموضع bottom ليتناسب مع الارتفاع الجديد
+            // ØªØ¹Ø¯ÙŠÙ„ Ø§Ù„Ø­Ø¬Ù… h-7 -> h-6 ÙˆØ§Ù„Ù…ÙˆØ¶Ø¹ bottom Ù„ÙŠØªÙ†Ø§Ø³Ø¨ Ù…Ø¹ Ø§Ù„Ø§Ø±ØªÙØ§Ø¹ Ø§Ù„Ø¬Ø¯ÙŠØ¯
             className="absolute bottom-[-10px] z-20 h-6 w-6 rounded-full border-0 bg-transparent p-0 overflow-hidden"
             style={{ left: 0 }}
             animate={{
@@ -264,7 +280,7 @@ const Navbar: React.FC<NavbarProps> = ({
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => setShowNotifs(!showNotifs)}
-            // تقليل الـ padding p-3 -> p-2
+            // ØªÙ‚Ù„ÙŠÙ„ Ø§Ù„Ù€ padding p-3 -> p-2
             className="p-2 bg-slate-50 rounded-xl border border-slate-200 text-slate-400 hover:text-slate-800 transition-all relative"
           >
             <Bell size={16} />
@@ -282,9 +298,9 @@ const Navbar: React.FC<NavbarProps> = ({
                 className={`absolute top-full mt-3 ${isEn ? 'right-0' : 'left-0'} w-72 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-2xl`}
               >
                 <div className="p-4 border-b border-slate-100 flex justify-between items-center">
-                  <div className="font-black text-[9px] uppercase tracking-widest text-slate-500">{isEn ? 'Intelligence Feed' : 'تغذية الذكاء'}</div>
+                  <div className="font-black text-[9px] uppercase tracking-widest text-slate-500">{isEn ? 'Intelligence Feed' : '\u062a\u063a\u0630\u064a\u0629 \u0627\u0644\u0630\u0643\u0627\u0621'}</div>
                   {unreadCount > 0 && (
-                    <button onClick={handleMarkAllAsRead} className="text-[9px] font-bold text-eden-accent uppercase">{isEn ? 'Mark all' : 'تحديد الكل'}</button>
+                    <button onClick={handleMarkAllAsRead} className="text-[9px] font-bold text-eden-accent uppercase">{isEn ? 'Mark all' : '\u062a\u062d\u062f\u064a\u062f \u0627\u0644\u0643\u0644'}</button>
                   )}
                 </div>
                 <div className="max-h-64 overflow-y-auto">
@@ -298,7 +314,7 @@ const Navbar: React.FC<NavbarProps> = ({
                       </div>
                     ))
                   ) : (
-                    <div className="p-8 text-center text-[9px] font-bold text-slate-400 uppercase">{isEn ? 'Clean slate' : 'لا يوجد جديد'}</div>
+                    <div className="p-8 text-center text-[9px] font-bold text-slate-400 uppercase">{isEn ? 'Clean slate' : '\u0644\u0627 \u064a\u0648\u062c\u062f \u062c\u062f\u064a\u062f'}</div>
                   )}
                 </div>
               </motion.div>
@@ -348,7 +364,7 @@ const Navbar: React.FC<NavbarProps> = ({
           <div className="w-7 h-7 rounded-lg bg-eden-accent/10 flex items-center justify-center overflow-hidden">
             {user?.avatar ? <img src={user.avatar} className="w-full h-full object-cover" /> : <UserIcon size={14} className="text-eden-accent" />}
           </div>
-          <div className="hidden md:block text-left">
+          <div className={`hidden md:block ${isRtl ? 'text-right' : 'text-left'}`}>
             <p className="text-[9px] font-black text-slate-800 leading-none uppercase tracking-widest">{user?.username || 'Pilot'}</p>
             <p className="text-[7px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{userRole}</p>
           </div>
@@ -359,3 +375,4 @@ const Navbar: React.FC<NavbarProps> = ({
 };
 
 export default Navbar;
+

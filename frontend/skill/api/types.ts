@@ -31,6 +31,11 @@ export interface RegisterRequest {
   instructor_code?: string;
 }
 
+export interface RegisterResponse extends User {
+  message?: string;
+  verification_required?: boolean;
+}
+
 export interface TokenRefreshRequest {
   refresh: string;
 }
@@ -108,10 +113,15 @@ export interface LandingCourse {
   description: string;
   image_url: string;
   price: string;
+  price_live: string | number;
+  price_offline: string | number;
+  price_recorded: string | number;
   is_free: boolean;
   instructor_name: string;
+  instructor_image_url: string;
   level_label: string;
   course_language: string;
+  duration_label: string;
   rating_value: number | string;
   enrolled_students: number;
   requirements: string[];
@@ -129,10 +139,15 @@ export interface SaveLandingCourseRequest {
   description?: string;
   image_url?: string;
   price?: string | number;
+  price_live?: string | number;
+  price_offline?: string | number;
+  price_recorded?: string | number;
   is_free?: boolean;
   instructor_name?: string;
+  instructor_image_url?: string;
   level_label?: string;
   course_language?: string;
+  duration_label?: string;
   rating_value?: string | number;
   enrolled_students?: number;
   requirements?: string[];
@@ -140,6 +155,68 @@ export interface SaveLandingCourseRequest {
   sort_order?: number;
   is_published?: boolean;
   episodes?: LandingCourseEpisode[];
+}
+
+export interface LandingBlog {
+  id: number;
+  title: string;
+  slug: string;
+  short_description: string;
+  content: string;
+  image_url: string;
+  author_name: string;
+  resource_links: string[];
+  resource_file?: string;
+  resource_file_url?: string;
+  read_time_minutes: number;
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SaveLandingBlogRequest {
+  title: string;
+  short_description?: string;
+  content?: string;
+  image_url?: string;
+  author_name?: string;
+  resource_links?: string[];
+  resource_file?: File | null;
+  read_time_minutes?: number;
+  sort_order?: number;
+  is_published?: boolean;
+}
+
+export interface LandingProject {
+  id: number;
+  title: string;
+  slug: string;
+  short_description: string;
+  description: string;
+  image_url: string;
+  project_type: string;
+  client_name: string;
+  project_pdf?: string;
+  project_pdf_url?: string;
+  external_url: string;
+  sort_order: number;
+  is_published: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SaveLandingProjectRequest {
+  title: string;
+  short_description?: string;
+  description?: string;
+  image_url?: string;
+  project_type?: string;
+  client_name?: string;
+  project_pdf?: File | null;
+  external_url?: string;
+  sort_order?: number;
+  is_published?: boolean;
 }
 
 // ==========================================

@@ -17,7 +17,7 @@ from .serializers import (
     ResendVerificationEmailSerializer
 )
 from .models import EmailVerificationLog
-from .utilities import EmailVerificationService
+from .utilities import EmailVerificationService, LoginValidationService
 
 User = get_user_model()
 
@@ -33,9 +33,13 @@ class RegisterView(generics.CreateAPIView):
     
     def create(self, request, *args, **kwargs):
         response = super().create(request, *args, **kwargs)
-        # Add custom message
-        response.data['message'] = "Account created. Check your email for verification link."
-        response.data['verification_required'] = True
+        verification_required = LoginValidationService.is_email_verification_required()
+        response.data['verification_required'] = verification_required
+        response.data['message'] = (
+            "Account created. Check your email for verification link."
+            if verification_required
+            else "Account created successfully."
+        )
         return response
 
 

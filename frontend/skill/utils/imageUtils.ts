@@ -3,30 +3,24 @@
  * Handles resolution of media URLs from Django backend
  */
 
-// Get API base URL dynamically from environment or current location
-const getApiBaseUrl = (): string => {
-  // Check for environment variable first
-  if (typeof process !== 'undefined' && process.env.REACT_APP_API_URL) {
-    return process.env.REACT_APP_API_URL;
+// Get API base URL dynamically from Vite env/current origin.
+// In dev we default to Vite proxy (same-origin) unless VITE_API_DIRECT=true.
+export const getApiBaseUrl = (): string => {
+  const rawApiUrl = (import.meta.env.VITE_API_URL || '').trim().replace(/\/+$/, '');
+  const safeApiUrl = import.meta.env.DEV
+    ? rawApiUrl.replace('://localhost', '://127.0.0.1')
+    : rawApiUrl;
+  const useDevProxy = import.meta.env.DEV && import.meta.env.VITE_API_DIRECT !== 'true';
+
+  if (useDevProxy) {
+    return typeof window !== 'undefined' ? window.location.origin : '';
   }
-  
-  // Otherwise, use current location's origin (e.g., http://localhost:3000)
-  // and adjust to backend (e.g., http://localhost:8000)
-  if (typeof window !== 'undefined') {
-    const protocol = window.location.protocol;
-    const hostname = window.location.hostname;
-    
-    // If running on localhost, assume backend is on port 8000
-    if (hostname === 'localhost' || hostname === '127.0.0.1') {
-      return `${protocol}//${hostname}:8000`;
-    }
-    
-    // For production, use same domain
-    return window.location.origin.replace(/:\d+$/, ':8000');
+
+  if (safeApiUrl) {
+    return safeApiUrl;
   }
-  
-  // Fallback
-  return "http://127.0.0.1:8000";
+
+  return typeof window !== 'undefined' ? window.location.origin : '';
 };
 
 const API_BASE_URL = getApiBaseUrl();
